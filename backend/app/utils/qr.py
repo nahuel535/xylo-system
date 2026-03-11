@@ -1,9 +1,8 @@
 import os
 import qrcode
 
-
-def generate_product_qr(product_id: int, base_url: str = "http://192.168.0.224:5173/scan") -> str:
-    qr_data = f"{base_url}/{product_id}"
+def generate_product_qr(product_id: int, base_url: str = "https://xylo-system.vercel.app") -> str:
+    qr_data = f"{base_url}/scan/{product_id}"
 
     folder_path = "qrcodes"
     os.makedirs(folder_path, exist_ok=True)
