@@ -10,17 +10,18 @@ export default function ScanRedirectPage() {
   useEffect(() => {
     async function resolveProduct() {
       try {
-        const response = await api.get(/products/${id});
-        const product = response.data;
+       const response = await api.get(`/products/${id}`);
+        navigate(`/products/${id}/sell`, { replace: true });
+        navigate(`/products/${id}`, { replace: true });
 
         if (product.status === "in_stock") {
           setMessage("Producto encontrado. Abriendo venta rápida...");
-          navigate(/products/${id}/sell, { replace: true });
+          navigate(`/products/${id}/sell`, { replace: true });
           return;
         }
 
         setMessage("Producto encontrado. Abriendo detalle...");
-        navigate(/products/${id}, { replace: true });
+        navigate(`/products/${id}`, { replace: true });
       } catch (error) {
         console.error("Error resolviendo QR:", error);
         setMessage("No se encontró el producto o hubo un error.");
