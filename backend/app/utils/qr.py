@@ -1,21 +1,16 @@
-import os
-import qrcode
-from io import BytesIO
+from fastapi.responses import StreamingResponse
+from app.utils.qr import generate_product_qr
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "").rstrip("/")
+@router.get("/{product_id}/qr")
+def get_product_qr(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-def generate_product_qr(product_id):
-    if not FRONTEND_URL:
-        raise ValueError("FRONTEND_URL no está configurada")
+    buffer = generate_product_qr(product.id)
 
-    qr_url = f"{FRONTEND_URL}/scan/{product_id}"
-
-    img = qrcode.make(qr_url)
-    buffer = BytesIO()
-    img.save(buffer, format="PNG")
-    buffer.seek(0)
-
-    return buffer
-
-# Alias por compatibilidad
-generate_qr = generate_product_qr
+    return StreamingResponse(
+        buffer,
+        media_type="image/png",
+        headers={"Content-Disposition": f"attachment; filename=product_{product.id}_qr.png"}
+    )
