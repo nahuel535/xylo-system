@@ -92,7 +92,7 @@ export default function ProductDetailPage() {
             )}
 
             <a
-              href={`http://192.168.0.224:8000/products/${product.id}/qr`}
+              href={`${import.meta.env.VITE_API_URL}/products/${product.id}/qr`}
               target="_blank"
               rel="noreferrer"
               className="block w-full text-center bg-white/5 hover:bg-white/10 transition text-white rounded-xl px-4 py-3 font-medium"
