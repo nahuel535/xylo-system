@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
 
+import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import NewProductPage from "./pages/NewProductPage";
@@ -16,21 +19,21 @@ import ScanRedirectPage from "./pages/ScanRedirectPage";
 
 function Layout() {
   return (
-     <div className="flex min-h-screen bg-base-bg text-base-text">
+    <div className="flex min-h-screen bg-base-bg text-base-text">
       <Sidebar />
       <main className="flex-1 p-4 md:p-8 pt-20 md:pt-8 pb-24 md:pb-8">
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
-          <Route path="/scanner" element={<ScannerPage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/sold-products" element={<SoldProductsPage />} />
-          <Route path="/sales" element={<SalesPage />} />
-          <Route path="/exchange" element={<ExchangePage />} />
-          <Route path="/products/new" element={<NewProductPage />} />
-          <Route path="/products/:id" element={<ProductDetailPage />} />
-          <Route path="/products/:id/edit" element={<EditProductPage />} />
-          <Route path="/products/:id/sell" element={<SellProductPage />} />
-          <Route path="/products/:id/label" element={<ProductLabelPage />} />
+          <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/scanner" element={<ProtectedRoute><ScannerPage /></ProtectedRoute>} />
+          <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
+          <Route path="/sold-products" element={<ProtectedRoute><SoldProductsPage /></ProtectedRoute>} />
+          <Route path="/sales" element={<ProtectedRoute><SalesPage /></ProtectedRoute>} />
+          <Route path="/exchange" element={<ProtectedRoute><ExchangePage /></ProtectedRoute>} />
+          <Route path="/products/new" element={<ProtectedRoute requireAdmin><NewProductPage /></ProtectedRoute>} />
+          <Route path="/products/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
+          <Route path="/products/:id/edit" element={<ProtectedRoute requireAdmin><EditProductPage /></ProtectedRoute>} />
+          <Route path="/products/:id/sell" element={<ProtectedRoute><SellProductPage /></ProtectedRoute>} />
+          <Route path="/products/:id/label" element={<ProtectedRoute><ProductLabelPage /></ProtectedRoute>} />
           <Route path="/scan/:id" element={<ScanRedirectPage />} />
         </Routes>
       </main>
@@ -41,7 +44,12 @@ function Layout() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Layout />
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/*" element={<Layout />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

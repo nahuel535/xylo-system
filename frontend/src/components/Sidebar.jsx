@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+import { LogOut } from "lucide-react";
 
 const links = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -24,6 +26,7 @@ const links = [
 
 // Links que aparecen en la bottom bar mobile
 const bottomLinks = links.slice(0, 5);
+const { user, logout } = useAuth();
 
 export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -146,6 +149,18 @@ export default function Sidebar() {
           <Menu size={20} />
           <span>Más</span>
         </button>
+        <div className="mt-auto pt-6 border-t border-base-border">
+  <p className="text-sm text-base-muted px-4 mb-2">{user?.name}</p>
+  <button
+    onClick={logout}
+    className="flex items-center gap-3 rounded-xl px-4 py-3 text-base-muted hover:bg-white/5 w-full"
+  >
+    <LogOut size={18} />
+        <span>Cerrar sesión</span>
+          </button>
+        </div>
+      
+      
       </nav>
     </>
   );

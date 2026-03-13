@@ -8,6 +8,7 @@ from app.api.products import router as products_router
 from app.api.sales import router as sales_router
 from app.api.dashboard import router as dashboard_router
 from app.api.exchange_rate import router as exchange_rates_router
+from app.api.auth import router as auth_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -31,6 +32,7 @@ app.include_router(products_router)
 app.include_router(sales_router)
 app.include_router(dashboard_router)
 app.include_router(exchange_rates_router)
+app.include_router(auth_router)
 
 @app.get("/")
 def read_root():
