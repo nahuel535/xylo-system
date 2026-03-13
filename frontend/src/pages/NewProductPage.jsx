@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
@@ -43,13 +43,14 @@ export default function NewProductPage() {
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [listeningField, setListeningField] = useState(null);
+  const recognitionRef = useRef(null);
 
   useEffect(() => {
     async function loadUsers() {
       try {
         const response = await api.get("/users/");
         setUsers(response.data);
-
         if (response.data.length > 0) {
           setForm((prev) => ({
             ...prev,
@@ -60,7 +61,6 @@ export default function NewProductPage() {
         console.error("Error cargando usuarios:", error);
       }
     }
-
     loadUsers();
   }, []);
 
@@ -76,27 +76,64 @@ export default function NewProductPage() {
 
   function handleChange(event) {
     const { name, value } = event.target;
-
     setForm((prev) => {
-      const updated = {
-        ...prev,
-        [name]: value,
-      };
-
+      const updated = { ...prev, [name]: value };
       if (name === "model") {
         updated.storage = "";
         updated.color = "";
       }
-
       return updated;
     });
+  }
+
+  function handleVoice(fieldName) {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Tu navegador no soporta dictado por voz. Usá Chrome.");
+      return;
+    }
+
+    // Si ya está escuchando ese campo, detener
+    if (listeningField === fieldName) {
+      recognitionRef.current?.stop();
+      setListeningField(null);
+      return;
+    }
+
+    // Detener cualquier reconocimiento previo
+    recognitionRef.current?.stop();
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "es-AR";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognitionRef.current = recognition;
+
+    setListeningField(fieldName);
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setForm((prev) => ({ ...prev, [fieldName]: transcript }));
+      setListeningField(null);
+    };
+
+    recognition.onerror = () => {
+      setListeningField(null);
+    };
+
+    recognition.onend = () => {
+      setListeningField(null);
+    };
+
+    recognition.start();
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage("");
     setSaving(true);
-
     try {
       await api.post("/products/", {
         ...form,
@@ -106,7 +143,6 @@ export default function NewProductPage() {
         photo_url: form.photo_url || null,
         created_by: form.created_by ? Number(form.created_by) : null,
       });
-
       navigate("/products");
     } catch (error) {
       console.error("Error creando producto:", error);
@@ -118,10 +154,7 @@ export default function NewProductPage() {
 
   return (
     <div>
-      <Header
-        title="Nuevo producto"
-        subtitle="Alta guiada de equipo Apple"
-      />
+      <Header title="Nuevo producto" subtitle="Alta guiada de equipo Apple" />
 
       <form
         onSubmit={handleSubmit}
@@ -141,6 +174,8 @@ export default function NewProductPage() {
             name="brand"
             value={form.brand}
             onChange={handleChange}
+            onVoice={handleVoice}
+            listening={listeningField === "brand"}
           />
 
           <SelectField
@@ -178,6 +213,8 @@ export default function NewProductPage() {
             name="imei"
             value={form.imei}
             onChange={handleChange}
+            onVoice={handleVoice}
+            listening={listeningField === "imei"}
             required
           />
 
@@ -186,6 +223,8 @@ export default function NewProductPage() {
             name="serial_number"
             value={form.serial_number}
             onChange={handleChange}
+            onVoice={handleVoice}
+            listening={listeningField === "serial_number"}
           />
 
           <Field
@@ -193,6 +232,8 @@ export default function NewProductPage() {
             name="battery_health"
             value={form.battery_health}
             onChange={handleChange}
+            onVoice={handleVoice}
+            listening={listeningField === "battery_health"}
             type="number"
           />
 
@@ -245,6 +286,8 @@ export default function NewProductPage() {
             name="purchase_price_usd"
             value={form.purchase_price_usd}
             onChange={handleChange}
+            onVoice={handleVoice}
+            listening={listeningField === "purchase_price_usd"}
             type="number"
             step="0.01"
             required
@@ -255,6 +298,8 @@ export default function NewProductPage() {
             name="suggested_sale_price_usd"
             value={form.suggested_sale_price_usd}
             onChange={handleChange}
+            onVoice={handleVoice}
+            listening={listeningField === "suggested_sale_price_usd"}
             type="number"
             step="0.01"
             required
@@ -270,10 +315,12 @@ export default function NewProductPage() {
           />
 
           <Field
-            label="Foto (URL por ahora)"
+            label="Foto (URL)"
             name="photo_url"
             value={form.photo_url}
             onChange={handleChange}
+            onVoice={handleVoice}
+            listening={listeningField === "photo_url"}
           />
 
           <SelectField
@@ -291,18 +338,23 @@ export default function NewProductPage() {
 
         <div>
           <p className="text-sm text-base-muted mb-2">Observaciones</p>
-          <textarea
-            name="notes"
-            value={form.notes}
-            onChange={handleChange}
-            placeholder="Detalle del equipo, caja, accesorios, estado, etc."
-            className="w-full min-h-[130px] bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none"
-          />
+          <div className="relative">
+            <textarea
+              name="notes"
+              value={form.notes}
+              onChange={handleChange}
+              placeholder="Detalle del equipo, caja, accesorios, estado, etc."
+              className="w-full min-h-[130px] bg-white/5 border border-base-border rounded-xl px-4 py-3 pr-12 text-white outline-none"
+            />
+            <MicButton
+              listening={listeningField === "notes"}
+              onClick={() => handleVoice("notes")}
+              className="absolute top-3 right-3"
+            />
+          </div>
         </div>
 
-        {message && (
-          <p className="text-sm text-red-300">{message}</p>
-        )}
+        {message && <p className="text-sm text-red-300">{message}</p>}
 
         <div className="flex gap-3">
           <button
@@ -326,11 +378,32 @@ export default function NewProductPage() {
   );
 }
 
+function MicButton({ listening, onClick, className = "" }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`p-1.5 rounded-lg transition ${
+        listening
+          ? "bg-red-500/20 text-red-400 animate-pulse"
+          : "text-base-muted hover:text-white hover:bg-white/10"
+      } ${className}`}
+      title={listening ? "Escuchando... (click para cancelar)" : "Dictar por voz"}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 1a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V5a4 4 0 0 1 4-4zm-1.5 14.93A7.001 7.001 0 0 1 5 9H3a9 9 0 0 0 8 8.94V20H8v2h8v-2h-3v-2.07A9 9 0 0 0 21 9h-2a7 7 0 0 1-5.5 6.93z"/>
+      </svg>
+    </button>
+  );
+}
+
 function Field({
   label,
   name,
   value,
   onChange,
+  onVoice,
+  listening = false,
   type = "text",
   required = false,
   placeholder = "",
@@ -339,16 +412,27 @@ function Field({
   return (
     <div>
       <p className="text-sm text-base-muted mb-2">{label}</p>
-      <input
-        name={name}
-        value={value}
-        onChange={onChange}
-        type={type}
-        required={required}
-        placeholder={placeholder}
-        step={step}
-        className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none"
-      />
+      <div className="relative">
+        <input
+          name={name}
+          value={value}
+          onChange={onChange}
+          type={type}
+          required={required}
+          placeholder={listening ? "Escuchando..." : placeholder}
+          step={step}
+          className={`w-full bg-white/5 border rounded-xl px-4 py-3 pr-10 text-white outline-none transition ${
+            listening ? "border-red-400/60 bg-red-500/5" : "border-base-border"
+          }`}
+        />
+        {onVoice && (
+          <MicButton
+            listening={listening}
+            onClick={() => onVoice(name)}
+            className="absolute right-2 top-1/2 -translate-y-1/2"
+          />
+        )}
+      </div>
     </div>
   );
 }
@@ -364,9 +448,7 @@ function SelectField({
   disabled = false,
 }) {
   const normalizedOptions = options.map((option) =>
-    typeof option === "string"
-      ? { value: option, label: option }
-      : option
+    typeof option === "string" ? { value: option, label: option } : option
   );
 
   return (
