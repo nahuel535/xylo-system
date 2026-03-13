@@ -1,16 +1,10 @@
-from fastapi.responses import StreamingResponse
-from app.utils.qr import generate_product_qr
+from io import BytesIO
+import qrcode
 
-@router.get("/{product_id}/qr")
-def get_product_qr(product_id: int, db: Session = Depends(get_db)):
-    product = db.query(Product).filter(Product.id == product_id).first()
-    if not product:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-
-    buffer = generate_product_qr(product.id)
-
-    return StreamingResponse(
-        buffer,
-        media_type="image/png",
-        headers={"Content-Disposition": f"attachment; filename=product_{product.id}_qr.png"}
-    )
+def generate_product_qr(product_id: int, base_url: str = "https://xylo-system.vercel.app") -> BytesIO:
+    qr_data = f"{base_url}/scan/{product_id}"
+    qr = qrcode.make(qr_data)
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    buffer.seek(0)
+    return buffer
