@@ -1,17 +1,15 @@
-from io import BytesIO
+import os
 import qrcode
+from io import BytesIO
 
+FRONTEND_URL = os.getenv("FRONTEND_URL")
 
-def generate_product_qr(
-    product_id: int,
-    base_url: str = "https://xylo-system.vercel.app",
-) -> BytesIO:
-    qr_data = f"{base_url}/scan/{product_id}"
+def generate_qr(product_id):
+    qr_url = f"{FRONTEND_URL}/scan/{product_id}"
 
-    qr = qrcode.make(qr_data)
-
+    img = qrcode.make(qr_url)
     buffer = BytesIO()
-    qr.save(buffer, format="PNG")
+    img.save(buffer, format="PNG")
     buffer.seek(0)
 
     return buffer
