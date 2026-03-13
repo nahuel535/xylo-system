@@ -16,9 +16,9 @@ import ScanRedirectPage from "./pages/ScanRedirectPage";
 
 function Layout() {
   return (
-    <div className="flex min-h-screen bg-base-bg text-base-text">
+     <div className="flex min-h-screen bg-base-bg text-base-text">
       <Sidebar />
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-4 md:p-8 pt-20 md:pt-8 pb-24 md:pb-8">
         <Routes>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/scanner" element={<ScannerPage />} />
