@@ -76,8 +76,8 @@ export default function StorePage() {
             borderRadius: "980px", fontSize: "13px", fontWeight: 500,
             textDecoration: "none", transition: "background 0.2s",
           }}
-          onMouseEnter={(e) => e.target.style.background = "#3d8a6e"}
-          onMouseLeave={(e) => e.target.style.background = "#4a9d7f"}
+          onMouseEnter={(e) => e.currentTarget.style.background = "#3d8a6e"}
+        onMouseLeave={(e) => e.currentTarget.style.background = "#4a9d7f"}
         <a>
           Consultar
         </a>
@@ -210,7 +210,7 @@ export default function StorePage() {
         <p style={{ fontSize: "13px", color: "#6e6e73", marginBottom: "16px" }}>
           © {new Date().getFullYear()} Xylo — Todos los derechos reservados
         </p>
-        
+        <a
           href={`https://wa.me/${WHATSAPP}`}
           target="_blank"
           rel="noreferrer"
@@ -220,7 +220,7 @@ export default function StorePage() {
             borderRadius: "980px", fontSize: "14px", fontWeight: 500,
             textDecoration: "none",
           }}
-        <a>
+        >
           <WhatsAppIcon /> Escribinos por WhatsApp
         </a>
       </footer>

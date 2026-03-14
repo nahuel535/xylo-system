@@ -163,7 +163,7 @@ export default function StoreProductPage() {
         )}
 
         {/* CTA */}
-        
+        <a
           href={waUrl}
           target="_blank"
           rel="noreferrer"
@@ -177,7 +177,7 @@ export default function StoreProductPage() {
           }}
           onMouseEnter={(e) => e.currentTarget.style.opacity = "0.9"}
           onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
-        <a>
+        >
           <WhatsAppIcon size={22} />
           Me interesa este iPhone
         </a>
