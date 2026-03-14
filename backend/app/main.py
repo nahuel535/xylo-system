@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
-from app.db.session import engine, Base
+from app.db.session import engine, Base, get_db
 from app.db.base import User, Product, Sale, SalePayment
 from app.api.users import router as users_router
 from app.api.products import router as products_router
@@ -34,6 +35,27 @@ app.include_router(dashboard_router)
 app.include_router(exchange_rates_router)
 app.include_router(auth_router)
 
+
 @app.get("/")
 def read_root():
     return {"message": "Xylo backend funcionando con PostgreSQL"}
+
+
+@app.post("/setup")
+def setup(db: Session = Depends(get_db)):
+    from app.core.security import hash_password
+    from app.models.user import User
+    existing = db.query(User).filter(User.email == "admin@xylo.com").first()
+    if existing:
+        return {"message": "Ya existe"}
+    user = User(
+        name="Admin",
+        email="admin@xylo.com",
+        password_hash=hash_password("admin123"),
+        role="admin",
+        is_active=True
+    )
+    db.add(user)
+    db.commit()
+    return {"message": "Admin creado"}
+
