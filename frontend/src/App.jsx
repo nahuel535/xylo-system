@@ -16,6 +16,8 @@ import EditProductPage from "./pages/EditProductPage";
 import SellProductPage from "./pages/SellProductPage";
 import ProductLabelPage from "./pages/ProductLabelPage";
 import ScanRedirectPage from "./pages/ScanRedirectPage";
+import StorePage from "./pages/public/StorePage";
+import StoreProductPage from "./pages/public/StoreProductPage";
 
 function Layout() {
   return (
@@ -35,6 +37,8 @@ function Layout() {
           <Route path="/products/:id/sell" element={<ProtectedRoute><SellProductPage /></ProtectedRoute>} />
           <Route path="/products/:id/label" element={<ProtectedRoute><ProductLabelPage /></ProtectedRoute>} />
           <Route path="/scan/:id" element={<ScanRedirectPage />} />
+          <Route path="/store" element={<StorePage />} />
+          <Route path="/store/:id" element={<StoreProductPage />} />
         </Routes>
       </main>
     </div>
