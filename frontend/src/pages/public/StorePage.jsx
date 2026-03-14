@@ -67,7 +67,7 @@ export default function StorePage() {
           <XyloLogo size={24} />
           <span style={{ fontSize: "17px", fontWeight: 600, color: "#1d1d1f", letterSpacing: "-0.3px" }}>Xylo</span>
         </Link>
-        
+        <a
           href={`https://wa.me/${WHATSAPP}`}
           target="_blank"
           rel="noreferrer"
@@ -78,7 +78,7 @@ export default function StorePage() {
           }}
           onMouseEnter={(e) => e.currentTarget.style.background = "#3d8a6e"}
         onMouseLeave={(e) => e.currentTarget.style.background = "#4a9d7f"}
-        <a>
+        >
           Consultar
         </a>
       </nav>
