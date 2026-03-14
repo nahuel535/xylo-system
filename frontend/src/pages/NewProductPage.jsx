@@ -134,23 +134,37 @@ export default function NewProductPage() {
     }
   }
 
-  async function handleEnhancePhoto() {
-    if (!form.photo_url) return;
-    setEnhancing(true);
-    try {
-      const res = await api.post("/photos/enhance", {
-        image_url: form.photo_url,
-        model: form.model,
-        color: form.color,
-      });
-      setForm((prev) => ({ ...prev, photo_url: res.data.enhanced_url }));
-      setPhotoPreview(res.data.enhanced_url);
-    } catch {
-      setMessage("Error al mejorar la foto. Intentá de nuevo.");
-    } finally {
-      setEnhancing(false);
-    }
+async function handleGeneratePhoto() {
+  if (!form.model) {
+    setMessage("Seleccioná un modelo antes de generar la imagen.");
+    return;
   }
+  setEnhancing(true);
+  try {
+    const res = await api.post("/photos/generate", {
+      model: form.model,
+      color: form.color,
+      storage: form.storage,
+    });
+
+    const { image_base64, mime_type } = res.data;
+    const byteChars = atob(image_base64);
+    const byteArray = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) {
+      byteArray[i] = byteChars.charCodeAt(i);
+    }
+    const blob = new Blob([byteArray], { type: mime_type });
+    const file = new File([blob], `${form.model}-generated.jpg`, { type: mime_type });
+
+    const cloudinaryUrl = await uploadToCloudinary(file);
+    setForm((prev) => ({ ...prev, photo_url: cloudinaryUrl }));
+    setPhotoPreview(cloudinaryUrl);
+  } catch {
+    setMessage("Error generando la imagen. Intentá de nuevo.");
+  } finally {
+    setEnhancing(false);
+  }
+}
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -174,7 +188,6 @@ export default function NewProductPage() {
     }
   }
 
-  // ── Render ────────────────────────────────────────
   return (
     <div>
       <Header title="Nuevo producto" subtitle="Alta guiada de equipo Apple" />
@@ -236,25 +249,24 @@ export default function NewProductPage() {
               <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
             </label>
 
-            {/* Botón mejorar con IA */}
-            {photoPreview && !enhancing && (
-              <button
-                type="button"
-                onClick={handleEnhancePhoto}
-                className="mt-2 w-full flex items-center justify-center gap-2 bg-xylo-500/10 hover:bg-xylo-500/20 text-xylo-300 border border-xylo-500/20 rounded-xl px-4 py-2.5 text-sm font-medium transition"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3l14 9-14 9V3z" />
-                </svg>
-                Mejorar foto con IA
-              </button>
-            )}
-            {enhancing && (
-              <div className="mt-2 w-full flex items-center justify-center gap-2 bg-xylo-500/10 border border-xylo-500/20 rounded-xl px-4 py-2.5 text-sm text-xylo-300">
-                <div className="w-4 h-4 border-2 border-xylo-400 border-t-transparent rounded-full animate-spin" />
-                Generando imagen premium...
-              </div>
-            )}
+          {form.model && !enhancing && (
+  <button
+    type="button"
+    onClick={handleGeneratePhoto}
+    className="mt-2 w-full flex items-center justify-center gap-2 bg-xylo-500/10 hover:bg-xylo-500/20 text-xylo-300 border border-xylo-500/20 rounded-xl px-4 py-2.5 text-sm font-medium transition"
+  >
+    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+    </svg>
+    {photoPreview ? "Regenerar imagen con IA" : "Generar imagen con IA"}
+  </button>
+)}
+{enhancing && (
+  <div className="mt-2 w-full flex items-center justify-center gap-2 bg-xylo-500/10 border border-xylo-500/20 rounded-xl px-4 py-2.5 text-sm text-xylo-300">
+    <div className="w-4 h-4 border-2 border-xylo-400 border-t-transparent rounded-full animate-spin" />
+    Generando imagen con Gemini...
+  </div>
+)}
           </div>
 
           <SelectField

@@ -1,37 +1,50 @@
-import os
-import fal_client
+import httpx
+import base64
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/photos", tags=["Photos"])
 
-FAL_KEY = "d8d91c72-4ac7-41cb-901a-2467b4d01d32:b0030a1a594c12926ebf298ed000df44"
+GEMINI_API_KEY = "AIzaSyDizOJJUOJWEymaggyD7Oxu07jkukdKoXY"
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key={GEMINI_API_KEY}"
 
-class EnhanceRequest(BaseModel):
-    image_url: str
+class GenerateRequest(BaseModel):
     model: str = ""
     color: str = ""
+    storage: str = ""
 
-@router.post("/enhance")
-async def enhance_photo(data: EnhanceRequest):
+@router.post("/generate")
+async def generate_photo(data: GenerateRequest):
     try:
-        os.environ["FAL_KEY"] = FAL_KEY
-
-        prompt = f"Professional product photography of an {data.model} {data.color} iPhone. Clean white background, studio lighting, sharp focus, Apple Store aesthetic, premium tech product photo, 4k"
-        
-        result = fal_client.run(
-            "fal-ai/flux/schnell",
-            arguments={
-                "prompt": prompt,
-                "image_url": data.image_url,
-                "strength": 0.4,
-                "num_inference_steps": 4,
-                "image_size": "portrait_4_3",
-            }
+        prompt = (
+            f"Professional product photography of an {data.model} {data.storage} in {data.color}. "
+            f"Clean pure white background, studio lighting, sharp focus, Apple Store aesthetic, "
+            f"premium tech product photo, centered composition, no shadows, photorealistic, 4k quality."
         )
 
-        image_url = result["images"][0]["url"]
-        return {"enhanced_url": image_url}
+        async with httpx.AsyncClient(timeout=60) as client:
+            response = await client.post(GEMINI_URL, json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]},
+            })
 
+        if response.status_code != 200:
+            raise HTTPException(status_code=500, detail=f"Error de Gemini: {response.text}")
+
+        result = response.json()
+
+        for part in result["candidates"][0]["content"]["parts"]:
+            if "inlineData" in part:
+                image_data = part["inlineData"]["data"]
+                mime_type = part["inlineData"]["mimeType"]
+                return {
+                    "image_base64": image_data,
+                    "mime_type": mime_type,
+                }
+
+        raise HTTPException(status_code=500, detail="Gemini no devolvió imagen")
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generando imagen: {str(e)}")
