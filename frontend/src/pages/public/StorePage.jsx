@@ -255,14 +255,24 @@ function ProductCard({ product, exchange, index }) {
         e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.06)";
       }}
     >
-      {/* Icono iPhone */}
-      <div style={{
-        width: "48px", height: "48px", background: "#f5f5f7",
-        borderRadius: "14px", display: "flex", alignItems: "center",
-        justifyContent: "center", marginBottom: "16px", fontSize: "24px",
-      }}>
-        📱
-      </div>
+      {product.photo_url ? (
+  <img
+    src={product.photo_url}
+    alt={product.model}
+    style={{
+      width: "100%", height: "180px", objectFit: "cover",
+      borderRadius: "12px", marginBottom: "16px",
+    }}
+  />
+) : (
+  <div style={{
+    width: "48px", height: "48px", background: "#f5f5f7",
+    borderRadius: "14px", display: "flex", alignItems: "center",
+    justifyContent: "center", marginBottom: "16px", fontSize: "24px",
+  }}>
+    📱
+  </div>
+)}
 
       <p style={{ fontSize: "17px", fontWeight: 600, color: "#1d1d1f", marginBottom: "4px", letterSpacing: "-0.3px" }}>
         {product.model}

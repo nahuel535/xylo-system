@@ -82,14 +82,26 @@ export default function StoreProductPage() {
 
         {/* Header del producto */}
         <div style={{ textAlign: "center", marginBottom: "48px" }}>
-          <div style={{
-            width: "96px", height: "96px", background: "white",
-            borderRadius: "24px", display: "flex", alignItems: "center",
-            justifyContent: "center", fontSize: "48px",
-            margin: "0 auto 24px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
-          }}>
-            📱
-          </div>
+          {product.photo_url ? (
+  <img
+    src={product.photo_url}
+    alt={product.model}
+    style={{
+      width: "100%", maxHeight: "360px", objectFit: "cover",
+      borderRadius: "20px", marginBottom: "32px",
+      boxShadow: "0 8px 40px rgba(0,0,0,0.12)",
+    }}
+  />
+) : (
+  <div style={{
+    width: "96px", height: "96px", background: "white",
+    borderRadius: "24px", display: "flex", alignItems: "center",
+    justifyContent: "center", fontSize: "48px",
+    margin: "0 auto 24px", boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
+  }}>
+    📱
+  </div>
+)}
           <h1 style={{ fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 700, letterSpacing: "-1px", marginBottom: "8px" }}>
             {product.model}
           </h1>

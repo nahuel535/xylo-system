@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
+import { uploadToCloudinary } from "../services/cloudinary";
 import {
   CATEGORY_OPTIONS,
   CONDITION_OPTIONS,
@@ -38,24 +39,26 @@ const initialState = {
 
 export default function NewProductPage() {
   const navigate = useNavigate();
+  const recognitionRef = useRef(null);
 
+  // ── Estados ──────────────────────────────────────
   const [form, setForm] = useState(initialState);
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [listeningField, setListeningField] = useState(null);
-  const recognitionRef = useRef(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [enhancing, setEnhancing] = useState(false);
 
+  // ── Effects ──────────────────────────────────────
   useEffect(() => {
     async function loadUsers() {
       try {
         const response = await api.get("/users/");
         setUsers(response.data);
         if (response.data.length > 0) {
-          setForm((prev) => ({
-            ...prev,
-            created_by: String(response.data[0].id),
-          }));
+          setForm((prev) => ({ ...prev, created_by: String(response.data[0].id) }));
         }
       } catch (error) {
         console.error("Error cargando usuarios:", error);
@@ -64,6 +67,7 @@ export default function NewProductPage() {
     loadUsers();
   }, []);
 
+  // ── Memos ─────────────────────────────────────────
   const availableStorages = useMemo(() => {
     if (!form.model || !IPHONE_OPTIONS[form.model]) return [];
     return IPHONE_OPTIONS[form.model].storages;
@@ -74,6 +78,7 @@ export default function NewProductPage() {
     return IPHONE_OPTIONS[form.model].colors;
   }, [form.model]);
 
+  // ── Handlers ─────────────────────────────────────
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((prev) => {
@@ -87,47 +92,64 @@ export default function NewProductPage() {
   }
 
   function handleVoice(fieldName) {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("Tu navegador no soporta dictado por voz. Usá Chrome.");
       return;
     }
-
-    // Si ya está escuchando ese campo, detener
     if (listeningField === fieldName) {
       recognitionRef.current?.stop();
       setListeningField(null);
       return;
     }
-
-    // Detener cualquier reconocimiento previo
     recognitionRef.current?.stop();
-
     const recognition = new SpeechRecognition();
     recognition.lang = "es-AR";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     recognitionRef.current = recognition;
-
     setListeningField(fieldName);
-
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       setForm((prev) => ({ ...prev, [fieldName]: transcript }));
       setListeningField(null);
     };
-
-    recognition.onerror = () => {
-      setListeningField(null);
-    };
-
-    recognition.onend = () => {
-      setListeningField(null);
-    };
-
+    recognition.onerror = () => setListeningField(null);
+    recognition.onend = () => setListeningField(null);
     recognition.start();
+  }
+
+  async function handlePhotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      setForm((prev) => ({ ...prev, photo_url: url }));
+      setPhotoPreview(url);
+    } catch {
+      setMessage("Error subiendo la foto. Intentá de nuevo.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
+  async function handleEnhancePhoto() {
+    if (!form.photo_url) return;
+    setEnhancing(true);
+    try {
+      const res = await api.post("/photos/enhance", {
+        image_url: form.photo_url,
+        model: form.model,
+        color: form.color,
+      });
+      setForm((prev) => ({ ...prev, photo_url: res.data.enhanced_url }));
+      setPhotoPreview(res.data.enhanced_url);
+    } catch {
+      setMessage("Error al mejorar la foto. Intentá de nuevo.");
+    } finally {
+      setEnhancing(false);
+    }
   }
 
   async function handleSubmit(event) {
@@ -152,6 +174,7 @@ export default function NewProductPage() {
     }
   }
 
+  // ── Render ────────────────────────────────────────
   return (
     <div>
       <Header title="Nuevo producto" subtitle="Alta guiada de equipo Apple" />
@@ -161,177 +184,85 @@ export default function NewProductPage() {
         className="bg-base-card border border-base-border rounded-xl p-6 space-y-6"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          <SelectField
-            label="Categoría"
-            name="category"
-            value={form.category}
-            onChange={handleChange}
-            options={CATEGORY_OPTIONS}
-          />
+          <SelectField label="Categoría" name="category" value={form.category} onChange={handleChange} options={CATEGORY_OPTIONS} />
+          <Field label="Marca" name="brand" value={form.brand} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "brand"} />
+          <SelectField label="Modelo" name="model" value={form.model} onChange={handleChange} options={MODEL_OPTIONS} required placeholder="Seleccionar modelo" />
+          <SelectField label="Capacidad" name="storage" value={form.storage} onChange={handleChange} options={availableStorages} placeholder={form.model ? "Seleccionar capacidad" : "Elegí modelo primero"} disabled={!form.model} />
+          <SelectField label="Color" name="color" value={form.color} onChange={handleChange} options={availableColors} placeholder={form.model ? "Seleccionar color" : "Elegí modelo primero"} disabled={!form.model} />
+          <Field label="IMEI" name="imei" value={form.imei} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "imei"} required />
+          <Field label="Número de serie" name="serial_number" value={form.serial_number} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "serial_number"} />
+          <Field label="Batería (%)" name="battery_health" value={form.battery_health} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "battery_health"} type="number" />
+          <SelectField label="Estado estético" name="cosmetic_condition" value={form.cosmetic_condition} onChange={handleChange} options={COSMETIC_CONDITION_OPTIONS} placeholder="Seleccionar estado" />
+          <SelectField label="Estado funcional" name="functional_condition" value={form.functional_condition} onChange={handleChange} options={FUNCTIONAL_CONDITION_OPTIONS} placeholder="Seleccionar estado" />
+          <SelectField label="Tipo de SIM" name="sim_type" value={form.sim_type} onChange={handleChange} options={SIM_TYPE_OPTIONS} placeholder="Seleccionar tipo" />
+          <SelectField label="Condición" name="condition_type" value={form.condition_type} onChange={handleChange} options={CONDITION_OPTIONS} placeholder="Seleccionar condición" />
+          <Field label="Fecha de compra" name="purchase_date" value={form.purchase_date} onChange={handleChange} type="date" />
+          <Field label="Costo USD" name="purchase_price_usd" value={form.purchase_price_usd} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "purchase_price_usd"} type="number" step="0.01" required />
+          <Field label="Precio sugerido USD" name="suggested_sale_price_usd" value={form.suggested_sale_price_usd} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "suggested_sale_price_usd"} type="number" step="0.01" required />
+          <SelectField label="Proveedor" name="supplier" value={form.supplier} onChange={handleChange} options={SUPPLIER_OPTIONS} placeholder="Seleccionar proveedor" />
 
-          <Field
-            label="Marca"
-            name="brand"
-            value={form.brand}
-            onChange={handleChange}
-            onVoice={handleVoice}
-            listening={listeningField === "brand"}
-          />
+          {/* Foto del equipo */}
+          <div className="md:col-span-2 xl:col-span-3">
+            <p className="text-sm text-base-muted mb-2">Foto del equipo</p>
+            <label className={`flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl cursor-pointer transition
+              ${uploadingPhoto ? "opacity-50 pointer-events-none" : "hover:border-xylo-500/50 hover:bg-white/5"}
+              ${photoPreview ? "border-xylo-500/40" : "border-base-border"}
+            `}>
+              {photoPreview ? (
+                <div className="relative w-full">
+                  <img src={photoPreview} alt="Preview" className="w-full h-48 object-cover rounded-xl" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl opacity-0 hover:opacity-100 transition">
+                    <p className="text-white text-sm font-medium">Cambiar foto</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                  {uploadingPhoto ? (
+                    <>
+                      <div className="w-8 h-8 border-2 border-xylo-500 border-t-transparent rounded-full animate-spin mb-3" />
+                      <p className="text-sm text-base-muted">Subiendo foto...</p>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-8 h-8 text-base-muted mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                      </svg>
+                      <p className="text-sm text-base-muted">Tocá para subir una foto</p>
+                      <p className="text-xs text-base-muted/60 mt-1">JPG, PNG o HEIC</p>
+                    </>
+                  )}
+                </div>
+              )}
+              <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
+            </label>
 
-          <SelectField
-            label="Modelo"
-            name="model"
-            value={form.model}
-            onChange={handleChange}
-            options={MODEL_OPTIONS}
-            required
-            placeholder="Seleccionar modelo"
-          />
-
-          <SelectField
-            label="Capacidad"
-            name="storage"
-            value={form.storage}
-            onChange={handleChange}
-            options={availableStorages}
-            placeholder={form.model ? "Seleccionar capacidad" : "Elegí modelo primero"}
-            disabled={!form.model}
-          />
-
-          <SelectField
-            label="Color"
-            name="color"
-            value={form.color}
-            onChange={handleChange}
-            options={availableColors}
-            placeholder={form.model ? "Seleccionar color" : "Elegí modelo primero"}
-            disabled={!form.model}
-          />
-
-          <Field
-            label="IMEI"
-            name="imei"
-            value={form.imei}
-            onChange={handleChange}
-            onVoice={handleVoice}
-            listening={listeningField === "imei"}
-            required
-          />
-
-          <Field
-            label="Número de serie"
-            name="serial_number"
-            value={form.serial_number}
-            onChange={handleChange}
-            onVoice={handleVoice}
-            listening={listeningField === "serial_number"}
-          />
-
-          <Field
-            label="Batería (%)"
-            name="battery_health"
-            value={form.battery_health}
-            onChange={handleChange}
-            onVoice={handleVoice}
-            listening={listeningField === "battery_health"}
-            type="number"
-          />
-
-          <SelectField
-            label="Estado estético"
-            name="cosmetic_condition"
-            value={form.cosmetic_condition}
-            onChange={handleChange}
-            options={COSMETIC_CONDITION_OPTIONS}
-            placeholder="Seleccionar estado"
-          />
-
-          <SelectField
-            label="Estado funcional"
-            name="functional_condition"
-            value={form.functional_condition}
-            onChange={handleChange}
-            options={FUNCTIONAL_CONDITION_OPTIONS}
-            placeholder="Seleccionar estado"
-          />
-
-          <SelectField
-            label="Tipo de SIM"
-            name="sim_type"
-            value={form.sim_type}
-            onChange={handleChange}
-            options={SIM_TYPE_OPTIONS}
-            placeholder="Seleccionar tipo"
-          />
-
-          <SelectField
-            label="Condición"
-            name="condition_type"
-            value={form.condition_type}
-            onChange={handleChange}
-            options={CONDITION_OPTIONS}
-            placeholder="Seleccionar condición"
-          />
-
-          <Field
-            label="Fecha de compra"
-            name="purchase_date"
-            value={form.purchase_date}
-            onChange={handleChange}
-            type="date"
-          />
-
-          <Field
-            label="Costo USD"
-            name="purchase_price_usd"
-            value={form.purchase_price_usd}
-            onChange={handleChange}
-            onVoice={handleVoice}
-            listening={listeningField === "purchase_price_usd"}
-            type="number"
-            step="0.01"
-            required
-          />
-
-          <Field
-            label="Precio sugerido USD"
-            name="suggested_sale_price_usd"
-            value={form.suggested_sale_price_usd}
-            onChange={handleChange}
-            onVoice={handleVoice}
-            listening={listeningField === "suggested_sale_price_usd"}
-            type="number"
-            step="0.01"
-            required
-          />
-
-          <SelectField
-            label="Proveedor"
-            name="supplier"
-            value={form.supplier}
-            onChange={handleChange}
-            options={SUPPLIER_OPTIONS}
-            placeholder="Seleccionar proveedor"
-          />
-
-          <Field
-            label="Foto (URL)"
-            name="photo_url"
-            value={form.photo_url}
-            onChange={handleChange}
-            onVoice={handleVoice}
-            listening={listeningField === "photo_url"}
-          />
+            {/* Botón mejorar con IA */}
+            {photoPreview && !enhancing && (
+              <button
+                type="button"
+                onClick={handleEnhancePhoto}
+                className="mt-2 w-full flex items-center justify-center gap-2 bg-xylo-500/10 hover:bg-xylo-500/20 text-xylo-300 border border-xylo-500/20 rounded-xl px-4 py-2.5 text-sm font-medium transition"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3l14 9-14 9V3z" />
+                </svg>
+                Mejorar foto con IA
+              </button>
+            )}
+            {enhancing && (
+              <div className="mt-2 w-full flex items-center justify-center gap-2 bg-xylo-500/10 border border-xylo-500/20 rounded-xl px-4 py-2.5 text-sm text-xylo-300">
+                <div className="w-4 h-4 border-2 border-xylo-400 border-t-transparent rounded-full animate-spin" />
+                Generando imagen premium...
+              </div>
+            )}
+          </div>
 
           <SelectField
             label="Usuario creador"
             name="created_by"
             value={form.created_by}
             onChange={handleChange}
-            options={users.map((user) => ({
-              value: String(user.id),
-              label: `${user.name} (${user.role})`,
-            }))}
+            options={users.map((user) => ({ value: String(user.id), label: `${user.name} (${user.role})` }))}
             placeholder="Seleccionar usuario"
           />
         </div>
@@ -346,30 +277,17 @@ export default function NewProductPage() {
               placeholder="Detalle del equipo, caja, accesorios, estado, etc."
               className="w-full min-h-[130px] bg-white/5 border border-base-border rounded-xl px-4 py-3 pr-12 text-white outline-none"
             />
-            <MicButton
-              listening={listeningField === "notes"}
-              onClick={() => handleVoice("notes")}
-              className="absolute top-3 right-3"
-            />
+            <MicButton listening={listeningField === "notes"} onClick={() => handleVoice("notes")} className="absolute top-3 right-3" />
           </div>
         </div>
 
         {message && <p className="text-sm text-red-300">{message}</p>}
 
         <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={saving}
-            className="bg-xylo-500 hover:bg-xylo-400 disabled:opacity-60 transition text-white rounded-xl px-5 py-3 font-medium"
-          >
+          <button type="submit" disabled={saving} className="bg-xylo-500 hover:bg-xylo-400 disabled:opacity-60 transition text-white rounded-xl px-5 py-3 font-medium">
             {saving ? "Guardando..." : "Guardar producto"}
           </button>
-
-          <button
-            type="button"
-            onClick={() => setForm(initialState)}
-            className="bg-white/5 hover:bg-white/10 transition rounded-xl px-5 py-3"
-          >
+          <button type="button" onClick={() => { setForm(initialState); setPhotoPreview(null); }} className="bg-white/5 hover:bg-white/10 transition rounded-xl px-5 py-3">
             Limpiar
           </button>
         </div>
@@ -383,11 +301,7 @@ function MicButton({ listening, onClick, className = "" }) {
     <button
       type="button"
       onClick={onClick}
-      className={`p-1.5 rounded-lg transition ${
-        listening
-          ? "bg-red-500/20 text-red-400 animate-pulse"
-          : "text-base-muted hover:text-white hover:bg-white/10"
-      } ${className}`}
+      className={`p-1.5 rounded-lg transition ${listening ? "bg-red-500/20 text-red-400 animate-pulse" : "text-base-muted hover:text-white hover:bg-white/10"} ${className}`}
       title={listening ? "Escuchando... (click para cancelar)" : "Dictar por voz"}
     >
       <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -397,77 +311,30 @@ function MicButton({ listening, onClick, className = "" }) {
   );
 }
 
-function Field({
-  label,
-  name,
-  value,
-  onChange,
-  onVoice,
-  listening = false,
-  type = "text",
-  required = false,
-  placeholder = "",
-  step,
-}) {
+function Field({ label, name, value, onChange, onVoice, listening = false, type = "text", required = false, placeholder = "", step }) {
   return (
     <div>
       <p className="text-sm text-base-muted mb-2">{label}</p>
       <div className="relative">
         <input
-          name={name}
-          value={value}
-          onChange={onChange}
-          type={type}
-          required={required}
-          placeholder={listening ? "Escuchando..." : placeholder}
-          step={step}
-          className={`w-full bg-white/5 border rounded-xl px-4 py-3 pr-10 text-white outline-none transition ${
-            listening ? "border-red-400/60 bg-red-500/5" : "border-base-border"
-          }`}
+          name={name} value={value} onChange={onChange} type={type}
+          required={required} placeholder={listening ? "Escuchando..." : placeholder} step={step}
+          className={`w-full bg-white/5 border rounded-xl px-4 py-3 pr-10 text-white outline-none transition ${listening ? "border-red-400/60 bg-red-500/5" : "border-base-border"}`}
         />
-        {onVoice && (
-          <MicButton
-            listening={listening}
-            onClick={() => onVoice(name)}
-            className="absolute right-2 top-1/2 -translate-y-1/2"
-          />
-        )}
+        {onVoice && <MicButton listening={listening} onClick={() => onVoice(name)} className="absolute right-2 top-1/2 -translate-y-1/2" />}
       </div>
     </div>
   );
 }
 
-function SelectField({
-  label,
-  name,
-  value,
-  onChange,
-  options,
-  required = false,
-  placeholder = "Seleccionar",
-  disabled = false,
-}) {
-  const normalizedOptions = options.map((option) =>
-    typeof option === "string" ? { value: option, label: option } : option
-  );
-
+function SelectField({ label, name, value, onChange, options, required = false, placeholder = "Seleccionar", disabled = false }) {
+  const normalizedOptions = options.map((option) => typeof option === "string" ? { value: option, label: option } : option);
   return (
     <div>
       <p className="text-sm text-base-muted mb-2">{label}</p>
-      <select
-        name={name}
-        value={value}
-        onChange={onChange}
-        required={required}
-        disabled={disabled}
-        className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none disabled:opacity-50"
-      >
+      <select name={name} value={value} onChange={onChange} required={required} disabled={disabled} className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none disabled:opacity-50">
         <option value="">{placeholder}</option>
-        {normalizedOptions.map((option) => (
-          <option key={option.value} value={option.value} className="text-black">
-            {option.label}
-          </option>
-        ))}
+        {normalizedOptions.map((option) => <option key={option.value} value={option.value} className="text-black">{option.label}</option>)}
       </select>
     </div>
   );
