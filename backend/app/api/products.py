@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.product import Product
+from app.models.sale import Sale
+from app.models.sale_payment import SalePayment
 from app.schemas.product import ProductCreate, ProductResponse, ProductUpdate
 from app.models.user import User
 from app.utils.qr import generate_product_qr
@@ -54,19 +56,17 @@ def update_product(product_id: int, product_data: ProductUpdate, db: Session = D
 
 @router.delete("/{product_id}")
 def delete_product(product_id: int, db: Session = Depends(get_db)):
-    from app.models.sale import Sale
-    from app.models.sale_payment import SalePayment
-
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-    # Eliminar pagos y ventas asociadas primero
+    # Eliminar pagos primero, luego ventas, luego producto
     sales = db.query(Sale).filter(Sale.product_id == product_id).all()
     for sale in sales:
         db.query(SalePayment).filter(SalePayment.sale_id == sale.id).delete()
         db.delete(sale)
 
+    db.flush()
     db.delete(product)
     db.commit()
     return {"message": "Producto eliminado correctamente"}
