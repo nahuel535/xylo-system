@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
+import { uploadToCloudinary } from "../services/cloudinary";
 import {
   CATEGORY_OPTIONS,
   CONDITION_OPTIONS,
@@ -23,6 +24,7 @@ export default function EditProductPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -77,6 +79,20 @@ export default function EditProductPage() {
     if (!form?.model || !IPHONE_OPTIONS[form.model]) return [];
     return IPHONE_OPTIONS[form.model].colors;
   }, [form?.model]);
+
+  async function handlePhotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const url = await uploadToCloudinary(file);
+      setForm((prev) => ({ ...prev, photo_url: url }));
+    } catch {
+      setMessage("Error subiendo la foto. Intentá de nuevo.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -297,12 +313,40 @@ export default function EditProductPage() {
             placeholder="Seleccionar proveedor"
           />
 
-          <Field
-            label="Foto (URL por ahora)"
-            name="photo_url"
-            value={form.photo_url}
-            onChange={handleChange}
-          />
+          <div className="md:col-span-2 xl:col-span-3">
+            <p className="text-sm text-base-muted mb-2">Foto del equipo</p>
+            <label className={`flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl cursor-pointer transition
+              ${uploadingPhoto ? "opacity-50 pointer-events-none" : "hover:border-xylo-500/50 hover:bg-base-subtle"}
+              ${form.photo_url ? "border-xylo-500/40" : "border-base-border"}
+            `}>
+              {form.photo_url ? (
+                <div className="relative w-full">
+                  <img src={form.photo_url} alt="Preview" className="w-full h-48 object-cover rounded-xl" />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-xl opacity-0 hover:opacity-100 transition">
+                    <p className="text-white text-sm font-medium">Cambiar foto</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                  {uploadingPhoto ? (
+                    <>
+                      <div className="w-8 h-8 border-2 border-xylo-500 border-t-transparent rounded-full animate-spin mb-3" />
+                      <p className="text-sm text-base-muted">Subiendo foto...</p>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-8 h-8 text-base-muted mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                      </svg>
+                      <p className="text-sm text-base-muted">Tocá para subir una foto</p>
+                      <p className="text-xs text-base-muted mt-1">JPG, PNG o HEIC</p>
+                    </>
+                  )}
+                </div>
+              )}
+              <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
+            </label>
+          </div>
 
           <SelectField
             label="Usuario creador"
