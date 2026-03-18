@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import api from "../services/api";
 
 const AuthContext = createContext(null);
@@ -9,19 +9,34 @@ export function AuthProvider({ children }) {
     return stored ? JSON.parse(stored) : null;
   });
 
+  useEffect(() => {
+    const token = localStorage.getItem("xylo_token");
+    if (token) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+  }, []);
+
   async function login(email, password) {
     const response = await api.post("/auth/login", { email, password });
     const data = response.data;
 
     localStorage.setItem("xylo_token", data.access_token);
-    localStorage.setItem("xylo_user", JSON.stringify({
+    localStorage.setItem(
+      "xylo_user",
+      JSON.stringify({
+        id: data.user_id,
+        name: data.user_name,
+        role: data.user_role,
+      })
+    );
+
+    api.defaults.headers.common["Authorization"] = `Bearer ${data.access_token}`;
+
+    setUser({
       id: data.user_id,
       name: data.user_name,
       role: data.user_role,
-    }));
-
-    api.defaults.headers.common["Authorization"] = `Bearer ${data.access_token}`;
-    setUser({ id: data.user_id, name: data.user_name, role: data.user_role });
+    });
   }
 
   function logout() {
