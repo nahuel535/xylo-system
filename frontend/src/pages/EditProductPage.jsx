@@ -324,7 +324,7 @@ export default function EditProductPage() {
             value={form.notes}
             onChange={handleChange}
             placeholder="Detalle del equipo, caja, accesorios, estado, etc."
-            className="w-full min-h-[130px] bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none"
+            className="w-full min-h-[130px] bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
           />
         </div>
 
@@ -346,7 +346,7 @@ export default function EditProductPage() {
             onClick={() => navigate(-1)}
             className="bg-white/5 hover:bg-white/10 transition rounded-xl px-5 py-3"
           >
-            Cancelar
+            Cancelars
           </button>
 
           <button
@@ -384,7 +384,7 @@ function Field({
         required={required}
         placeholder={placeholder}
         step={step}
-        className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none"
+        className="w-full bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
       />
     </div>
   );
@@ -415,11 +415,11 @@ function SelectField({
         onChange={onChange}
         required={required}
         disabled={disabled}
-        className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none disabled:opacity-50"
+        className="w-full bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-text outline-none disabled:opacity-50 focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
       >
         <option value="">{placeholder}</option>
         {normalizedOptions.map((option) => (
-          <option key={option.value} value={option.value} className="text-black">
+          <option key={option.value} value={option.value}>
             {option.label}
           </option>
         ))}

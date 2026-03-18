@@ -125,20 +125,12 @@ export default function ProductDetailPage() {
               Ver etiqueta imprimible
             </Link>
 
-            {product.status !== "sold" && (
-              <Link
-                to={`/products/${product.id}/edit`}
-                className="block w-full text-center bg-base-subtle hover:bg-base-border transition text-base-text rounded-xl px-4 py-2.5 text-sm"
-              >
-                Editar producto
-              </Link>
-            )}
-
-            {product.status === "sold" && (
-              <div className="bg-base-subtle rounded-xl px-4 py-2.5 text-center text-sm text-base-muted">
-                Este producto ya fue vendido
-              </div>
-            )}
+            <Link
+              to={`/products/${product.id}/edit`}
+              className="block w-full text-center bg-base-subtle hover:bg-base-border transition text-base-text rounded-xl px-4 py-2.5 text-sm"
+            >
+              Editar producto
+            </Link>
 
             <Link
               to={product.status === "sold" ? "/sold-products" : "/products"}

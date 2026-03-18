@@ -4,12 +4,9 @@ const api = axios.create({
   baseURL: "https://xylo-system-production.up.railway.app",
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("xylo_token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+const token = localStorage.getItem("xylo_token");
+if (token) {
+  api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+}
 
 export default api;
