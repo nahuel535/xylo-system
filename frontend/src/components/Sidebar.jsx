@@ -6,6 +6,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import logo from "../assets/logo.png";
+import { Users } from "lucide-react";
 
 const links = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -15,6 +16,7 @@ const links = [
   { to: "/sales", label: "Ventas", icon: ReceiptText },
   { to: "/exchange", label: "Cotización", icon: Landmark },
   { to: "/products/new", label: "Nuevo", icon: PlusSquare },
+  { to: "/users", label: "Usuarios", icon: Users },
 ];
 
 const bottomLinks = links.slice(0, 5);

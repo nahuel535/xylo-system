@@ -18,6 +18,7 @@ import ProductLabelPage from "./pages/ProductLabelPage";
 import ScanRedirectPage from "./pages/ScanRedirectPage";
 import StorePage from "./pages/public/StorePage";
 import StoreProductPage from "./pages/public/StoreProductPage";
+import UsersPage from "./pages/UsersPage";
 
 function Layout() {
   return (
@@ -39,6 +40,8 @@ function Layout() {
           <Route path="/scan/:id" element={<ScanRedirectPage />} />
           <Route path="/store" element={<StorePage />} />
           <Route path="/store/:id" element={<StoreProductPage />} />
+          <Route path="/users" element={<ProtectedRoute requireAdmin><UsersPage /></ProtectedRoute>} />
+
         </Routes>
       </main>
     </div>
