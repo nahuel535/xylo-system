@@ -1,225 +1,270 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
-import UsdtCard from "../components/UsdtCard";
-import {
-  Package, TrendingUp, DollarSign, BarChart2,
-  ShoppingBag, Calendar, Clock, CreditCard
-} from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 
-export default function DashboardPage() {
-  const [summary, setSummary] = useState(null);
+export default function ProductsPage() {
+  const [products, setProducts] = useState([]);
   const [exchange, setExchange] = useState(null);
-  const [topModels, setTopModels] = useState([]);
-  const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [search, setSearch] = useState("");
+  const [modelFilter, setModelFilter] = useState("");
+  const [capacityFilter, setCapacityFilter] = useState("");
+  const [colorFilter, setColorFilter] = useState("");
+  const [conditionFilter, setConditionFilter] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [sortField, setSortField] = useState(null);
+  const [sortDir, setSortDir] = useState("asc");
+
   useEffect(() => {
-    async function loadDashboard() {
+    async function loadProducts() {
       try {
-        const [summaryRes, exchangeRes, topModelsRes, paymentRes] = await Promise.all([
-          api.get("/dashboard/summary"),
+        const [productsRes, exchangeRes] = await Promise.all([
+          api.get("/products/"),
           api.get("/exchange-rates/active"),
-          api.get("/dashboard/top-models"),
-          api.get("/dashboard/payment-methods"),
         ]);
-        setSummary(summaryRes.data);
+        setProducts(productsRes.data.filter((p) => p.status === "in_stock"));
         setExchange(exchangeRes.data);
-        setTopModels(topModelsRes.data);
-        setPaymentMethods(paymentRes.data);
       } catch (error) {
-        console.error("Error cargando dashboard:", error);
+        console.error("Error cargando productos:", error);
       } finally {
         setLoading(false);
       }
     }
-    loadDashboard();
+    loadProducts();
   }, []);
 
-  if (loading) return <p className="text-base-muted">Cargando dashboard...</p>;
-  if (!summary) return <p className="text-base-muted">No se pudo cargar el dashboard.</p>;
+  const models = useMemo(() => [...new Set(products.map((p) => p.model).filter(Boolean))], [products]);
+  const capacities = useMemo(() => [...new Set(products.map((p) => p.storage).filter(Boolean))], [products]);
+  const colors = useMemo(() => [...new Set(products.map((p) => p.color).filter(Boolean))], [products]);
+  const conditions = useMemo(() => [...new Set(products.map((p) => p.condition_type).filter(Boolean))], [products]);
 
-  const maxSales = topModels[0]?.sales_count || 1;
-  const maxPayment = paymentMethods[0]?.total_usd || 1;
+  const activeFilters = [search, modelFilter, capacityFilter, colorFilter, conditionFilter, minPrice, maxPrice].filter(Boolean).length;
 
-  const methodLabels = {
-    cash_usd: "Efectivo USD",
-    cash_ars: "Efectivo ARS",
-    transfer: "Transferencia",
-    card: "Tarjeta",
-    crypto: "Crypto",
+  function handleSort(field) {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  }
+
+  function clearFilters() {
+    setSearch(""); setModelFilter(""); setCapacityFilter("");
+    setColorFilter(""); setConditionFilter(""); setMinPrice("");
+    setMaxPrice(""); setSortField(null);
+  }
+
+  const filteredProducts = useMemo(() => {
+    let result = products.filter((p) => {
+      const text = search.toLowerCase();
+      const matchesSearch =
+        !text ||
+        p.model?.toLowerCase().includes(text) ||
+        p.imei?.toLowerCase().includes(text) ||
+        p.color?.toLowerCase().includes(text) ||
+        p.storage?.toLowerCase().includes(text);
+      return (
+        matchesSearch &&
+        (!modelFilter || p.model === modelFilter) &&
+        (!capacityFilter || p.storage === capacityFilter) &&
+        (!colorFilter || p.color === colorFilter) &&
+        (!conditionFilter || p.condition_type === conditionFilter) &&
+        (!minPrice || Number(p.suggested_sale_price_usd) >= Number(minPrice)) &&
+        (!maxPrice || Number(p.suggested_sale_price_usd) <= Number(maxPrice))
+      );
+    });
+    if (sortField) {
+      result = [...result].sort((a, b) => {
+        const aVal = a[sortField] ?? "";
+        const bVal = b[sortField] ?? "";
+        const cmp = typeof aVal === "number" ? aVal - bVal : String(aVal).localeCompare(String(bVal));
+        return sortDir === "asc" ? cmp : -cmp;
+      });
+    }
+    return result;
+  }, [products, search, modelFilter, capacityFilter, colorFilter, conditionFilter, minPrice, maxPrice, sortField, sortDir]);
+
+  const SortIcon = ({ field }) => {
+    if (sortField !== field) return <ChevronsUpDown size={14} className="inline ml-1 opacity-30" />;
+    return sortDir === "asc"
+      ? <ChevronUp size={14} className="inline ml-1 text-xylo-500" />
+      : <ChevronDown size={14} className="inline ml-1 text-xylo-500" />;
   };
 
-  const methodColors = {
-    cash_usd: "bg-green-500",
-    cash_ars: "bg-blue-500",
-    transfer: "bg-purple-500",
-    card: "bg-yellow-500",
-    crypto: "bg-orange-500",
-  };
+  const ThSortable = ({ field, children }) => (
+    <th
+      className="text-left px-5 py-3.5 text-xs font-medium text-base-muted uppercase tracking-wide cursor-pointer select-none hover:text-base-text transition"
+      onClick={() => handleSort(field)}
+    >
+      {children}<SortIcon field={field} />
+    </th>
+  );
+
+  const inputClass = "w-full bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition";
 
   return (
     <div>
-      <Header title="Dashboard" subtitle="Resumen general del negocio" />
+      <Header title="Stock" subtitle="Listado de equipos disponibles" />
 
-      {/* Stats principales */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          icon={<Package size={18} />}
-          label="En stock"
-          value={summary.total_products_in_stock}
-          sub={`USD ${fmt(summary.total_stock_value_usd)} en inventario`}
-          color="text-blue-400"
-          bg="bg-blue-500/10"
-        />
-        <StatCard
-          icon={<ShoppingBag size={18} />}
-          label="Ventas totales"
-          value={summary.total_sales_count}
-          sub={`USD ${fmt(summary.total_sales_value_usd)} facturado`}
-          color="text-xylo-400"
-          bg="bg-xylo-500/10"
-        />
-        <StatCard
-          icon={<TrendingUp size={18} />}
-          label="Ganancia bruta"
-          value={`USD ${fmt(summary.total_gross_profit_usd)}`}
-          sub="Acumulada total"
-          color="text-green-400"
-          bg="bg-green-500/10"
-        />
-        <StatCard
-          icon={<DollarSign size={18} />}
-          label="Dólar venta"
-          value={exchange ? `ARS ${formatNumber(exchange.sell_rate_ars)}` : "-"}
-          sub={exchange ? `Compra: ARS ${formatNumber(exchange.buy_rate_ars)}` : ""}
-          color="text-yellow-400"
-          bg="bg-yellow-500/10"
-        />
-      </div>
-
-      {/* Stats de hoy y mes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="bg-base-card border border-base-border rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Clock size={16} className="text-base-muted" />
-            <p className="text-sm font-medium">Hoy</p>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-2xl font-semibold">{summary.sales_today_count}</p>
-              <p className="text-sm text-base-muted">ventas</p>
-            </div>
-            <div>
-              <p className="text-2xl font-semibold">USD {fmt(summary.sales_today_value_usd)}</p>
-              <p className="text-sm text-base-muted">facturado</p>
-            </div>
+      {/* Filtros */}
+      <div className="bg-base-card border border-base-border rounded-2xl p-5 mb-5 shadow-card">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+          <input
+            type="text"
+            placeholder="Buscar por modelo, IMEI, color..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className={`${inputClass} sm:col-span-2 xl:col-span-1`}
+          />
+          <select value={modelFilter} onChange={(e) => setModelFilter(e.target.value)} className={inputClass}>
+            <option value="">Todos los modelos</option>
+            {models.map((m) => <option key={m} value={m}>{m}</option>)}
+          </select>
+          <select value={capacityFilter} onChange={(e) => setCapacityFilter(e.target.value)} className={inputClass}>
+            <option value="">Todas las capacidades</option>
+            {capacities.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={colorFilter} onChange={(e) => setColorFilter(e.target.value)} className={inputClass}>
+            <option value="">Todos los colores</option>
+            {colors.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={conditionFilter} onChange={(e) => setConditionFilter(e.target.value)} className={inputClass}>
+            <option value="">Todas las condiciones</option>
+            {conditions.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <div className="flex gap-2">
+            <input type="number" placeholder="Min USD" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className={inputClass} />
+            <input type="number" placeholder="Max USD" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className={inputClass} />
           </div>
         </div>
 
-        <div className="bg-base-card border border-base-border rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Calendar size={16} className="text-base-muted" />
-            <p className="text-sm font-medium">Este mes</p>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-2xl font-semibold">{summary.sales_this_month_count}</p>
-              <p className="text-sm text-base-muted">ventas</p>
-            </div>
-            <div>
-              <p className="text-2xl font-semibold">USD {fmt(summary.sales_this_month_value_usd)}</p>
-              <p className="text-sm text-base-muted">facturado</p>
-            </div>
-          </div>
+        <div className="mt-3 flex items-center gap-3 flex-wrap">
+          <button
+            onClick={clearFilters}
+            className="bg-base-subtle hover:bg-base-border transition rounded-xl px-4 py-2 text-sm text-base-muted"
+          >
+            Limpiar filtros {activeFilters > 0 && (
+              <span className="ml-1 bg-xylo-500 text-white text-xs px-1.5 py-0.5 rounded-full">{activeFilters}</span>
+            )}
+          </button>
+          <span className="text-sm text-base-muted">
+            {filteredProducts.length} resultado{filteredProducts.length !== 1 ? "s" : ""}
+          </span>
         </div>
       </div>
 
-      {/* Modelos más vendidos + Métodos de pago */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {/* Top modelos */}
-        <div className="bg-base-card border border-base-border rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-5">
-            <BarChart2 size={16} className="text-base-muted" />
-            <p className="text-sm font-medium">Modelos más vendidos</p>
-          </div>
-          {topModels.length === 0 ? (
-            <p className="text-sm text-base-muted">Sin datos aún.</p>
-          ) : (
-            <div className="space-y-3">
-              {topModels.slice(0, 6).map((model) => (
-                <div key={model.model}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm">{model.model}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-base-muted">USD {fmt(model.total_sales_usd)}</span>
-                      <span className="text-xs font-medium text-xylo-300">{model.sales_count} vendidos</span>
-                    </div>
-                  </div>
-                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-xylo-500 rounded-full transition-all duration-500"
-                      style={{ width: `${(model.sales_count / maxSales) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Tabla desktop */}
+      <div className="hidden md:block bg-base-card border border-base-border rounded-2xl overflow-hidden shadow-card">
+        <table className="w-full text-sm">
+          <thead className="bg-base-subtle border-b border-base-border">
+            <tr>
+              <ThSortable field="model">Modelo</ThSortable>
+              <ThSortable field="storage">Capacidad</ThSortable>
+              <ThSortable field="color">Color</ThSortable>
+              <th className="text-left px-5 py-3.5 text-xs font-medium text-base-muted uppercase tracking-wide">IMEI</th>
+              <ThSortable field="battery_health">Batería</ThSortable>
+              <ThSortable field="cosmetic_condition">Estado estético</ThSortable>
+              <ThSortable field="condition_type">Condición</ThSortable>
+              <ThSortable field="purchase_price_usd">Costo USD</ThSortable>
+              <ThSortable field="suggested_sale_price_usd">Venta USD</ThSortable>
+              <th className="text-left px-5 py-3.5 text-xs font-medium text-base-muted uppercase tracking-wide">Venta ARS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan="10" className="px-5 py-6 text-base-muted text-sm">Cargando productos...</td></tr>
+            ) : filteredProducts.length === 0 ? (
+              <tr><td colSpan="10" className="px-5 py-6 text-base-muted text-sm">No hay productos que coincidan.</td></tr>
+            ) : (
+              filteredProducts.map((product) => (
+                <tr key={product.id} className="border-t border-base-border hover:bg-base-subtle/50 transition">
+                  <td className="px-5 py-3.5">
+                    <Link to={`/products/${product.id}`} className="text-xylo-500 hover:text-xylo-600 hover:underline font-medium">
+                      {product.model}
+                    </Link>
+                  </td>
+                  <td className="px-5 py-3.5 text-base-text">{product.storage}</td>
+                  <td className="px-5 py-3.5 text-base-text">{product.color}</td>
+                  <td className="px-5 py-3.5 font-mono text-xs text-base-muted">{product.imei}</td>
+                  <td className="px-5 py-3.5">
+                    {product.battery_health ? (
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                        product.battery_health >= 85 ? "bg-green-50 text-green-600" :
+                        product.battery_health >= 70 ? "bg-yellow-50 text-yellow-600" :
+                        "bg-red-50 text-red-600"
+                      }`}>
+                        {product.battery_health}%
+                      </span>
+                    ) : "-"}
+                  </td>
+                  <td className="px-5 py-3.5 text-sm text-base-text">{product.cosmetic_condition || "-"}</td>
+                  <td className="px-5 py-3.5">
+                    <span className="px-2 py-1 rounded-full text-xs bg-xylo-50 text-xylo-600 font-medium">
+                      {product.condition_type || "-"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5 text-base-text">USD {product.purchase_price_usd}</td>
+                  <td className="px-5 py-3.5 text-base-text font-medium">USD {product.suggested_sale_price_usd}</td>
+                  <td className="px-5 py-3.5 text-base-muted">
+                    {exchange ? `ARS ${toArs(product.suggested_sale_price_usd, exchange.sell_rate_ars)}` : "-"}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-        {/* Métodos de pago */}
-        <div className="bg-base-card border border-base-border rounded-xl p-5">
-          <div className="flex items-center gap-2 mb-5">
-            <CreditCard size={16} className="text-base-muted" />
-            <p className="text-sm font-medium">Métodos de pago</p>
-          </div>
-          {paymentMethods.length === 0 ? (
-            <p className="text-sm text-base-muted">Sin datos aún.</p>
-          ) : (
-            <div className="space-y-3">
-              {paymentMethods.map((method) => (
-                <div key={method.method}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm">{methodLabels[method.method] || method.method}</span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-base-muted">{method.count} pagos</span>
-                      <span className="text-xs font-medium text-green-400">USD {fmt(method.total_usd)}</span>
-                    </div>
-                  </div>
-                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${methodColors[method.method] || "bg-white/40"}`}
-                      style={{ width: `${(method.total_usd / maxPayment) * 100}%` }}
-                    />
-                  </div>
+      {/* Cards mobile */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <p className="text-base-muted text-sm">Cargando productos...</p>
+        ) : filteredProducts.length === 0 ? (
+          <p className="text-base-muted text-sm">No hay productos que coincidan.</p>
+        ) : (
+          filteredProducts.map((product) => (
+            <Link
+              key={product.id}
+              to={`/products/${product.id}`}
+              className="block bg-base-card border border-base-border rounded-2xl p-4 hover:border-xylo-500/40 hover:shadow-soft transition shadow-card"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <p className="font-semibold text-xylo-500">{product.model}</p>
+                  <p className="text-xs text-base-muted">{product.storage} · {product.color}</p>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                {product.battery_health && (
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                    product.battery_health >= 85 ? "bg-green-50 text-green-600" :
+                    product.battery_health >= 70 ? "bg-yellow-50 text-yellow-600" :
+                    "bg-red-50 text-red-600"
+                  }`}>
+                    🔋 {product.battery_health}%
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-base-muted font-mono mb-3">{product.imei}</p>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-base-text">USD {product.suggested_sale_price_usd}</span>
+                {exchange && (
+                  <span className="text-xs text-base-muted">
+                    ARS {toArs(product.suggested_sale_price_usd, exchange.sell_rate_ars)}
+                  </span>
+                )}
+              </div>
+            </Link>
+          ))
+        )}
       </div>
     </div>
   );
 }
 
-function StatCard({ icon, label, value, sub, color, bg }) {
-  return (
-    <div className="bg-base-card border border-base-border rounded-xl p-5">
-      <div className={`inline-flex p-2 rounded-lg ${bg} ${color} mb-3`}>
-        {icon}
-      </div>
-      <p className="text-2xl font-semibold mb-1">{value}</p>
-      <p className="text-sm text-base-muted">{label}</p>
-      {sub && <p className="text-xs text-base-muted mt-1 opacity-60">{sub}</p>}
-    </div>
-  );
-}
-
-function fmt(value) {
-  return Number(value).toLocaleString("es-AR", { maximumFractionDigits: 0 });
-}
-
-function formatNumber(value) {
-  return Number(value).toLocaleString("es-AR");
+function toArs(usd, rate) {
+  return (Number(usd) * Number(rate)).toLocaleString("es-AR");
 }

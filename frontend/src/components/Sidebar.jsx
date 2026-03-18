@@ -5,6 +5,7 @@ import {
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import logo from "../assets/logo.png";
 
 const links = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -68,14 +69,12 @@ export default function Sidebar() {
     <>
       {/* ── DESKTOP sidebar ── */}
       <aside className="hidden md:flex w-64 bg-base-card border-r border-base-border min-h-screen p-4 flex-col">
-        <div className="mb-6 px-3 pt-2">
+        <div className="mb-6 px-2 pt-2">
           <div className="flex items-center gap-2.5 mb-0.5">
-            <div className="w-7 h-7 bg-xylo-500 rounded-lg flex items-center justify-center">
-              <span className="text-white text-xs font-bold">X</span>
-            </div>
+            <img src={logo} alt="Xylo" className="w-8 h-8 rounded-xl" />
             <h1 className="text-base font-semibold text-base-text tracking-tight">Xylo</h1>
           </div>
-          <p className="text-xs text-base-muted pl-9">Sistema interno</p>
+          <p className="text-xs text-base-muted pl-10">Sistema interno</p>
         </div>
         <NavItems />
       </aside>
@@ -83,9 +82,7 @@ export default function Sidebar() {
       {/* ── MOBILE top bar ── */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-base-card/90 backdrop-blur-xl border-b border-base-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-xylo-500 rounded-md flex items-center justify-center">
-            <span className="text-white text-xs font-bold">X</span>
-          </div>
+          <img src={logo} alt="Xylo" className="w-6 h-6 rounded-lg" />
           <h1 className="text-sm font-semibold text-base-text">Xylo</h1>
         </div>
         <button
@@ -101,11 +98,9 @@ export default function Sidebar() {
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
           <div className="relative w-64 bg-base-card border-r border-base-border h-full p-4 flex flex-col z-10">
-            <div className="flex items-center justify-between mb-6 px-3 pt-2">
+            <div className="flex items-center justify-between mb-6 px-2 pt-2">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 bg-xylo-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">X</span>
-                </div>
+                <img src={logo} alt="Xylo" className="w-7 h-7 rounded-xl" />
                 <h1 className="text-base font-semibold text-base-text">Xylo</h1>
               </div>
               <button

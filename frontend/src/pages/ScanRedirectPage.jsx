@@ -12,25 +12,23 @@ export default function ScanRedirectPage() {
       try {
         const response = await api.get(`/products/${id}`);
         const product = response.data;
-
         if (product.status === "in_stock") {
           navigate(`/products/${id}/sell`);
         } else {
           navigate(`/products/${id}`);
         }
       } catch (error) {
-        console.error("Error resolviendo QR:", error);
         setMessage("No se pudo abrir el producto.");
       }
     }
-
     resolveScan();
   }, [id, navigate]);
 
   return (
     <div className="min-h-screen bg-base-bg text-base-text flex items-center justify-center">
-      <div className="bg-base-card border border-base-border rounded-xl px-6 py-5">
-        {message}
+      <div className="bg-base-card border border-base-border rounded-2xl px-8 py-6 shadow-card flex items-center gap-3">
+        <div className="w-4 h-4 border-2 border-xylo-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-base-muted">{message}</p>
       </div>
     </div>
   );

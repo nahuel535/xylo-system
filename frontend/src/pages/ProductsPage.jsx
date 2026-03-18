@@ -54,14 +54,9 @@ export default function ProductsPage() {
   }
 
   function clearFilters() {
-    setSearch("");
-    setModelFilter("");
-    setCapacityFilter("");
-    setColorFilter("");
-    setConditionFilter("");
-    setMinPrice("");
-    setMaxPrice("");
-    setSortField(null);
+    setSearch(""); setModelFilter(""); setCapacityFilter("");
+    setColorFilter(""); setConditionFilter(""); setMinPrice("");
+    setMaxPrice(""); setSortField(null);
   }
 
   const filteredProducts = useMemo(() => {
@@ -73,7 +68,6 @@ export default function ProductsPage() {
         p.imei?.toLowerCase().includes(text) ||
         p.color?.toLowerCase().includes(text) ||
         p.storage?.toLowerCase().includes(text);
-
       return (
         matchesSearch &&
         (!modelFilter || p.model === modelFilter) &&
@@ -84,112 +78,79 @@ export default function ProductsPage() {
         (!maxPrice || Number(p.suggested_sale_price_usd) <= Number(maxPrice))
       );
     });
-
     if (sortField) {
       result = [...result].sort((a, b) => {
         const aVal = a[sortField] ?? "";
         const bVal = b[sortField] ?? "";
-        const cmp = typeof aVal === "number"
-          ? aVal - bVal
-          : String(aVal).localeCompare(String(bVal));
+        const cmp = typeof aVal === "number" ? aVal - bVal : String(aVal).localeCompare(String(bVal));
         return sortDir === "asc" ? cmp : -cmp;
       });
     }
-
     return result;
   }, [products, search, modelFilter, capacityFilter, colorFilter, conditionFilter, minPrice, maxPrice, sortField, sortDir]);
 
   const SortIcon = ({ field }) => {
     if (sortField !== field) return <ChevronsUpDown size={14} className="inline ml-1 opacity-30" />;
     return sortDir === "asc"
-      ? <ChevronUp size={14} className="inline ml-1 text-xylo-400" />
-      : <ChevronDown size={14} className="inline ml-1 text-xylo-400" />;
+      ? <ChevronUp size={14} className="inline ml-1 text-xylo-500" />
+      : <ChevronDown size={14} className="inline ml-1 text-xylo-500" />;
   };
 
   const ThSortable = ({ field, children }) => (
     <th
-      className="text-left px-5 py-4 cursor-pointer select-none hover:text-white transition"
+      className="text-left px-5 py-3.5 text-xs font-medium text-base-muted uppercase tracking-wide cursor-pointer select-none hover:text-base-text transition"
       onClick={() => handleSort(field)}
     >
       {children}<SortIcon field={field} />
     </th>
   );
 
+  const inputClass = "w-full bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition";
+
   return (
     <div>
       <Header title="Stock" subtitle="Listado de equipos disponibles" />
 
       {/* Filtros */}
-      <div className="bg-base-card border border-base-border rounded-xl p-5 mb-5">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="bg-base-card border border-base-border rounded-2xl p-5 mb-5 shadow-card">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
           <input
             type="text"
             placeholder="Buscar por modelo, IMEI, color..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none sm:col-span-2 xl:col-span-1"
+            className={`${inputClass} sm:col-span-2 xl:col-span-1`}
           />
-
-          <select
-            value={modelFilter}
-            onChange={(e) => setModelFilter(e.target.value)}
-            className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none"
-          >
+          <select value={modelFilter} onChange={(e) => setModelFilter(e.target.value)} className={inputClass}>
             <option value="">Todos los modelos</option>
-            {models.map((m) => <option key={m} value={m} className="text-black">{m}</option>)}
+            {models.map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
-
-          <select
-            value={capacityFilter}
-            onChange={(e) => setCapacityFilter(e.target.value)}
-            className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none"
-          >
+          <select value={capacityFilter} onChange={(e) => setCapacityFilter(e.target.value)} className={inputClass}>
             <option value="">Todas las capacidades</option>
-            {capacities.map((c) => <option key={c} value={c} className="text-black">{c}</option>)}
+            {capacities.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
-
-          <select
-            value={colorFilter}
-            onChange={(e) => setColorFilter(e.target.value)}
-            className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none"
-          >
+          <select value={colorFilter} onChange={(e) => setColorFilter(e.target.value)} className={inputClass}>
             <option value="">Todos los colores</option>
-            {colors.map((c) => <option key={c} value={c} className="text-black">{c}</option>)}
+            {colors.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
-
-          <select
-            value={conditionFilter}
-            onChange={(e) => setConditionFilter(e.target.value)}
-            className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none"
-          >
+          <select value={conditionFilter} onChange={(e) => setConditionFilter(e.target.value)} className={inputClass}>
             <option value="">Todas las condiciones</option>
-            {conditions.map((c) => <option key={c} value={c} className="text-black">{c}</option>)}
+            {conditions.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
-
           <div className="flex gap-2">
-            <input
-              type="number"
-              placeholder="Precio min USD"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none"
-            />
-            <input
-              type="number"
-              placeholder="Precio max USD"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none"
-            />
+            <input type="number" placeholder="Min USD" value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className={inputClass} />
+            <input type="number" placeholder="Max USD" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className={inputClass} />
           </div>
         </div>
 
-        <div className="mt-4 flex items-center gap-3 flex-wrap">
+        <div className="mt-3 flex items-center gap-3 flex-wrap">
           <button
             onClick={clearFilters}
-            className="bg-white/5 hover:bg-white/10 transition rounded-xl px-4 py-2 text-sm"
+            className="bg-base-subtle hover:bg-base-border transition rounded-xl px-4 py-2 text-sm text-base-muted"
           >
-            Limpiar filtros {activeFilters > 0 && <span className="ml-1 bg-xylo-500 text-white text-xs px-1.5 py-0.5 rounded-full">{activeFilters}</span>}
+            Limpiar filtros {activeFilters > 0 && (
+              <span className="ml-1 bg-xylo-500 text-white text-xs px-1.5 py-0.5 rounded-full">{activeFilters}</span>
+            )}
           </button>
           <span className="text-sm text-base-muted">
             {filteredProducts.length} resultado{filteredProducts.length !== 1 ? "s" : ""}
@@ -198,54 +159,58 @@ export default function ProductsPage() {
       </div>
 
       {/* Tabla desktop */}
-      <div className="hidden md:block bg-base-card border border-base-border rounded-xl overflow-hidden">
+      <div className="hidden md:block bg-base-card border border-base-border rounded-2xl overflow-hidden shadow-card">
         <table className="w-full text-sm">
-          <thead className="bg-white/5 text-base-muted">
+          <thead className="bg-base-subtle border-b border-base-border">
             <tr>
               <ThSortable field="model">Modelo</ThSortable>
               <ThSortable field="storage">Capacidad</ThSortable>
               <ThSortable field="color">Color</ThSortable>
-              <th className="text-left px-5 py-4">IMEI</th>
+              <th className="text-left px-5 py-3.5 text-xs font-medium text-base-muted uppercase tracking-wide">IMEI</th>
               <ThSortable field="battery_health">Batería</ThSortable>
               <ThSortable field="cosmetic_condition">Estado estético</ThSortable>
               <ThSortable field="condition_type">Condición</ThSortable>
               <ThSortable field="purchase_price_usd">Costo USD</ThSortable>
               <ThSortable field="suggested_sale_price_usd">Venta USD</ThSortable>
-              <th className="text-left px-5 py-4">Venta ARS</th>
+              <th className="text-left px-5 py-3.5 text-xs font-medium text-base-muted uppercase tracking-wide">Venta ARS</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="10" className="px-5 py-4 text-base-muted">Cargando productos...</td></tr>
+              <tr><td colSpan="10" className="px-5 py-6 text-base-muted text-sm">Cargando productos...</td></tr>
             ) : filteredProducts.length === 0 ? (
-              <tr><td colSpan="10" className="px-5 py-4 text-base-muted">No hay productos que coincidan.</td></tr>
+              <tr><td colSpan="10" className="px-5 py-6 text-base-muted text-sm">No hay productos que coincidan.</td></tr>
             ) : (
               filteredProducts.map((product) => (
-                <tr key={product.id} className="border-t border-white/5 hover:bg-white/[0.02] transition">
-                  <td className="px-5 py-4">
-                    <Link to={`/products/${product.id}`} className="text-xylo-300 hover:underline">
+                <tr key={product.id} className="border-t border-base-border hover:bg-base-subtle/50 transition">
+                  <td className="px-5 py-3.5">
+                    <Link to={`/products/${product.id}`} className="text-xylo-500 hover:text-xylo-600 hover:underline font-medium">
                       {product.model}
                     </Link>
                   </td>
-                  <td className="px-5 py-4">{product.storage}</td>
-                  <td className="px-5 py-4">{product.color}</td>
-                  <td className="px-5 py-4 font-mono text-xs">{product.imei}</td>
-                  <td className="px-5 py-4">
+                  <td className="px-5 py-3.5 text-base-text">{product.storage}</td>
+                  <td className="px-5 py-3.5 text-base-text">{product.color}</td>
+                  <td className="px-5 py-3.5 font-mono text-xs text-base-muted">{product.imei}</td>
+                  <td className="px-5 py-3.5">
                     {product.battery_health ? (
-                      <span className={`text-xs font-medium ${product.battery_health >= 85 ? "text-green-400" : product.battery_health >= 70 ? "text-yellow-400" : "text-red-400"}`}>
+                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                        product.battery_health >= 85 ? "bg-green-50 text-green-600" :
+                        product.battery_health >= 70 ? "bg-yellow-50 text-yellow-600" :
+                        "bg-red-50 text-red-600"
+                      }`}>
                         {product.battery_health}%
                       </span>
                     ) : "-"}
                   </td>
-                  <td className="px-5 py-4 text-xs">{product.cosmetic_condition || "-"}</td>
-                  <td className="px-5 py-4">
-                    <span className="px-2 py-1 rounded-full text-xs bg-xylo-500/20 text-xylo-300">
+                  <td className="px-5 py-3.5 text-sm text-base-text">{product.cosmetic_condition || "-"}</td>
+                  <td className="px-5 py-3.5">
+                    <span className="px-2 py-1 rounded-full text-xs bg-xylo-50 text-xylo-600 font-medium">
                       {product.condition_type || "-"}
                     </span>
                   </td>
-                  <td className="px-5 py-4">USD {product.purchase_price_usd}</td>
-                  <td className="px-5 py-4">USD {product.suggested_sale_price_usd}</td>
-                  <td className="px-5 py-4">
+                  <td className="px-5 py-3.5 text-base-text">USD {product.purchase_price_usd}</td>
+                  <td className="px-5 py-3.5 text-base-text font-medium">USD {product.suggested_sale_price_usd}</td>
+                  <td className="px-5 py-3.5 text-base-muted">
                     {exchange ? `ARS ${toArs(product.suggested_sale_price_usd, exchange.sell_rate_ars)}` : "-"}
                   </td>
                 </tr>
@@ -266,22 +231,26 @@ export default function ProductsPage() {
             <Link
               key={product.id}
               to={`/products/${product.id}`}
-              className="block bg-base-card border border-base-border rounded-xl p-4 hover:border-xylo-500/50 transition"
+              className="block bg-base-card border border-base-border rounded-2xl p-4 hover:border-xylo-500/40 hover:shadow-soft transition shadow-card"
             >
               <div className="flex items-start justify-between mb-2">
                 <div>
-                  <p className="font-semibold text-xylo-300">{product.model}</p>
+                  <p className="font-semibold text-xylo-500">{product.model}</p>
                   <p className="text-xs text-base-muted">{product.storage} · {product.color}</p>
                 </div>
                 {product.battery_health && (
-                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${product.battery_health >= 85 ? "bg-green-500/20 text-green-400" : product.battery_health >= 70 ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"}`}>
+                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                    product.battery_health >= 85 ? "bg-green-50 text-green-600" :
+                    product.battery_health >= 70 ? "bg-yellow-50 text-yellow-600" :
+                    "bg-red-50 text-red-600"
+                  }`}>
                     🔋 {product.battery_health}%
                   </span>
                 )}
               </div>
               <p className="text-xs text-base-muted font-mono mb-3">{product.imei}</p>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">USD {product.suggested_sale_price_usd}</span>
+                <span className="text-sm font-semibold text-base-text">USD {product.suggested_sale_price_usd}</span>
                 {exchange && (
                   <span className="text-xs text-base-muted">
                     ARS {toArs(product.suggested_sale_price_usd, exchange.sell_rate_ars)}

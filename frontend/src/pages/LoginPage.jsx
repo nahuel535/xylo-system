@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import logo from "../assets/logo.png";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -26,10 +27,11 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-base-bg text-base-text flex items-center justify-center p-6">
-      <div className="bg-base-card border border-base-border rounded-2xl p-8 w-full max-w-sm">
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold">Xylo</h1>
-          <p className="text-base-muted text-sm mt-1">Sistema interno — iniciá sesión</p>
+      <div className="bg-base-card border border-base-border rounded-3xl p-8 w-full max-w-sm shadow-elevated">
+        <div className="flex flex-col items-center mb-8">
+          <img src={logo} alt="Xylo" className="w-16 h-16 rounded-2xl mb-4 shadow-soft" />
+          <h1 className="text-2xl font-semibold text-base-text tracking-tight">Xylo</h1>
+          <p className="text-base-muted text-sm mt-1">Sistema interno</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -40,11 +42,10 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none"
+              className="w-full bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
               placeholder="tu@email.com"
             />
           </div>
-
           <div>
             <p className="text-sm text-base-muted mb-2">Contraseña</p>
             <input
@@ -52,17 +53,17 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full bg-white/5 border border-base-border rounded-xl px-4 py-3 text-white outline-none"
+              className="w-full bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
               placeholder="••••••••"
             />
           </div>
-
-          {error && <p className="text-sm text-red-400">{error}</p>}
-
+          {error && (
+            <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{error}</p>
+          )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-xylo-500 hover:bg-xylo-400 disabled:opacity-60 transition text-white rounded-xl px-4 py-3 font-medium"
+            className="w-full bg-xylo-500 hover:bg-xylo-600 disabled:opacity-60 transition text-white rounded-xl px-4 py-3 font-medium shadow-sm"
           >
             {loading ? "Ingresando..." : "Ingresar"}
           </button>

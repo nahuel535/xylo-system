@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../services/api";
+import logo from "../assets/logo.png";
 
 export default function ProductLabelPage() {
   const { id } = useParams();
@@ -18,7 +19,6 @@ export default function ProductLabelPage() {
         setLoading(false);
       }
     }
-
     loadProduct();
   }, [id]);
 
@@ -39,11 +39,17 @@ export default function ProductLabelPage() {
 
         <div className="bg-white rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.08)] border border-black/5 overflow-hidden print:shadow-none print:border print:rounded-none">
           <div className="px-10 pt-10 pb-8">
+
+            {/* Header — logo + modelo */}
             <div className="flex items-start justify-between gap-8">
               <div>
-                <p className="text-[12px] tracking-[0.22em] uppercase text-black/45 mb-3">
-                  Xylo Selection
-                </p>
+                {/* Logo + marca */}
+                <div className="flex items-center gap-2 mb-4">
+                  <img src={logo} alt="Xylo" className="w-7 h-7 rounded-lg" />
+                  <p className="text-[12px] tracking-[0.22em] uppercase text-black/45">
+                    Xylo Selection
+                  </p>
+                </div>
 
                 <h1 className="text-[42px] leading-[1.02] font-semibold tracking-[-0.03em]">
                   {product.model || "iPhone"}
@@ -54,23 +60,24 @@ export default function ProductLabelPage() {
                 </p>
               </div>
 
+              {/* Precio — espacio para escribir con fibra */}
               <div className="shrink-0 rounded-[24px] border border-black/8 bg-[#fafafa] px-6 py-5 min-w-[190px] text-right">
                 <p className="text-[12px] uppercase tracking-[0.18em] text-black/40 mb-2">
                   Precio
                 </p>
-                <p className="text-[34px] leading-none font-semibold tracking-[-0.03em]">
-                  USD {formatPrice(product.suggested_sale_price_usd)}
-                </p>
+                <p className="text-[13px] text-black/40 uppercase tracking-widest mb-1">USD</p>
+                {/* Línea para escribir el precio */}
+                <div className="border-b-2 border-black/20 h-10 w-full" />
               </div>
             </div>
 
+            {/* Specs — sin IMEI */}
             <div className="mt-10 grid grid-cols-2 gap-x-10 gap-y-6">
               <Spec label="Batería" value={product.battery_health ? `${product.battery_health}%` : "-"} />
               <Spec label="Condición" value={product.condition_type || "-"} />
               <Spec label="Estado estético" value={product.cosmetic_condition || "-"} />
               <Spec label="Estado funcional" value={product.functional_condition || "-"} />
               <Spec label="Tipo de SIM" value={product.sim_type || "-"} />
-              <Spec label="IMEI" value={product.imei || "-"} mono />
             </div>
 
             {product.notes && (
@@ -85,6 +92,7 @@ export default function ProductLabelPage() {
             )}
           </div>
 
+          {/* Footer QR */}
           <div className="border-t border-black/6 px-10 py-8 flex items-center justify-between gap-8">
             <div>
               <p className="text-[12px] uppercase tracking-[0.18em] text-black/40 mb-3">
@@ -97,7 +105,7 @@ export default function ProductLabelPage() {
 
             <div className="shrink-0 rounded-[28px] border border-black/8 bg-white p-4">
               <img
-                src={`http://192.168.0.224:8000/products/${product.id}/qr`}
+                src={`https://xylo-system-production.up.railway.app/products/${product.id}/qr`}
                 alt="QR producto"
                 className="w-40 h-40 object-contain"
               />
@@ -112,7 +120,6 @@ export default function ProductLabelPage() {
             size: A4;
             margin: 14mm;
           }
-
           body {
             background: white !important;
           }
@@ -128,18 +135,9 @@ function Spec({ label, value, mono = false }) {
       <p className="text-[12px] uppercase tracking-[0.16em] text-black/40 mb-2">
         {label}
       </p>
-      <p
-        className={`text-[18px] leading-6 tracking-[-0.01em] text-black/85 ${
-          mono ? "font-mono text-[15px]" : "font-medium"
-        }`}
-      >
+      <p className={`text-[18px] leading-6 tracking-[-0.01em] text-black/85 ${mono ? "font-mono text-[15px]" : "font-medium"}`}>
         {value}
       </p>
     </div>
   );
-}
-
-function formatPrice(value) {
-  if (value === null || value === undefined || value === "") return "-";
-  return Number(value).toLocaleString("en-US");
 }
