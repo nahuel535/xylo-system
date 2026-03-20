@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(\"c:/Users/Casaa/Desktop/xylo-system/backend/app/schemas/dashboard.py\":*)"
+      "Bash(\"c:/Users/Casaa/Desktop/xylo-system/backend/app/schemas/dashboard.py\":*)",
+      "Read(//c/Users/Casaa/.claude/skills/ui-ux-pro-max/**)",
+      "Bash(python scripts/search.py \"premium used iphones ecommerce reseller storefront dark luxury\" --design-system -p \"Xylo Store\" -f markdown)",
+      "Bash(python skills/ui-ux-pro-max/scripts/search.py \"luxury premium apple ecommerce iphone reseller store dark\" --design-system -p \"Xylo Store\" -f markdown)",
+      "Bash(python \"C:/Users/Casaa/.claude/skills/ui-ux-pro-max/scripts/search.py\" \"luxury premium apple ecommerce iphone reseller store dark\" --design-system -p \"Xylo Store\" -f markdown)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

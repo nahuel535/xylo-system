@@ -30,7 +30,6 @@ export default function StoreProductPage() {
       }
     }
     load();
-
     const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
@@ -48,16 +47,34 @@ export default function StoreProductPage() {
 
   if (loading) return (
     <div style={{ fontFamily: FONT, background: "#fff", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <p style={{ color: "#aaa", fontSize: "17px" }}>Cargando...</p>
+      <div style={{ textAlign: "center" }}>
+        <div style={{
+          width: "40px", height: "40px", border: `2px solid ${ACCENT}30`,
+          borderTop: `2px solid ${ACCENT}`,
+          borderRadius: "50%", margin: "0 auto 16px",
+          animation: "spin 0.8s linear infinite",
+        }} />
+        <p style={{ color: "#aaa", fontSize: "15px" }}>Cargando...</p>
+      </div>
     </div>
   );
 
   if (!product || product.status !== "in_stock") return (
-    <div style={{ fontFamily: FONT, background: "#fff", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "12px", textAlign: "center", padding: "24px" }}>
-      <p style={{ fontSize: "52px" }}>📭</p>
-      <p style={{ fontSize: "22px", fontWeight: 600, color: "#1d1d1f" }}>Producto no disponible</p>
-      <p style={{ fontSize: "15px", color: "#6e6e73", marginBottom: "8px" }}>Este equipo ya fue vendido o no está disponible.</p>
-      <Link to="/store" style={{ color: ACCENT, fontSize: "15px", textDecoration: "none", fontWeight: 500 }}>← Ver stock disponible</Link>
+    <div style={{
+      fontFamily: FONT, background: "#fff", minHeight: "100vh",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      flexDirection: "column", gap: "12px", textAlign: "center", padding: "24px",
+    }}>
+      <div style={{ opacity: 0.25, marginBottom: "8px" }}>
+        <InboxSVG />
+      </div>
+      <p style={{ fontSize: "22px", fontWeight: 700, color: "#1d1d1f", letterSpacing: "-0.03em" }}>Producto no disponible</p>
+      <p style={{ fontSize: "15px", color: "#6e6e73", marginBottom: "8px" }}>
+        Este equipo ya fue vendido o no está disponible.
+      </p>
+      <Link to="/store" style={{ color: ACCENT, fontSize: "15px", textDecoration: "none", fontWeight: 500 }}>
+        ← Ver stock disponible
+      </Link>
     </div>
   );
 
@@ -91,7 +108,7 @@ export default function StoreProductPage() {
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
         height: "56px",
-        background: scrolled ? "rgba(255,255,255,0.88)" : "transparent",
+        background: scrolled ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0)",
         backdropFilter: scrolled ? "blur(24px) saturate(180%)" : "none",
         WebkitBackdropFilter: scrolled ? "blur(24px) saturate(180%)" : "none",
         borderBottom: scrolled ? "1px solid rgba(0,0,0,0.06)" : "none",
@@ -99,19 +116,30 @@ export default function StoreProductPage() {
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "0 32px",
       }}>
-        <Link to="/store" style={{ fontSize: "15px", color: ACCENT, textDecoration: "none", fontWeight: 500, display: "flex", alignItems: "center", gap: "4px" }}>
-          ← Stock
+        <Link
+          to="/store"
+          style={{
+            display: "flex", alignItems: "center", gap: "6px",
+            color: ACCENT, textDecoration: "none",
+            fontSize: "14px", fontWeight: 500,
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+          </svg>
+          Stock
         </Link>
         <XyloLogo size={22} />
         <div style={{ width: "60px" }} />
       </nav>
 
-      {/* Sticky CTA — aparece cuando el precio desaparece del scroll */}
+      {/* Sticky CTA bar */}
       <div style={{
         position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 150,
-        padding: "16px 24px",
-        background: "rgba(255,255,255,0.92)",
+        padding: "14px 24px",
+        background: "rgba(255,255,255,0.94)",
         backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
         borderTop: "1px solid rgba(0,0,0,0.06)",
         display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px",
         transform: priceVisible ? "translateY(100%)" : "translateY(0)",
@@ -132,8 +160,11 @@ export default function StoreProductPage() {
             background: "#25d366", color: "white",
             padding: "12px 24px", borderRadius: "980px",
             fontSize: "15px", fontWeight: 600, textDecoration: "none",
-            whiteSpace: "nowrap",
+            whiteSpace: "nowrap", cursor: "pointer",
+            transition: "opacity 0.2s",
           }}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = "0.88"}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
         >
           <WhatsAppIcon size={17} />
           Me interesa
@@ -148,33 +179,47 @@ export default function StoreProductPage() {
         display: "flex", alignItems: "center", justifyContent: "center",
         overflow: "hidden",
         paddingTop: "56px",
+        position: "relative",
       }}>
         {product.photo_url ? (
           <img
             src={product.photo_url}
             alt={product.model}
-            style={{
-              width: "100%", maxHeight: "560px",
-              objectFit: "cover",
-            }}
+            style={{ width: "100%", maxHeight: "560px", objectFit: "cover" }}
           />
         ) : (
           <div style={{
-            width: "120px", height: "120px", background: "white",
-            borderRadius: "28px", display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "56px", boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-            margin: "80px 0",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: "12px",
+            padding: "80px 0",
           }}>
-            📱
+            <div style={{
+              width: "100px", height: "100px", background: "white",
+              borderRadius: "28px", display: "flex", alignItems: "center", justifyContent: "center",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
+            }}>
+              <PhoneSVG />
+            </div>
+            <p style={{ fontSize: "13px", color: "#aaa" }}>Sin foto disponible</p>
           </div>
         )}
+        {/* Badge disponible */}
+        <div style={{
+          position: "absolute", top: "72px", right: "20px",
+          background: "rgba(52,199,89,0.12)",
+          border: "1px solid rgba(52,199,89,0.2)",
+          borderRadius: "980px", padding: "5px 12px",
+          display: "flex", alignItems: "center", gap: "6px",
+        }}>
+          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#34c759" }} />
+          <span style={{ fontSize: "12px", fontWeight: 600, color: "#34c759" }}>Disponible</span>
+        </div>
       </div>
 
       {/* Contenido */}
-      <div style={{ maxWidth: "680px", margin: "0 auto", padding: "0 24px 140px" }}>
+      <div style={{ maxWidth: "680px", margin: "0 auto", padding: "0 24px 160px" }}>
 
-        {/* Título */}
-        <div style={{ padding: "48px 0 40px", borderBottom: "1px solid #f0f0f0" }}>
+        {/* Título y subtítulo */}
+        <div style={{ padding: "48px 0 36px", borderBottom: "1px solid #f0f0f0" }}>
           <h1 style={{
             fontSize: "clamp(32px, 6vw, 48px)",
             fontWeight: 700, letterSpacing: "-0.04em",
@@ -182,14 +227,17 @@ export default function StoreProductPage() {
           }}>
             {product.model}
           </h1>
-          <p style={{ fontSize: "19px", color: "#6e6e73" }}>
+          <p style={{ fontSize: "18px", color: "#6e6e73" }}>
             {[product.storage, product.color].filter(Boolean).join(" · ")}
           </p>
         </div>
 
         {/* Precio */}
-        <div ref={priceRef} style={{ padding: "40px 0", borderBottom: "1px solid #f0f0f0" }}>
-          <p style={{ fontSize: "13px", fontWeight: 500, color: "#aaa", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "8px" }}>
+        <div ref={priceRef} style={{ padding: "36px 0", borderBottom: "1px solid #f0f0f0" }}>
+          <p style={{
+            fontSize: "11px", fontWeight: 600, color: "#aaa",
+            letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "10px",
+          }}>
             Precio
           </p>
           <p style={{
@@ -200,7 +248,7 @@ export default function StoreProductPage() {
             USD {Number(product.suggested_sale_price_usd).toLocaleString("es-AR")}
           </p>
           {ars && (
-            <p style={{ fontSize: "20px", color: "#6e6e73", fontWeight: 400 }}>
+            <p style={{ fontSize: "19px", color: "#6e6e73", fontWeight: 400 }}>
               ARS {ars}
             </p>
           )}
@@ -209,14 +257,18 @@ export default function StoreProductPage() {
         {/* Batería */}
         {product.battery_health && (
           <div style={{ padding: "32px 0", borderBottom: "1px solid #f0f0f0" }}>
-            <p style={{ fontSize: "13px", fontWeight: 500, color: "#aaa", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "20px" }}>
+            <p style={{
+              fontSize: "11px", fontWeight: 600, color: "#aaa",
+              letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "20px",
+            }}>
               Salud de batería
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-              <div style={{ flex: 1, height: "8px", background: "#f0f0f0", borderRadius: "4px", overflow: "hidden" }}>
+              <div style={{ flex: 1, height: "6px", background: "#f0f0f0", borderRadius: "3px", overflow: "hidden" }}>
                 <div style={{
                   width: `${product.battery_health}%`, height: "100%",
-                  background: batteryColor, borderRadius: "4px",
+                  background: `linear-gradient(90deg, ${batteryColor}cc, ${batteryColor})`,
+                  borderRadius: "3px",
                   transition: "width 1s ease",
                 }} />
               </div>
@@ -232,14 +284,17 @@ export default function StoreProductPage() {
 
         {/* Especificaciones */}
         <div style={{ padding: "32px 0", borderBottom: "1px solid #f0f0f0" }}>
-          <p style={{ fontSize: "13px", fontWeight: 500, color: "#aaa", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "20px" }}>
+          <p style={{
+            fontSize: "11px", fontWeight: 600, color: "#aaa",
+            letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "20px",
+          }}>
             Especificaciones
           </p>
-          <div style={{ background: "#f5f5f7", borderRadius: "16px", overflow: "hidden" }}>
+          <div style={{ background: "#f9f9f9", borderRadius: "16px", overflow: "hidden" }}>
             {specs.map((spec, i) => (
               <div key={spec.label} style={{
                 display: "flex", justifyContent: "space-between", alignItems: "center",
-                padding: "14px 20px",
+                padding: "13px 20px",
                 borderTop: i > 0 ? "1px solid rgba(0,0,0,0.05)" : "none",
               }}>
                 <span style={{ fontSize: "15px", color: "#6e6e73" }}>{spec.label}</span>
@@ -252,10 +307,13 @@ export default function StoreProductPage() {
         {/* Notas */}
         {product.notes && (
           <div style={{ padding: "32px 0", borderBottom: "1px solid #f0f0f0" }}>
-            <p style={{ fontSize: "13px", fontWeight: 500, color: "#aaa", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "16px" }}>
+            <p style={{
+              fontSize: "11px", fontWeight: 600, color: "#aaa",
+              letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "16px",
+            }}>
               Observaciones
             </p>
-            <p style={{ fontSize: "16px", color: "#1d1d1f", lineHeight: 1.7 }}>{product.notes}</p>
+            <p style={{ fontSize: "16px", color: "#1d1d1f", lineHeight: 1.75 }}>{product.notes}</p>
           </div>
         )}
 
@@ -269,36 +327,63 @@ export default function StoreProductPage() {
               display: "flex", alignItems: "center", justifyContent: "center",
               gap: "10px", background: "#25d366", color: "white",
               padding: "20px 32px", borderRadius: "16px",
-              fontSize: "18px", fontWeight: 600, textDecoration: "none",
-              boxShadow: "0 8px 32px rgba(37,211,102,0.3)",
-              marginBottom: "12px",
+              fontSize: "17px", fontWeight: 600, textDecoration: "none",
+              boxShadow: "0 8px 32px rgba(37,211,102,0.28)",
+              marginBottom: "12px", cursor: "pointer",
               transition: "opacity 0.2s",
             }}
             onMouseEnter={(e) => e.currentTarget.style.opacity = "0.9"}
             onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
           >
-            <WhatsAppIcon size={22} />
+            <WhatsAppIcon size={21} />
             Me interesa este iPhone
           </a>
           <Link
             to="/store"
             style={{
-              display: "block", textAlign: "center",
-              padding: "16px", borderRadius: "16px",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+              padding: "16px",
+              borderRadius: "16px",
               fontSize: "15px", color: "#6e6e73", textDecoration: "none",
               transition: "color 0.2s",
+              cursor: "pointer",
             }}
             onMouseEnter={(e) => e.currentTarget.style.color = "#1d1d1f"}
             onMouseLeave={(e) => e.currentTarget.style.color = "#6e6e73"}
           >
-            ← Ver más equipos
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+            </svg>
+            Ver más equipos
           </Link>
         </div>
       </div>
 
       <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
         * { -webkit-font-smoothing: antialiased; }
+        @media (max-width: 480px) {
+          nav { padding: 0 16px !important; }
+        }
       `}</style>
     </div>
+  );
+}
+
+function PhoneSVG() {
+  return (
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#c8c8cc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+      <circle cx="12" cy="17" r="1" fill="#c8c8cc" stroke="none" />
+    </svg>
+  );
+}
+
+function InboxSVG() {
+  return (
+    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#aaa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+      <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    </svg>
   );
 }

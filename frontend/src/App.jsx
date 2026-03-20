@@ -42,8 +42,6 @@ function Layout() {
           <Route path="/products/:id/sell" element={<ProtectedRoute><SellProductPage /></ProtectedRoute>} />
           <Route path="/products/:id/label" element={<ProtectedRoute><ProductLabelPage /></ProtectedRoute>} />
           <Route path="/scan/:id" element={<ScanRedirectPage />} />
-          <Route path="/store" element={<StorePage />} />
-          <Route path="/store/:id" element={<StoreProductPage />} />
           <Route path="/users" element={<ProtectedRoute requireAdmin><UsersPage /></ProtectedRoute>} />
 
         </Routes>
@@ -58,6 +56,8 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/store" element={<StorePage />} />
+          <Route path="/store/:id" element={<StoreProductPage />} />
           <Route path="/*" element={<Layout />} />
         </Routes>
       </AuthProvider>

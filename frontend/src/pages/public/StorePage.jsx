@@ -54,7 +54,7 @@ export default function StorePage() {
       <nav style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
         height: "56px",
-        background: scrolled ? "rgba(255,255,255,0.88)" : "transparent",
+        background: scrolled ? "rgba(255,255,255,0.90)" : "transparent",
         backdropFilter: scrolled ? "blur(24px) saturate(180%)" : "none",
         WebkitBackdropFilter: scrolled ? "blur(24px) saturate(180%)" : "none",
         borderBottom: scrolled ? "1px solid rgba(0,0,0,0.06)" : "none",
@@ -64,7 +64,11 @@ export default function StorePage() {
       }}>
         <Link to="/store" style={{ display: "flex", alignItems: "center", gap: "8px", textDecoration: "none" }}>
           <XyloLogo size={22} />
-          <span style={{ fontSize: "17px", fontWeight: 700, color: "#1d1d1f", letterSpacing: "-0.4px" }}>Xylo</span>
+          <span style={{
+            fontSize: "17px", fontWeight: 700, letterSpacing: "-0.4px",
+            color: scrolled ? "#1d1d1f" : "white",
+            transition: "color 0.4s",
+          }}>Xylo</span>
         </Link>
 
         <a
@@ -73,61 +77,84 @@ export default function StorePage() {
           rel="noreferrer"
           style={{
             display: "flex", alignItems: "center", gap: "7px",
-            background: ACCENT, color: "white",
-            padding: "8px 18px", borderRadius: "980px",
+            background: scrolled ? ACCENT : "rgba(255,255,255,0.12)",
+            border: scrolled ? "none" : "1px solid rgba(255,255,255,0.2)",
+            color: "white",
+            padding: "7px 16px", borderRadius: "980px",
             fontSize: "14px", fontWeight: 500, textDecoration: "none",
-            transition: "opacity 0.2s",
+            transition: "all 0.3s", cursor: "pointer",
+            backdropFilter: "blur(8px)",
           }}
           onMouseEnter={(e) => e.currentTarget.style.opacity = "0.85"}
           onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
         >
-          <WhatsAppIcon size={15} />
+          <WhatsAppIcon size={14} />
           Consultar
         </a>
       </nav>
 
-      {/* Hero */}
+      {/* Hero — Dark */}
       <section style={{
         minHeight: "100vh",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
         textAlign: "center",
         padding: "120px 24px 80px",
-        background: "linear-gradient(180deg, #f5f5f7 0%, #fff 60%)",
+        background: "linear-gradient(155deg, #0d1512 0%, #0f1110 50%, #0a0d0c 100%)",
         position: "relative", overflow: "hidden",
       }}>
-        {/* Orb decorativo */}
+        {/* Orb verde */}
         <div style={{
           position: "absolute", top: "10%", left: "50%",
           transform: "translateX(-50%)",
-          width: "700px", height: "700px",
-          background: `radial-gradient(ellipse at center, ${ACCENT}18 0%, transparent 70%)`,
+          width: "900px", height: "700px",
+          background: `radial-gradient(ellipse at center, ${ACCENT}1a 0%, ${ACCENT}08 40%, transparent 70%)`,
+          pointerEvents: "none",
+        }} />
+        {/* Grid decorativa */}
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: `
+            linear-gradient(rgba(74,157,127,0.035) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(74,157,127,0.035) 1px, transparent 1px)
+          `,
+          backgroundSize: "64px 64px",
           pointerEvents: "none",
         }} />
 
         <FadeIn delay={0}>
-          <p style={{
-            fontSize: "13px", fontWeight: 600, color: ACCENT,
-            letterSpacing: "0.14em", textTransform: "uppercase",
-            marginBottom: "20px",
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: "8px",
+            background: "rgba(74,157,127,0.1)",
+            border: "1px solid rgba(74,157,127,0.2)",
+            borderRadius: "980px",
+            padding: "6px 16px",
+            marginBottom: "32px",
           }}>
-            Stock disponible · {products.length} equipos
-          </p>
+            <div style={{
+              width: "6px", height: "6px", borderRadius: "50%",
+              background: ACCENT,
+              boxShadow: `0 0 8px ${ACCENT}`,
+            }} />
+            <span style={{ fontSize: "13px", fontWeight: 500, color: ACCENT, letterSpacing: "0.05em" }}>
+              {products.length} equipos en stock
+            </span>
+          </div>
         </FadeIn>
 
         <FadeIn delay={80}>
           <h1 style={{
-            fontSize: "clamp(52px, 8vw, 88px)",
+            fontSize: "clamp(56px, 9vw, 100px)",
             fontWeight: 700,
             letterSpacing: "-0.04em",
-            lineHeight: 1,
-            color: "#1d1d1f",
-            marginBottom: "24px",
+            lineHeight: 0.95,
+            color: "white",
+            marginBottom: "28px",
           }}>
             iPhones
             <br />
             <span style={{
-              background: `linear-gradient(135deg, ${ACCENT}, #2d7a60)`,
+              background: `linear-gradient(135deg, ${ACCENT} 0%, #2d8a65 60%)`,
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -139,11 +166,11 @@ export default function StorePage() {
 
         <FadeIn delay={160}>
           <p style={{
-            fontSize: "clamp(17px, 2.5vw, 21px)",
-            color: "#6e6e73",
-            lineHeight: 1.6,
-            maxWidth: "500px",
-            marginBottom: "40px",
+            fontSize: "clamp(16px, 2.5vw, 20px)",
+            color: "rgba(255,255,255,0.45)",
+            lineHeight: 1.65,
+            maxWidth: "460px",
+            marginBottom: "48px",
           }}>
             Equipos seleccionados, revisados y listos para usar.
             <br />Precio justo, sin sorpresas.
@@ -155,12 +182,12 @@ export default function StorePage() {
             <a
               href="#stock"
               style={{
-                background: "#1d1d1f", color: "white",
+                background: "white", color: "#1d1d1f",
                 padding: "14px 32px", borderRadius: "980px",
-                fontSize: "16px", fontWeight: 500, textDecoration: "none",
-                transition: "opacity 0.2s",
+                fontSize: "15px", fontWeight: 600, textDecoration: "none",
+                transition: "opacity 0.2s", cursor: "pointer",
               }}
-              onMouseEnter={(e) => e.currentTarget.style.opacity = "0.8"}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = "0.88"}
               onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
             >
               Ver stock disponible
@@ -170,15 +197,19 @@ export default function StorePage() {
               target="_blank"
               rel="noreferrer"
               style={{
-                background: "white", color: "#1d1d1f",
-                border: "1.5px solid rgba(0,0,0,0.12)",
-                padding: "14px 32px", borderRadius: "980px",
-                fontSize: "16px", fontWeight: 500, textDecoration: "none",
-                transition: "background 0.2s",
+                display: "flex", alignItems: "center", gap: "8px",
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                color: "white",
+                padding: "14px 28px", borderRadius: "980px",
+                fontSize: "15px", fontWeight: 500, textDecoration: "none",
+                backdropFilter: "blur(8px)",
+                transition: "background 0.2s", cursor: "pointer",
               }}
-              onMouseEnter={(e) => e.currentTarget.style.background = "#f5f5f7"}
-              onMouseLeave={(e) => e.currentTarget.style.background = "white"}
+              onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.13)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
             >
+              <WhatsAppIcon size={15} />
               Hacer una consulta
             </a>
           </div>
@@ -188,46 +219,101 @@ export default function StorePage() {
         <div style={{
           position: "absolute", bottom: "40px", left: "50%",
           transform: "translateX(-50%)",
-          display: "flex", flexDirection: "column", alignItems: "center", gap: "8px",
-          opacity: 0.35,
+          opacity: 0.28,
         }}>
           <div style={{
-            width: "1px", height: "40px",
-            background: "linear-gradient(to bottom, transparent, #1d1d1f)",
-            animation: "scrollHint 2s ease-in-out infinite",
+            width: "1px", height: "48px",
+            background: "linear-gradient(to bottom, transparent, white)",
+            animation: "scrollLine 2s ease-in-out infinite",
           }} />
         </div>
       </section>
 
-      {/* Features */}
+      {/* Features — Bento */}
       <section style={{ background: "#f5f5f7", padding: "80px 24px" }}>
-        <div style={{ maxWidth: "960px", margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
-          {[
-            { icon: "✓", title: "Revisados", desc: "Cada equipo pasa por una inspección técnica completa antes de la venta." },
-            { icon: "🔋", title: "Batería verificada", desc: "Conocés el estado real de la batería antes de comprar." },
-            { icon: "💬", title: "Atención directa", desc: "Consultá por WhatsApp y te respondemos al instante." },
-            { icon: "📦", title: "Listo para usar", desc: "Sin activaciones pendientes, libre y desbloqueado." },
-          ].map((f) => (
-            <RevealCard key={f.title}>
+        <div style={{ maxWidth: "960px", margin: "0 auto" }}>
+          {/* Row 1: carta grande full width */}
+          <RevealCard>
+            <div style={{
+              background: "#111",
+              borderRadius: "24px",
+              padding: "40px 44px",
+              marginBottom: "16px",
+              display: "flex", alignItems: "center", gap: "32px",
+              overflow: "hidden", position: "relative",
+            }}>
               <div style={{
-                background: "white", borderRadius: "20px", padding: "28px 24px",
-                boxShadow: "0 1px 8px rgba(0,0,0,0.05)",
-                height: "100%", boxSizing: "border-box",
+                position: "absolute", right: "-80px", top: "-80px",
+                width: "320px", height: "320px",
+                background: `radial-gradient(circle, ${ACCENT}18 0%, transparent 65%)`,
+                pointerEvents: "none",
+              }} />
+              <div style={{
+                flexShrink: 0,
+                width: "52px", height: "52px",
+                background: `${ACCENT}20`, borderRadius: "16px",
+                display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                <p style={{ fontSize: "28px", marginBottom: "12px" }}>{f.icon}</p>
-                <p style={{ fontSize: "16px", fontWeight: 600, color: "#1d1d1f", marginBottom: "6px" }}>{f.title}</p>
-                <p style={{ fontSize: "14px", color: "#6e6e73", lineHeight: 1.6 }}>{f.desc}</p>
+                <ShieldCheckSVG />
               </div>
-            </RevealCard>
-          ))}
+              <div>
+                <p style={{ fontSize: "21px", fontWeight: 700, color: "white", marginBottom: "6px", letterSpacing: "-0.03em" }}>
+                  Revisados y certificados
+                </p>
+                <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.42)", lineHeight: 1.65, maxWidth: "480px" }}>
+                  Cada equipo pasa por una inspección técnica completa antes de publicarse. Sabés exactamente qué comprás antes de decidir.
+                </p>
+              </div>
+            </div>
+          </RevealCard>
+
+          {/* Row 2: 3 tarjetas */}
+          <div className="bento-row">
+            {[
+              {
+                icon: <BatterySVG />,
+                title: "Batería verificada",
+                desc: "El porcentaje real de batería es visible antes de comprar. Sin sorpresas.",
+              },
+              {
+                icon: <ChatSVG />,
+                title: "Atención directa",
+                desc: "Respondemos por WhatsApp al instante. Sin formularios, sin esperas.",
+              },
+              {
+                icon: <BoxSVG />,
+                title: "Listo para usar",
+                desc: "Sin activaciones pendientes, desbloqueado y disponible para cualquier operadora.",
+              },
+            ].map((f, i) => (
+              <RevealCard key={f.title} delay={i * 60}>
+                <div style={{
+                  background: "white", borderRadius: "20px", padding: "28px 24px",
+                  boxShadow: "0 1px 6px rgba(0,0,0,0.05)",
+                  height: "100%", boxSizing: "border-box",
+                }}>
+                  <div style={{
+                    width: "38px", height: "38px",
+                    background: `${ACCENT}14`, borderRadius: "11px",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    marginBottom: "18px",
+                  }}>
+                    {f.icon}
+                  </div>
+                  <p style={{ fontSize: "16px", fontWeight: 600, color: "#1d1d1f", marginBottom: "6px" }}>{f.title}</p>
+                  <p style={{ fontSize: "14px", color: "#6e6e73", lineHeight: 1.65 }}>{f.desc}</p>
+                </div>
+              </RevealCard>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Stock */}
       <section id="stock" style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 24px 100px" }}>
 
-        <div style={{ marginBottom: "48px", textAlign: "center" }}>
-          <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 700, letterSpacing: "-0.03em", marginBottom: "8px" }}>
+        <div style={{ marginBottom: "48px" }}>
+          <h2 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 700, letterSpacing: "-0.03em", marginBottom: "6px" }}>
             Equipos disponibles
           </h2>
           <p style={{ fontSize: "17px", color: "#6e6e73" }}>
@@ -237,12 +323,13 @@ export default function StorePage() {
 
         {/* Filtros */}
         <div style={{ marginBottom: "40px" }}>
-          {/* Search */}
-          <div style={{ position: "relative", maxWidth: "480px", margin: "0 auto 20px" }}>
-            <span style={{
-              position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)",
-              color: "#aaa", fontSize: "16px", pointerEvents: "none",
-            }}>⌕</span>
+          <div style={{ position: "relative", maxWidth: "480px", marginBottom: "20px" }}>
+            <svg
+              style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#999" }}
+              width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
             <input
               type="text"
               placeholder="Buscar modelo, color, capacidad..."
@@ -250,16 +337,19 @@ export default function StorePage() {
               onChange={(e) => setSearch(e.target.value)}
               style={{
                 width: "100%", boxSizing: "border-box",
-                background: "#f5f5f7", border: "none",
-                borderRadius: "980px", padding: "13px 20px 13px 40px",
+                background: "#f5f5f7",
+                border: "1.5px solid transparent",
+                borderRadius: "12px", padding: "12px 20px 12px 42px",
                 fontSize: "15px", color: "#1d1d1f", outline: "none",
+                transition: "border-color 0.2s",
               }}
+              onFocus={(e) => e.currentTarget.style.borderColor = ACCENT}
+              onBlur={(e) => e.currentTarget.style.borderColor = "transparent"}
             />
           </div>
 
-          {/* Chips modelo */}
           {models.length > 1 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center", marginBottom: "10px" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
               <Chip active={!modelFilter} onClick={() => setModelFilter("")}>Todos</Chip>
               {models.map((m) => (
                 <Chip key={m} active={modelFilter === m} onClick={() => setModelFilter(modelFilter === m ? "" : m)}>{m}</Chip>
@@ -267,10 +357,9 @@ export default function StorePage() {
             </div>
           )}
 
-          {/* Chips storage */}
           {storages.length > 1 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", justifyContent: "center" }}>
-              <Chip active={!storageFilter} onClick={() => setStorageFilter("")}>Todas las capacidades</Chip>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+              <Chip active={!storageFilter} onClick={() => setStorageFilter("")}>Todas</Chip>
               {storages.map((s) => (
                 <Chip key={s} active={storageFilter === s} onClick={() => setStorageFilter(storageFilter === s ? "" : s)}>{s}</Chip>
               ))}
@@ -278,25 +367,31 @@ export default function StorePage() {
           )}
         </div>
 
-        {/* Grid */}
+        {/* Grid de productos */}
         {loading ? (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
             {[...Array(6)].map((_, i) => (
               <div key={i} style={{
-                background: "#f5f5f7", borderRadius: "24px", height: "360px",
+                background: "#f5f5f7", borderRadius: "24px", height: "380px",
                 animation: "pulse 1.8s ease-in-out infinite",
-                animationDelay: `${i * 120}ms`,
+                animationDelay: `${i * 100}ms`,
               }} />
             ))}
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "100px 0", color: "#6e6e73" }}>
-            <p style={{ fontSize: "52px", marginBottom: "16px" }}>📭</p>
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: "20px", opacity: 0.3 }}>
+              <InboxSVG />
+            </div>
             <p style={{ fontSize: "22px", fontWeight: 600, color: "#1d1d1f", marginBottom: "8px" }}>Sin resultados</p>
-            <p style={{ fontSize: "15px", marginBottom: "20px" }}>Probá con otros filtros o consultanos.</p>
+            <p style={{ fontSize: "15px", marginBottom: "24px" }}>Probá con otros filtros o consultanos directamente.</p>
             <button
               onClick={() => { setSearch(""); setModelFilter(""); setStorageFilter(""); }}
-              style={{ background: "#1d1d1f", color: "white", border: "none", borderRadius: "980px", padding: "10px 24px", fontSize: "14px", cursor: "pointer" }}
+              style={{
+                background: "#1d1d1f", color: "white", border: "none",
+                borderRadius: "980px", padding: "11px 26px",
+                fontSize: "14px", cursor: "pointer",
+              }}
             >
               Limpiar filtros
             </button>
@@ -304,7 +399,7 @@ export default function StorePage() {
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "20px" }}>
             {filtered.map((product, i) => (
-              <RevealCard key={product.id} delay={i * 30}>
+              <RevealCard key={product.id} delay={i * 40}>
                 <ProductCard product={product} exchange={exchange} />
               </RevealCard>
             ))}
@@ -312,16 +407,25 @@ export default function StorePage() {
         )}
       </section>
 
-      {/* CTA banner */}
+      {/* CTA Banner */}
       <section style={{
-        background: "#1d1d1f",
-        padding: "80px 24px",
+        background: "#0a0f0d",
+        padding: "88px 24px",
         textAlign: "center",
+        position: "relative",
+        overflow: "hidden",
       }}>
-        <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, letterSpacing: "-0.03em", color: "white", marginBottom: "12px" }}>
+        <div style={{
+          position: "absolute", top: "50%", left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "640px", height: "320px",
+          background: `radial-gradient(ellipse, ${ACCENT}12 0%, transparent 70%)`,
+          pointerEvents: "none",
+        }} />
+        <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", fontWeight: 700, letterSpacing: "-0.03em", color: "white", marginBottom: "12px", position: "relative" }}>
           ¿No encontrás lo que buscás?
         </h2>
-        <p style={{ fontSize: "17px", color: "rgba(255,255,255,0.55)", marginBottom: "32px" }}>
+        <p style={{ fontSize: "17px", color: "rgba(255,255,255,0.4)", marginBottom: "36px", position: "relative" }}>
           Escribinos y te conseguimos el equipo ideal.
         </p>
         <a
@@ -333,10 +437,10 @@ export default function StorePage() {
             background: "#25d366", color: "white",
             padding: "16px 36px", borderRadius: "980px",
             fontSize: "16px", fontWeight: 600, textDecoration: "none",
-            boxShadow: "0 8px 32px rgba(37,211,102,0.35)",
-            transition: "opacity 0.2s",
+            boxShadow: "0 8px 40px rgba(37,211,102,0.28)",
+            transition: "opacity 0.2s", position: "relative", cursor: "pointer",
           }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = "0.9"}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = "0.88"}
           onMouseLeave={(e) => e.currentTarget.style.opacity = "1"}
         >
           <WhatsAppIcon size={20} />
@@ -350,31 +454,43 @@ export default function StorePage() {
           <XyloLogo size={24} />
           <span style={{ fontSize: "15px", fontWeight: 600, color: "#1d1d1f", letterSpacing: "-0.3px" }}>Xylo</span>
         </div>
-        <p style={{ fontSize: "13px", color: "#aaa" }}>
+        <p style={{ fontSize: "13px", color: "#b0b0b0" }}>
           © {new Date().getFullYear()} Xylo — Todos los derechos reservados
         </p>
       </footer>
 
       <style>{`
         @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(24px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes pulse {
-          0%, 100% { opacity: 0.5; }
-          50% { opacity: 0.8; }
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.65; }
         }
-        @keyframes scrollHint {
-          0%, 100% { transform: scaleY(0); transform-origin: top; }
-          50% { transform: scaleY(1); transform-origin: top; }
+        @keyframes scrollLine {
+          0%   { transform: scaleY(0); transform-origin: top; opacity: 0; }
+          40%  { opacity: 1; }
+          100% { transform: scaleY(1); transform-origin: top; opacity: 0; }
         }
         * { -webkit-font-smoothing: antialiased; }
+        .bento-row {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 16px;
+        }
+        @media (max-width: 700px) {
+          .bento-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+          nav { padding: 0 16px !important; }
+        }
       `}</style>
     </div>
   );
 }
 
-/* ── Chip de filtro ── */
+/* ── Chip filtro ── */
 function Chip({ children, active, onClick }) {
   return (
     <button
@@ -382,13 +498,14 @@ function Chip({ children, active, onClick }) {
       style={{
         background: active ? "#1d1d1f" : "#f5f5f7",
         color: active ? "white" : "#1d1d1f",
-        border: "none", borderRadius: "980px",
+        border: active ? "none" : "1.5px solid transparent",
+        borderRadius: "980px",
         padding: "8px 18px", fontSize: "14px", fontWeight: 500,
         cursor: "pointer", transition: "all 0.18s ease",
         whiteSpace: "nowrap",
       }}
-      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "#e8e8ed"; }}
-      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "#f5f5f7"; }}
+      onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = "#e8e8ed"; e.currentTarget.style.borderColor = "transparent"; } }}
+      onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = "#f5f5f7"; } }}
     >
       {children}
     </button>
@@ -411,25 +528,28 @@ function ProductCard({ product, exchange }) {
       to={`/store/${product.id}`}
       style={{
         display: "flex", flexDirection: "column",
-        background: "#f5f5f7", borderRadius: "24px",
+        background: "white",
+        border: "1px solid rgba(0,0,0,0.06)",
+        borderRadius: "20px",
         textDecoration: "none", color: "inherit",
         overflow: "hidden",
-        transition: "transform 0.25s ease, box-shadow 0.25s ease",
+        transition: "box-shadow 0.25s ease, transform 0.25s ease",
         height: "100%",
+        cursor: "pointer",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-6px)";
-        e.currentTarget.style.boxShadow = "0 20px 48px rgba(0,0,0,0.12)";
+        e.currentTarget.style.boxShadow = "0 16px 48px rgba(0,0,0,0.10)";
+        e.currentTarget.style.transform = "translateY(-4px)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
         e.currentTarget.style.boxShadow = "none";
+        e.currentTarget.style.transform = "translateY(0)";
       }}
     >
       {/* Imagen */}
       <div style={{
         width: "100%", aspectRatio: "4/3",
-        background: "white",
+        background: "#f5f5f7",
         display: "flex", alignItems: "center", justifyContent: "center",
         overflow: "hidden",
       }}>
@@ -438,14 +558,15 @@ function ProductCard({ product, exchange }) {
             src={product.photo_url}
             alt={product.model}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            loading="lazy"
           />
         ) : (
-          <span style={{ fontSize: "64px", opacity: 0.25 }}>📱</span>
+          <PhoneSVG />
         )}
       </div>
 
       {/* Info */}
-      <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column", gap: "14px" }}>
         <div>
           <p style={{ fontSize: "17px", fontWeight: 600, color: "#1d1d1f", letterSpacing: "-0.3px", marginBottom: "3px" }}>
             {product.model}
@@ -456,31 +577,38 @@ function ProductCard({ product, exchange }) {
         </div>
 
         {product.battery_health && (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ flex: 1, height: "3px", background: "rgba(0,0,0,0.08)", borderRadius: "2px", overflow: "hidden" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ flex: 1, height: "4px", background: "rgba(0,0,0,0.07)", borderRadius: "2px", overflow: "hidden" }}>
               <div style={{ width: `${product.battery_health}%`, height: "100%", background: batteryColor, borderRadius: "2px" }} />
             </div>
-            <span style={{ fontSize: "12px", color: batteryColor, fontWeight: 600, minWidth: "32px" }}>
+            <span style={{ fontSize: "12px", color: batteryColor, fontWeight: 600, minWidth: "34px", textAlign: "right" }}>
               {product.battery_health}%
             </span>
           </div>
         )}
 
-        <div style={{ marginTop: "auto", paddingTop: "12px", borderTop: "1px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+        <div style={{
+          marginTop: "auto", paddingTop: "14px",
+          borderTop: "1px solid rgba(0,0,0,0.05)",
+          display: "flex", alignItems: "flex-end", justifyContent: "space-between",
+        }}>
           <div>
             <p style={{ fontSize: "20px", fontWeight: 700, color: "#1d1d1f", letterSpacing: "-0.5px", lineHeight: 1 }}>
               USD {Number(product.suggested_sale_price_usd).toLocaleString("es-AR")}
             </p>
             {ars && (
-              <p style={{ fontSize: "13px", color: "#6e6e73", marginTop: "2px" }}>ARS {ars}</p>
+              <p style={{ fontSize: "13px", color: "#6e6e73", marginTop: "3px" }}>ARS {ars}</p>
             )}
           </div>
           <div style={{
-            background: ACCENT, color: "white",
-            borderRadius: "980px", padding: "6px 14px",
-            fontSize: "13px", fontWeight: 500,
+            width: "32px", height: "32px",
+            background: "#f5f5f7", borderRadius: "50%",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "background 0.2s",
           }}>
-            Ver
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1d1d1f" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            </svg>
           </div>
         </div>
       </div>
@@ -488,19 +616,16 @@ function ProductCard({ product, exchange }) {
   );
 }
 
-/* ── FadeIn simple (solo en carga inicial) ── */
+/* ── Animación entrada ── */
 function FadeIn({ children, delay = 0 }) {
   return (
-    <div style={{
-      animation: `fadeUp 0.7s ease both`,
-      animationDelay: `${delay}ms`,
-    }}>
+    <div style={{ animation: `fadeUp 0.65s ease both`, animationDelay: `${delay}ms` }}>
       {children}
     </div>
   );
 }
 
-/* ── RevealCard con IntersectionObserver ── */
+/* ── Reveal con IntersectionObserver ── */
 function RevealCard({ children, delay = 0 }) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -510,7 +635,7 @@ function RevealCard({ children, delay = 0 }) {
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { threshold: 0.1 }
+      { threshold: 0.08 }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -521,12 +646,68 @@ function RevealCard({ children, delay = 0 }) {
       ref={ref}
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(28px)",
+        transform: visible ? "translateY(0)" : "translateY(24px)",
         transition: `opacity 0.55s ease ${delay}ms, transform 0.55s ease ${delay}ms`,
         height: "100%",
       }}
     >
       {children}
     </div>
+  );
+}
+
+/* ── SVG Icons ── */
+function ShieldCheckSVG() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <polyline points="9 12 11 14 15 10" />
+    </svg>
+  );
+}
+
+function BatterySVG() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="7" width="18" height="10" rx="2" />
+      <line x1="22" y1="11" x2="22" y2="13" />
+      <line x1="6" y1="11" x2="6" y2="13" />
+    </svg>
+  );
+}
+
+function ChatSVG() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+function BoxSVG() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+      <line x1="12" y1="22.08" x2="12" y2="12" />
+    </svg>
+  );
+}
+
+function PhoneSVG() {
+  return (
+    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c8c8cc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+      <circle cx="12" cy="17" r="1" fill="#c8c8cc" stroke="none" />
+    </svg>
+  );
+}
+
+function InboxSVG() {
+  return (
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#c8c8cc" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+      <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    </svg>
   );
 }
