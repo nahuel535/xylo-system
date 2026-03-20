@@ -7,7 +7,13 @@
       "Bash(python skills/ui-ux-pro-max/scripts/search.py \"luxury premium apple ecommerce iphone reseller store dark\" --design-system -p \"Xylo Store\" -f markdown)",
       "Bash(python \"C:/Users/Casaa/.claude/skills/ui-ux-pro-max/scripts/search.py\" \"luxury premium apple ecommerce iphone reseller store dark\" --design-system -p \"Xylo Store\" -f markdown)",
       "Bash(npm install:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(find /c/Users/Casaa/Desktop/xylo-system/frontend -type f -name *.tsx -o -name *.jsx -o -name *.ts -o -name *.js)",
+      "Bash(find /c/Users/Casaa/Desktop/xylo-system/frontend/src -type f \\\\\\(-name *.tsx -o -name *.jsx -o -name *.ts -o -name *.js \\\\\\))",
+      "Bash(python scripts/search.py \"macOS apple HIG dashboard admin management system minimal\" --design-system -p \"Xylo System\" -f markdown)",
+      "Bash(python scripts/search.py \"apple macOS HIG vibrancy frosted glass sidebar light neutral\" --design-system -p \"Xylo System macOS\" -f markdown)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
