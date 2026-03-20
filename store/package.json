@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "node node_modules/vite/bin/vite.js build",
     "preview": "vite preview",
-    "start": "node start.js"
+    "start": "node start.cjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",
