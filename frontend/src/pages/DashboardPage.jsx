@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../services/api";
 import Header from "../components/Header";
 import UsdtCard from "../components/UsdtCard";
-import { Package, TrendingUp, TrendingDown, DollarSign, ShoppingBag, BarChart2, CreditCard, Minus } from "lucide-react";
+import { Package, TrendingUp, TrendingDown, DollarSign, ShoppingBag, BarChart2, CreditCard, Minus, Clock } from "lucide-react";
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState(null);
@@ -10,24 +10,27 @@ export default function DashboardPage() {
   const [topModels, setTopModels] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [monthlyStats, setMonthlyStats] = useState([]);
+  const [recentSales, setRecentSales] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chartView, setChartView] = useState("profit"); // "profit" | "revenue"
 
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const [summaryRes, exchangeRes, topModelsRes, paymentRes, monthlyRes] = await Promise.all([
+        const [summaryRes, exchangeRes, topModelsRes, paymentRes, monthlyRes, recentRes] = await Promise.all([
           api.get("/dashboard/summary"),
           api.get("/exchange-rates/active"),
           api.get("/dashboard/top-models"),
           api.get("/dashboard/payment-methods"),
           api.get("/dashboard/monthly-stats"),
+          api.get("/dashboard/recent-sales"),
         ]);
         setSummary(summaryRes.data);
         setExchange(exchangeRes.data);
         setTopModels(topModelsRes.data);
         setPaymentMethods(paymentRes.data);
         setMonthlyStats(monthlyRes.data.slice(-6));
+        setRecentSales(recentRes.data);
       } catch (error) {
         console.error("Error cargando dashboard:", error);
       } finally {
@@ -79,8 +82,8 @@ export default function DashboardPage() {
         />
         <KpiCard
           label="Stock en inventario"
-          value={summary.total_products_in_stock}
-          sub={`USD ${fmt(summary.total_stock_value_usd)} inmovilizado`}
+          value={`USD ${fmt(summary.total_stock_value_usd)}`}
+          sub={`${summary.total_products_in_stock} unidades en stock`}
           icon={<Package size={16} />}
           accent="blue"
         />
@@ -116,47 +119,71 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* ── Chart gasto vs ganancia por mes ── */}
-      {monthlyStats.length > 0 && (
-        <div className="bg-base-card border border-base-border rounded-2xl p-6 shadow-card">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-base-subtle rounded-lg flex items-center justify-center">
-                <BarChart2 size={14} className="text-base-muted" />
+      {/* ── Chart + Ventas recientes ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        {monthlyStats.length > 0 && (
+          <div className="bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-base-subtle rounded-lg flex items-center justify-center">
+                  <BarChart2 size={14} className="text-base-muted" />
+                </div>
+                <p className="text-sm font-semibold text-base-text">Evolución mensual</p>
               </div>
-              <p className="text-sm font-semibold text-base-text">Evolución mensual</p>
+              <div className="flex gap-1 bg-base-subtle rounded-xl p-1">
+                <button
+                  onClick={() => setChartView("profit")}
+                  className={`text-xs px-2.5 py-1 rounded-lg transition font-medium ${chartView === "profit" ? "bg-base-card text-base-text shadow-sm" : "text-base-muted hover:text-base-text"}`}
+                >
+                  Costo vs Ganancia
+                </button>
+                <button
+                  onClick={() => setChartView("revenue")}
+                  className={`text-xs px-2.5 py-1 rounded-lg transition font-medium ${chartView === "revenue" ? "bg-base-card text-base-text shadow-sm" : "text-base-muted hover:text-base-text"}`}
+                >
+                  Facturación
+                </button>
+              </div>
             </div>
-            <div className="flex gap-1 bg-base-subtle rounded-xl p-1">
-              <button
-                onClick={() => setChartView("profit")}
-                className={`text-xs px-3 py-1.5 rounded-lg transition font-medium ${chartView === "profit" ? "bg-base-card text-base-text shadow-sm" : "text-base-muted hover:text-base-text"}`}
-              >
-                Costo vs Ganancia
-              </button>
-              <button
-                onClick={() => setChartView("revenue")}
-                className={`text-xs px-3 py-1.5 rounded-lg transition font-medium ${chartView === "revenue" ? "bg-base-card text-base-text shadow-sm" : "text-base-muted hover:text-base-text"}`}
-              >
-                Facturación
-              </button>
+
+            <MonthlyChart data={monthlyStats} view={chartView} />
+
+            <div className="flex gap-5 mt-3 justify-center">
+              {chartView === "profit" ? (
+                <>
+                  <LegendDot color="bg-red-400" label="Costo" />
+                  <LegendDot color="bg-xylo-500" label="Ganancia" />
+                </>
+              ) : (
+                <LegendDot color="bg-xylo-500" label="Facturación" />
+              )}
             </div>
           </div>
+        )}
 
-          <MonthlyChart data={monthlyStats} view={chartView} />
-
-          {/* Leyenda */}
-          <div className="flex gap-5 mt-4 justify-center">
-            {chartView === "profit" ? (
-              <>
-                <LegendDot color="bg-red-400" label="Costo" />
-                <LegendDot color="bg-xylo-500" label="Ganancia" />
-              </>
-            ) : (
-              <LegendDot color="bg-xylo-500" label="Facturación" />
-            )}
-          </div>
+        {/* Ventas recientes */}
+        <div className="bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
+          <SectionHeader icon={<Clock size={14} />} title="Ventas recientes" />
+          {recentSales.length === 0 ? (
+            <p className="text-sm text-base-muted mt-4">Sin ventas aún.</p>
+          ) : (
+            <div className="mt-4 space-y-2">
+              {recentSales.map((sale) => (
+                <div key={sale.id} className="flex items-center justify-between py-2.5 border-b border-base-border last:border-0">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-base-text truncate">{sale.model}</p>
+                    <p className="text-xs text-base-muted">{sale.client_name || "Sin cliente"} · {fmtDate(sale.sale_date)}</p>
+                  </div>
+                  <div className="text-right ml-4 shrink-0">
+                    <p className="text-sm font-semibold text-base-text">USD {fmt(sale.sale_price_usd)}</p>
+                    <p className="text-xs text-green-500">+{fmt(sale.gross_profit_usd)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* ── Modelos + Métodos de pago ── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -471,6 +498,11 @@ function LegendDot({ color, label }) {
 // ── Helpers ────────────────────────────────────────────
 function fmt(value) {
   return Number(value).toLocaleString("es-AR", { maximumFractionDigits: 0 });
+}
+
+function fmtDate(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
 }
 
 function delta(current, previous) {

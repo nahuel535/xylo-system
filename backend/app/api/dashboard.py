@@ -107,6 +107,28 @@ def get_payment_methods_summary(db: Session = Depends(get_db)):
     return [{"method": row.method, "count": row.count, "total_usd": float(row.total_usd)} for row in results]
 
 
+@router.get("/recent-sales")
+def get_recent_sales(db: Session = Depends(get_db)):
+    results = (
+        db.query(Sale, Product)
+        .join(Product, Sale.product_id == Product.id)
+        .order_by(Sale.sale_date.desc())
+        .limit(8)
+        .all()
+    )
+    return [
+        {
+            "id": sale.id,
+            "model": product.model,
+            "client_name": sale.client_name,
+            "sale_price_usd": float(sale.sale_price_usd),
+            "gross_profit_usd": float(sale.gross_profit_usd),
+            "sale_date": sale.sale_date,
+        }
+        for sale, product in results
+    ]
+
+
 @router.get("/top-models")
 def get_top_models(db: Session = Depends(get_db)):
     results = (
