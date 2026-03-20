@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(\"c:/Users/Casaa/Desktop/xylo-system/backend/app/schemas/dashboard.py\":*)"
+    ]
+  }
+}

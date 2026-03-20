@@ -2,31 +2,32 @@ import { useEffect, useState } from "react";
 import api from "../services/api";
 import Header from "../components/Header";
 import UsdtCard from "../components/UsdtCard";
-import {
-  Package, TrendingUp, DollarSign, BarChart2,
-  ShoppingBag, Calendar, Clock, CreditCard
-} from "lucide-react";
+import { Package, TrendingUp, TrendingDown, DollarSign, ShoppingBag, BarChart2, CreditCard, Minus } from "lucide-react";
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState(null);
   const [exchange, setExchange] = useState(null);
   const [topModels, setTopModels] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
+  const [monthlyStats, setMonthlyStats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [chartView, setChartView] = useState("profit"); // "profit" | "revenue"
 
   useEffect(() => {
     async function loadDashboard() {
       try {
-        const [summaryRes, exchangeRes, topModelsRes, paymentRes] = await Promise.all([
+        const [summaryRes, exchangeRes, topModelsRes, paymentRes, monthlyRes] = await Promise.all([
           api.get("/dashboard/summary"),
           api.get("/exchange-rates/active"),
           api.get("/dashboard/top-models"),
           api.get("/dashboard/payment-methods"),
+          api.get("/dashboard/monthly-stats"),
         ]);
         setSummary(summaryRes.data);
         setExchange(exchangeRes.data);
         setTopModels(topModelsRes.data);
         setPaymentMethods(paymentRes.data);
+        setMonthlyStats(monthlyRes.data.slice(-6));
       } catch (error) {
         console.error("Error cargando dashboard:", error);
       } finally {
@@ -39,131 +40,147 @@ export default function DashboardPage() {
   if (loading) return <p className="text-base-muted">Cargando dashboard...</p>;
   if (!summary) return <p className="text-base-muted">No se pudo cargar el dashboard.</p>;
 
+  // Deltas mes vs mes anterior
+  const deltaRevenue = delta(summary.sales_this_month_value_usd, summary.sales_last_month_value_usd);
+  const deltaProfit = delta(summary.profit_this_month_usd, summary.profit_last_month_usd);
+  const deltaSales = delta(summary.sales_this_month_count, summary.sales_last_month_count);
+
+  // Margen este mes
+  const margin = summary.sales_this_month_value_usd > 0
+    ? ((summary.profit_this_month_usd / summary.sales_this_month_value_usd) * 100).toFixed(1)
+    : "0.0";
+
   const maxSales = topModels[0]?.sales_count || 1;
   const maxPayment = paymentMethods[0]?.total_usd || 1;
 
-  const methodLabels = {
-    cash_usd: "Efectivo USD",
-    cash_ars: "Efectivo ARS",
-    transfer: "Transferencia",
-    card: "Tarjeta",
-    crypto: "Crypto",
-  };
-
-  const methodColors = {
-    cash_usd: "bg-green-500",
-    cash_ars: "bg-blue-500",
-    transfer: "bg-purple-500",
-    card: "bg-yellow-500",
-    crypto: "bg-orange-500",
-  };
-
   return (
-    <div>
+    <div className="space-y-5">
       <Header title="Dashboard" subtitle="Resumen general del negocio" />
 
-      {/* Stats principales */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          icon={<Package size={18} />}
-          label="En stock"
+      {/* ── KPI cards principales ── */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <KpiCard
+          label="Ventas este mes"
+          value={`USD ${fmt(summary.sales_this_month_value_usd)}`}
+          sub={`${summary.sales_this_month_count} operaciones`}
+          delta={deltaRevenue}
+          deltaLabel="vs mes anterior"
+          icon={<ShoppingBag size={16} />}
+          accent="xylo"
+        />
+        <KpiCard
+          label="Ganancia este mes"
+          value={`USD ${fmt(summary.profit_this_month_usd)}`}
+          sub={`Margen ${margin}%`}
+          delta={deltaProfit}
+          deltaLabel="vs mes anterior"
+          icon={<TrendingUp size={16} />}
+          accent="green"
+        />
+        <KpiCard
+          label="Stock en inventario"
           value={summary.total_products_in_stock}
-          sub={`USD ${fmt(summary.total_stock_value_usd)} en inventario`}
-          color="text-blue-500"
-          bg="bg-blue-50"
+          sub={`USD ${fmt(summary.total_stock_value_usd)} inmovilizado`}
+          icon={<Package size={16} />}
+          accent="blue"
         />
-        <StatCard
-          icon={<ShoppingBag size={18} />}
-          label="Ventas totales"
-          value={summary.total_sales_count}
-          sub={`USD ${fmt(summary.total_sales_value_usd)} facturado`}
-          color="text-xylo-500"
-          bg="bg-xylo-50"
-        />
-        <StatCard
-          icon={<TrendingUp size={18} />}
-          label="Ganancia bruta"
+        <KpiCard
+          label="Ganancia acumulada"
           value={`USD ${fmt(summary.total_gross_profit_usd)}`}
-          sub="Acumulada total"
-          color="text-green-500"
-          bg="bg-green-50"
-        />
-        <StatCard
-          icon={<DollarSign size={18} />}
-          label="Dólar venta"
-          value={exchange ? `ARS ${formatNumber(exchange.sell_rate_ars)}` : "-"}
-          sub={exchange ? `Compra: ARS ${formatNumber(exchange.buy_rate_ars)}` : ""}
-          color="text-yellow-500"
-          bg="bg-yellow-50"
+          sub={`${summary.total_sales_count} ventas totales`}
+          icon={<DollarSign size={16} />}
+          accent="purple"
         />
       </div>
 
-      {/* Stats de hoy y mes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-7 h-7 bg-base-subtle rounded-lg flex items-center justify-center">
-              <Clock size={14} className="text-base-muted" />
-            </div>
-            <p className="text-sm font-medium text-base-text">Hoy</p>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-2xl font-semibold text-base-text">{summary.sales_today_count}</p>
-              <p className="text-sm text-base-muted">ventas</p>
-            </div>
-            <div>
-              <p className="text-2xl font-semibold text-base-text">USD {fmt(summary.sales_today_value_usd)}</p>
-              <p className="text-sm text-base-muted">facturado</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-7 h-7 bg-base-subtle rounded-lg flex items-center justify-center">
-              <Calendar size={14} className="text-base-muted" />
-            </div>
-            <p className="text-sm font-medium text-base-text">Este mes</p>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-2xl font-semibold text-base-text">{summary.sales_this_month_count}</p>
-              <p className="text-sm text-base-muted">ventas</p>
-            </div>
-            <div>
-              <p className="text-2xl font-semibold text-base-text">USD {fmt(summary.sales_this_month_value_usd)}</p>
-              <p className="text-sm text-base-muted">facturado</p>
-            </div>
-          </div>
-        </div>
+      {/* ── Comparativa mes actual vs anterior ── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <CompareCard
+          label="Facturación"
+          current={summary.sales_this_month_value_usd}
+          previous={summary.sales_last_month_value_usd}
+          prefix="USD"
+        />
+        <CompareCard
+          label="Ganancia bruta"
+          current={summary.profit_this_month_usd}
+          previous={summary.profit_last_month_usd}
+          prefix="USD"
+          accent
+        />
+        <CompareCard
+          label="Operaciones"
+          current={summary.sales_this_month_count}
+          previous={summary.sales_last_month_count}
+          integer
+        />
       </div>
 
-      {/* Modelos más vendidos + Métodos de pago */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
-        <div className="bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
-          <div className="flex items-center gap-2 mb-5">
-            <div className="w-7 h-7 bg-base-subtle rounded-lg flex items-center justify-center">
-              <BarChart2 size={14} className="text-base-muted" />
+      {/* ── Chart gasto vs ganancia por mes ── */}
+      {monthlyStats.length > 0 && (
+        <div className="bg-base-card border border-base-border rounded-2xl p-6 shadow-card">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-base-subtle rounded-lg flex items-center justify-center">
+                <BarChart2 size={14} className="text-base-muted" />
+              </div>
+              <p className="text-sm font-semibold text-base-text">Evolución mensual</p>
             </div>
-            <p className="text-sm font-medium text-base-text">Modelos más vendidos</p>
+            <div className="flex gap-1 bg-base-subtle rounded-xl p-1">
+              <button
+                onClick={() => setChartView("profit")}
+                className={`text-xs px-3 py-1.5 rounded-lg transition font-medium ${chartView === "profit" ? "bg-base-card text-base-text shadow-sm" : "text-base-muted hover:text-base-text"}`}
+              >
+                Costo vs Ganancia
+              </button>
+              <button
+                onClick={() => setChartView("revenue")}
+                className={`text-xs px-3 py-1.5 rounded-lg transition font-medium ${chartView === "revenue" ? "bg-base-card text-base-text shadow-sm" : "text-base-muted hover:text-base-text"}`}
+              >
+                Facturación
+              </button>
+            </div>
           </div>
+
+          <MonthlyChart data={monthlyStats} view={chartView} />
+
+          {/* Leyenda */}
+          <div className="flex gap-5 mt-4 justify-center">
+            {chartView === "profit" ? (
+              <>
+                <LegendDot color="bg-red-400" label="Costo" />
+                <LegendDot color="bg-xylo-500" label="Ganancia" />
+              </>
+            ) : (
+              <LegendDot color="bg-xylo-500" label="Facturación" />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Modelos + Métodos de pago ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
+          <SectionHeader icon={<BarChart2 size={14} />} title="Modelos más vendidos" />
           {topModels.length === 0 ? (
             <p className="text-sm text-base-muted">Sin datos aún.</p>
           ) : (
-            <div className="space-y-3">
-              {topModels.slice(0, 6).map((model) => (
+            <div className="space-y-3 mt-4">
+              {topModels.slice(0, 6).map((model, i) => (
                 <div key={model.model}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-sm text-base-text">{model.model}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-base-muted w-4">{i + 1}</span>
+                      <span className="text-sm text-base-text font-medium">{model.model}</span>
+                    </div>
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-base-muted">USD {fmt(model.total_sales_usd)}</span>
-                      <span className="text-xs font-medium text-xylo-500">{model.sales_count} vendidos</span>
+                      <span className="text-xs font-semibold text-xylo-500">{model.sales_count} uds</span>
                     </div>
                   </div>
                   <div className="h-1.5 bg-base-subtle rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-xylo-500 rounded-full transition-all duration-500"
+                      className="h-full bg-xylo-500 rounded-full transition-all duration-700"
                       style={{ width: `${(model.sales_count / maxSales) * 100}%` }}
                     />
                   </div>
@@ -174,28 +191,23 @@ export default function DashboardPage() {
         </div>
 
         <div className="bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
-          <div className="flex items-center gap-2 mb-5">
-            <div className="w-7 h-7 bg-base-subtle rounded-lg flex items-center justify-center">
-              <CreditCard size={14} className="text-base-muted" />
-            </div>
-            <p className="text-sm font-medium text-base-text">Métodos de pago</p>
-          </div>
+          <SectionHeader icon={<CreditCard size={14} />} title="Métodos de pago" />
           {paymentMethods.length === 0 ? (
             <p className="text-sm text-base-muted">Sin datos aún.</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 mt-4">
               {paymentMethods.map((method) => (
                 <div key={method.method}>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-sm text-base-text">{methodLabels[method.method] || method.method}</span>
+                    <span className="text-sm text-base-text capitalize">{method.method}</span>
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-base-muted">{method.count} pagos</span>
-                      <span className="text-xs font-medium text-green-500">USD {fmt(method.total_usd)}</span>
+                      <span className="text-xs font-semibold text-green-500">USD {fmt(method.total_usd)}</span>
                     </div>
                   </div>
                   <div className="h-1.5 bg-base-subtle rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${methodColors[method.method] || "bg-base-border"}`}
+                      className="h-full bg-green-500 rounded-full transition-all duration-700"
                       style={{ width: `${(method.total_usd / maxPayment) * 100}%` }}
                     />
                   </div>
@@ -206,29 +218,204 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* USDT */}
       <UsdtCard />
     </div>
   );
 }
 
-function StatCard({ icon, label, value, sub, color, bg }) {
+// ── Chart SVG ──────────────────────────────────────────
+function MonthlyChart({ data, view }) {
+  const W = 600;
+  const H = 180;
+  const PAD = { top: 12, right: 16, bottom: 32, left: 52 };
+  const chartW = W - PAD.left - PAD.right;
+  const chartH = H - PAD.top - PAD.bottom;
+  const n = data.length;
+  const barGroupW = chartW / n;
+  const barW = view === "profit" ? barGroupW * 0.3 : barGroupW * 0.45;
+  const gap = view === "profit" ? barGroupW * 0.06 : 0;
+
+  const maxVal = Math.max(
+    ...data.map((d) => view === "profit" ? Math.max(d.cost_usd, d.profit_usd) : d.revenue_usd),
+    1
+  );
+
+  const yTicks = 4;
+  const tickStep = niceStep(maxVal / yTicks);
+
+  function barH(val) {
+    return (val / (tickStep * yTicks)) * chartH;
+  }
+
+  function x(i) {
+    return PAD.left + i * barGroupW + (barGroupW - (view === "profit" ? barW * 2 + gap : barW)) / 2;
+  }
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxHeight: 200 }}>
+      {/* Y gridlines */}
+      {Array.from({ length: yTicks + 1 }, (_, i) => {
+        const val = i * tickStep;
+        const y = PAD.top + chartH - (val / (tickStep * yTicks)) * chartH;
+        return (
+          <g key={i}>
+            <line x1={PAD.left} y1={y} x2={W - PAD.right} y2={y}
+              stroke="currentColor" strokeOpacity={0.07} strokeWidth={1} />
+            <text x={PAD.left - 6} y={y + 4} textAnchor="end"
+              fontSize={9} fill="currentColor" opacity={0.4}>
+              {val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Bars */}
+      {data.map((d, i) => {
+        const bx = x(i);
+        if (view === "profit") {
+          const hCost = Math.max(barH(d.cost_usd), 2);
+          const hProfit = Math.max(barH(d.profit_usd), 2);
+          return (
+            <g key={i}>
+              {/* Cost bar */}
+              <rect
+                x={bx} y={PAD.top + chartH - hCost}
+                width={barW} height={hCost}
+                rx={3} fill="#f87171" opacity={0.85}
+              />
+              {/* Profit bar */}
+              <rect
+                x={bx + barW + gap} y={PAD.top + chartH - hProfit}
+                width={barW} height={hProfit}
+                rx={3} fill="var(--color-xylo-500, #7c3aed)" opacity={0.9}
+              />
+              {/* Label */}
+              <text x={bx + barW + gap / 2} y={H - PAD.bottom + 14}
+                textAnchor="middle" fontSize={9} fill="currentColor" opacity={0.5}>
+                {d.label}
+              </text>
+            </g>
+          );
+        } else {
+          const hRev = Math.max(barH(d.revenue_usd), 2);
+          return (
+            <g key={i}>
+              <rect
+                x={bx} y={PAD.top + chartH - hRev}
+                width={barW} height={hRev}
+                rx={3} fill="var(--color-xylo-500, #7c3aed)" opacity={0.9}
+              />
+              <text x={bx + barW / 2} y={H - PAD.bottom + 14}
+                textAnchor="middle" fontSize={9} fill="currentColor" opacity={0.5}>
+                {d.label}
+              </text>
+            </g>
+          );
+        }
+      })}
+    </svg>
+  );
+}
+
+// ── Sub-components ─────────────────────────────────────
+function KpiCard({ label, value, sub, delta: d, deltaLabel, icon, accent }) {
+  const accents = {
+    xylo: { bg: "bg-xylo-500/10", text: "text-xylo-500" },
+    green: { bg: "bg-green-500/10", text: "text-green-500" },
+    blue: { bg: "bg-blue-500/10", text: "text-blue-500" },
+    purple: { bg: "bg-purple-500/10", text: "text-purple-500" },
+  };
+  const { bg, text } = accents[accent] || accents.xylo;
+
   return (
     <div className="bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
-      <div className={`inline-flex p-2 rounded-xl ${bg} ${color} mb-3`}>
-        {icon}
-      </div>
-      <p className="text-2xl font-semibold text-base-text mb-1">{value}</p>
-      <p className="text-sm text-base-muted">{label}</p>
-      {sub && <p className="text-xs text-base-muted mt-1 opacity-70">{sub}</p>}
+      <div className={`inline-flex p-2 rounded-xl ${bg} ${text} mb-3`}>{icon}</div>
+      <p className="text-xl font-bold text-base-text mb-0.5">{value}</p>
+      <p className="text-xs text-base-muted mb-2">{label}</p>
+      {sub && <p className="text-xs text-base-muted opacity-60">{sub}</p>}
+      {d !== undefined && (
+        <DeltaBadge delta={d} label={deltaLabel} />
+      )}
     </div>
   );
 }
 
+function CompareCard({ label, current, previous, prefix = "", integer = false, accent = false }) {
+  const d = delta(current, previous);
+  const fmt2 = (v) => integer ? Number(v).toLocaleString("es-AR") : `${prefix} ${fmt(v)}`;
+
+  return (
+    <div className="bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
+      <p className="text-xs text-base-muted mb-3 font-medium">{label}</p>
+      <div className="flex items-end justify-between">
+        <div>
+          <p className={`text-xl font-bold ${accent ? "text-xylo-500" : "text-base-text"}`}>{fmt2(current)}</p>
+          <p className="text-xs text-base-muted mt-0.5">Este mes</p>
+        </div>
+        <div className="text-right">
+          <p className="text-base font-semibold text-base-muted">{fmt2(previous)}</p>
+          <p className="text-xs text-base-muted mt-0.5">Mes anterior</p>
+        </div>
+      </div>
+      <div className="mt-3 pt-3 border-t border-base-border">
+        <DeltaBadge delta={d} label="variación" />
+      </div>
+    </div>
+  );
+}
+
+function DeltaBadge({ delta: d, label }) {
+  if (d === null) return null;
+  const positive = d >= 0;
+  const zero = d === 0;
+  return (
+    <div className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg ${
+      zero ? "bg-base-subtle text-base-muted" :
+      positive ? "bg-green-500/10 text-green-500" : "bg-red-400/10 text-red-400"
+    }`}>
+      {zero ? <Minus size={11} /> : positive ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+      {zero ? "Sin cambio" : `${positive ? "+" : ""}${d.toFixed(1)}% ${label}`}
+    </div>
+  );
+}
+
+function SectionHeader({ icon, title }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-7 h-7 bg-base-subtle rounded-lg flex items-center justify-center text-base-muted">
+        {icon}
+      </div>
+      <p className="text-sm font-semibold text-base-text">{title}</p>
+    </div>
+  );
+}
+
+function LegendDot({ color, label }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
+      <span className="text-xs text-base-muted">{label}</span>
+    </div>
+  );
+}
+
+// ── Helpers ────────────────────────────────────────────
 function fmt(value) {
   return Number(value).toLocaleString("es-AR", { maximumFractionDigits: 0 });
 }
 
-function formatNumber(value) {
-  return Number(value).toLocaleString("es-AR");
+function delta(current, previous) {
+  const c = Number(current);
+  const p = Number(previous);
+  if (p === 0) return c === 0 ? 0 : null;
+  return ((c - p) / p) * 100;
+}
+
+function niceStep(rawStep) {
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const norm = rawStep / magnitude;
+  if (norm <= 1) return magnitude;
+  if (norm <= 2) return 2 * magnitude;
+  if (norm <= 5) return 5 * magnitude;
+  return 10 * magnitude;
 }

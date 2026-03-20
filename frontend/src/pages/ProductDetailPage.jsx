@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
+import AuditHistory from "../components/AuditHistory";
 import { Trash2 } from "lucide-react";
 
 export default function ProductDetailPage() {
@@ -176,6 +177,9 @@ export default function ProductDetailPage() {
             )}
           </div>
         </div>
+      </div>
+      <div className="mt-5">
+        <AuditHistory entityType="product" entityId={id} />
       </div>
     </div>
   );

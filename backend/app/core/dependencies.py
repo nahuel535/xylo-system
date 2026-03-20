@@ -1,4 +1,5 @@
-from fastapi import Depends, HTTPException, status
+from typing import Optional
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
@@ -25,3 +26,17 @@ def require_admin(current_user: User = Depends(get_current_user)):
     if current_user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Se requiere rol admin")
     return current_user
+
+
+def get_optional_user_id(request: Request) -> Optional[int]:
+    auth = request.headers.get("Authorization")
+    if not auth or not auth.startswith("Bearer "):
+        return None
+    token = auth.split(" ", 1)[1]
+    payload = decode_token(token)
+    if not payload:
+        return None
+    try:
+        return int(payload.get("sub", 0)) or None
+    except (TypeError, ValueError):
+        return None

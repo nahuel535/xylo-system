@@ -12,3 +12,18 @@ class DashboardSummary(BaseModel):
     sales_today_value_usd: Decimal
     sales_this_month_count: int
     sales_this_month_value_usd: Decimal
+    profit_this_month_usd: Decimal
+    cost_this_month_usd: Decimal
+    sales_last_month_count: int
+    sales_last_month_value_usd: Decimal
+    profit_last_month_usd: Decimal
+
+
+class MonthStat(BaseModel):
+    year: int
+    month: int
+    label: str
+    sales_count: int
+    revenue_usd: float
+    profit_usd: float
+    cost_usd: float

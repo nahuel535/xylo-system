@@ -9,6 +9,7 @@ import ProductsPage from "./pages/ProductsPage";
 import NewProductPage from "./pages/NewProductPage";
 import SoldProductsPage from "./pages/SoldProductsPage";
 import SaleDetailPage from "./pages/SaleDetailPage";
+import EditSalePage from "./pages/EditSalePage";
 import SalesPage from "./pages/SalesPage";
 import ExchangePage from "./pages/ExchangePage";
 import ScannerPage from "./pages/ScannerPage";
@@ -33,6 +34,7 @@ function Layout() {
           <Route path="/sold-products" element={<ProtectedRoute><SoldProductsPage /></ProtectedRoute>} />
           <Route path="/sales" element={<ProtectedRoute><SalesPage /></ProtectedRoute>} />
           <Route path="/sales/:id" element={<ProtectedRoute><SaleDetailPage /></ProtectedRoute>} />
+          <Route path="/sales/:id/edit" element={<ProtectedRoute requireAdmin><EditSalePage /></ProtectedRoute>} />
           <Route path="/exchange" element={<ProtectedRoute><ExchangePage /></ProtectedRoute>} />
           <Route path="/products/new" element={<ProtectedRoute requireAdmin><NewProductPage /></ProtectedRoute>} />
           <Route path="/products/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />

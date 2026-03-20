@@ -83,6 +83,7 @@ export default function NewProductPage() {
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
   const [listeningField, setListeningField] = useState(null);
+  const [pendingVoice, setPendingVoice] = useState(null); // { name, value }
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
 
@@ -139,14 +140,14 @@ export default function NewProductPage() {
     setVoiceTranscript("");
     setVoiceConfirming(false);
     setVoiceDone(false);
-    setTimeout(() => speakField(0), 300);
+    speakField(0);
   }
 
   function speakField(step) {
     const field = VOICE_FIELDS[step];
     if (!field) return;
     speak(`${field.label}. ${field.hint}`);
-    setTimeout(() => startVoiceListening(step), 2500);
+    // No arranca solo — el usuario presiona el botón
   }
 
   function startVoiceListening(step) {
@@ -196,15 +197,15 @@ export default function NewProductPage() {
       speak("¡Listo! Revisá los datos y guardá el producto.");
     } else {
       setVoiceStep(nextStep);
-      setTimeout(() => speakField(nextStep), 500);
+      speakField(nextStep);
     }
   }
 
   function rejectVoiceField() {
     setVoiceConfirming(false);
     setVoiceTranscript("");
-    speak("Bien, repetilo.");
-    setTimeout(() => startVoiceListening(voiceStep), 1000);
+    speak("Bien, repetilo cuando quieras.");
+    // No arranca solo — el usuario presiona el botón
   }
 
   function skipVoiceField() {
@@ -236,6 +237,7 @@ export default function NewProductPage() {
     if (!SpeechRecognition) { alert("Tu navegador no soporta dictado por voz. Usá Chrome."); return; }
     if (listeningField === fieldName) { recognitionRef.current?.stop(); setListeningField(null); return; }
     recognitionRef.current?.stop();
+    setPendingVoice(null);
     const recognition = new SpeechRecognition();
     recognition.lang = "es-AR";
     recognition.interimResults = false;
@@ -244,12 +246,25 @@ export default function NewProductPage() {
     setListeningField(fieldName);
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      setForm((prev) => ({ ...prev, [fieldName]: transcript }));
       setListeningField(null);
+      setPendingVoice({ name: fieldName, value: transcript });
     };
     recognition.onerror = () => setListeningField(null);
     recognition.onend = () => setListeningField(null);
     recognition.start();
+  }
+
+  function confirmPendingVoice() {
+    if (!pendingVoice) return;
+    setForm((prev) => ({ ...prev, [pendingVoice.name]: pendingVoice.value }));
+    setPendingVoice(null);
+  }
+
+  function rejectPendingVoice() {
+    if (!pendingVoice) return;
+    const fieldName = pendingVoice.name;
+    setPendingVoice(null);
+    handleVoice(fieldName);
   }
 
   async function handlePhotoUpload(e) {
@@ -498,6 +513,27 @@ export default function NewProductPage() {
             placeholder="Seleccionar usuario"
           />
         </div>
+
+        {/* Banner confirmación voz individual */}
+        {pendingVoice && (
+          <div className="flex items-center justify-between gap-4 bg-xylo-500/5 border border-xylo-500/20 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <Mic size={15} className="text-xylo-500 shrink-0" />
+              <span className="text-sm text-base-muted shrink-0">Escuché:</span>
+              <span className="text-sm font-semibold text-xylo-600 truncate">{pendingVoice.value}</span>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <button type="button" onClick={confirmPendingVoice}
+                className="flex items-center gap-1.5 bg-xylo-500 hover:bg-xylo-600 text-white rounded-lg px-3 py-1.5 text-xs font-medium transition">
+                <CheckCircle size={13} /> Correcto
+              </button>
+              <button type="button" onClick={rejectPendingVoice}
+                className="flex items-center gap-1.5 bg-base-subtle hover:bg-base-border text-base-muted rounded-lg px-3 py-1.5 text-xs transition">
+                <MicOff size={13} /> Repetir
+              </button>
+            </div>
+          </div>
+        )}
 
         <div>
           <p className="text-sm text-base-muted mb-2">Observaciones</p>

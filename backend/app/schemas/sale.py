@@ -22,6 +22,20 @@ class SaleCreate(BaseModel):
     payments: List[SalePaymentCreate] = []
 
 
+class SaleUpdate(BaseModel):
+    sale_price_usd: Optional[Decimal] = None
+    seller_id: Optional[int] = None
+    client_name: Optional[str] = None
+    notes: Optional[str] = None
+    has_trade_in: Optional[bool] = None
+    trade_in_value_usd: Optional[Decimal] = None
+    has_deposit: Optional[bool] = None
+    deposit_amount_usd: Optional[Decimal] = None
+    remaining_balance_usd: Optional[Decimal] = None
+    status: Optional[str] = None
+    payments: Optional[List[SalePaymentCreate]] = None
+
+
 class SaleResponse(BaseModel):
     id: int
     product_id: int

@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
+import AuditHistory from "../components/AuditHistory";
 
 export default function SaleDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [sale, setSale] = useState(null);
   const [product, setProduct] = useState(null);
@@ -44,10 +46,18 @@ export default function SaleDetailPage() {
 
   return (
     <div>
-      <Header
-        title={`Venta #${sale.id}`}
-        subtitle="Detalle completo de la operación"
-      />
+      <div className="flex items-start justify-between mb-6">
+        <Header
+          title={`Venta #${sale.id}`}
+          subtitle="Detalle completo de la operación"
+        />
+        <button
+          onClick={() => navigate(`/sales/${id}/edit`)}
+          className="bg-base-subtle hover:bg-base-border transition text-base-text rounded-xl px-4 py-2.5 text-sm font-medium"
+        >
+          Editar
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="bg-base-card border border-base-border rounded-xl p-6">
@@ -124,7 +134,11 @@ export default function SaleDetailPage() {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-5">
+        <AuditHistory entityType="sale" entityId={id} />
+      </div>
+
+      <div className="mt-5">
         <Link
           to="/sales"
           className="bg-white/5 hover:bg-white/10 transition rounded-xl px-4 py-3 text-sm"
