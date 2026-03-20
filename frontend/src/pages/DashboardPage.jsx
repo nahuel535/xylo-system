@@ -225,6 +225,8 @@ export default function DashboardPage() {
 
 // ── Chart SVG ──────────────────────────────────────────
 function MonthlyChart({ data, view }) {
+  const [tooltip, setTooltip] = useState(null);
+
   const W = 600;
   const H = 180;
   const PAD = { top: 12, right: 16, bottom: 32, left: 52 };
@@ -251,6 +253,10 @@ function MonthlyChart({ data, view }) {
     return PAD.left + i * barGroupW + (barGroupW - (view === "profit" ? barW * 2 + gap : barW)) / 2;
   }
 
+  // Tooltip dimensions
+  const TW = 148;
+  const TH = view === "profit" ? 60 : 44;
+
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ maxHeight: 200 }}>
       {/* Y gridlines */}
@@ -272,26 +278,24 @@ function MonthlyChart({ data, view }) {
       {/* Bars */}
       {data.map((d, i) => {
         const bx = x(i);
+        const hovered = tooltip?.i === i;
         if (view === "profit") {
           const hCost = Math.max(barH(d.cost_usd), 2);
           const hProfit = Math.max(barH(d.profit_usd), 2);
           return (
             <g key={i}>
-              {/* Cost bar */}
               <rect
                 x={bx} y={PAD.top + chartH - hCost}
                 width={barW} height={hCost}
-                rx={3} fill="#f87171" opacity={0.85}
+                rx={3} fill="#f87171" opacity={hovered ? 1 : 0.85}
               />
-              {/* Profit bar */}
               <rect
                 x={bx + barW + gap} y={PAD.top + chartH - hProfit}
                 width={barW} height={hProfit}
-                rx={3} fill="var(--color-xylo-500, #7c3aed)" opacity={0.9}
+                rx={3} fill="var(--color-xylo-500, #7c3aed)" opacity={hovered ? 1 : 0.9}
               />
-              {/* Label */}
               <text x={bx + barW + gap / 2} y={H - PAD.bottom + 14}
-                textAnchor="middle" fontSize={9} fill="currentColor" opacity={0.5}>
+                textAnchor="middle" fontSize={9} fill="currentColor" opacity={hovered ? 0.9 : 0.5}>
                 {d.label}
               </text>
             </g>
@@ -303,16 +307,81 @@ function MonthlyChart({ data, view }) {
               <rect
                 x={bx} y={PAD.top + chartH - hRev}
                 width={barW} height={hRev}
-                rx={3} fill="var(--color-xylo-500, #7c3aed)" opacity={0.9}
+                rx={3} fill="var(--color-xylo-500, #7c3aed)" opacity={hovered ? 1 : 0.9}
               />
               <text x={bx + barW / 2} y={H - PAD.bottom + 14}
-                textAnchor="middle" fontSize={9} fill="currentColor" opacity={0.5}>
+                textAnchor="middle" fontSize={9} fill="currentColor" opacity={hovered ? 0.9 : 0.5}>
                 {d.label}
               </text>
             </g>
           );
         }
       })}
+
+      {/* Invisible hitboxes for hover */}
+      {data.map((d, i) => {
+        const cx = PAD.left + i * barGroupW + barGroupW / 2;
+        return (
+          <rect
+            key={`hit-${i}`}
+            x={PAD.left + i * barGroupW}
+            y={PAD.top}
+            width={barGroupW}
+            height={chartH}
+            fill="transparent"
+            style={{ cursor: "crosshair" }}
+            onMouseEnter={() => setTooltip({ i, d, cx })}
+            onMouseLeave={() => setTooltip(null)}
+          />
+        );
+      })}
+
+      {/* Tooltip */}
+      {tooltip && (() => {
+        const tx = Math.min(Math.max(tooltip.cx - TW / 2, PAD.left), W - PAD.right - TW);
+        const ty = PAD.top + 2;
+        const d = tooltip.d;
+        return (
+          <g style={{ pointerEvents: "none" }}>
+            <rect
+              x={tx} y={ty} width={TW} height={TH}
+              rx={7} fill="white"
+              stroke="rgba(0,0,0,0.09)" strokeWidth={1}
+              filter="drop-shadow(0 2px 10px rgba(0,0,0,0.13))"
+            />
+            {/* Month label */}
+            <text x={tx + TW / 2} y={ty + 15} textAnchor="middle"
+              fontSize={9} fontWeight="600" fill="#0a0a0a">
+              {d.label}
+            </text>
+            {view === "profit" ? (
+              <>
+                <text x={tx + 12} y={ty + 31} fontSize={9} fill="#f87171">
+                  ● Costo
+                </text>
+                <text x={tx + TW - 12} y={ty + 31} textAnchor="end" fontSize={9} fontWeight="600" fill="#f87171">
+                  USD {fmt(d.cost_usd)}
+                </text>
+                <text x={tx + 12} y={ty + 47} fontSize={9} fill="var(--color-xylo-500, #7c3aed)">
+                  ● Ganancia
+                </text>
+                <text x={tx + TW - 12} y={ty + 47} textAnchor="end" fontSize={9} fontWeight="600" fill="var(--color-xylo-500, #7c3aed)">
+                  USD {fmt(d.profit_usd)}
+                </text>
+              </>
+            ) : (
+              <>
+                <text x={tx + 12} y={ty + 31} fontSize={9} fill="var(--color-xylo-500, #7c3aed)">
+                  ● Facturación
+                </text>
+                <text x={tx + TW - 12} y={ty + 31} textAnchor="end" fontSize={9} fontWeight="600" fill="var(--color-xylo-500, #7c3aed)">
+                  USD {fmt(d.revenue_usd)}
+                </text>
+              </>
+            )}
+          </g>
+        );
+      })()}
     </svg>
   );
 }
