@@ -14,6 +14,15 @@ from app.api.photos import router as photos_router
 
 Base.metadata.create_all(bind=engine)
 
+# Add missing columns if they don't exist (manual migrations)
+with engine.connect() as conn:
+    from sqlalchemy import text
+    conn.execute(text("""
+        ALTER TABLE products
+        ADD COLUMN IF NOT EXISTS is_offer BOOLEAN NOT NULL DEFAULT FALSE
+    """))
+    conn.commit()
+
 app = FastAPI(title="Xylo API")
 
 app.add_middleware(
