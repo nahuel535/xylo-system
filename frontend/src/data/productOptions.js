@@ -43,15 +43,35 @@ export const IPHONE_OPTIONS = {
     storages: ["64GB", "128GB", "256GB"],
     colors: ["Black", "White", "Green", "Yellow", "Purple", "Red"],
   },
+  "iPhone 11 Pro": {
+    storages: ["64GB", "256GB", "512GB"],
+    colors: ["Space Gray", "Silver", "Gold", "Midnight Green"],
+  },
+  "iPhone 11 Pro Max": {
+    storages: ["64GB", "256GB", "512GB"],
+    colors: ["Space Gray", "Silver", "Gold", "Midnight Green"],
+  },
   "iPhone 12": {
     storages: ["64GB", "128GB", "256GB"],
     colors: ["Black", "White", "Blue", "Green", "Purple", "Red"],
+  },
+  "iPhone 12 Pro": {
+    storages: ["128GB", "256GB", "512GB"],
+    colors: ["Silver", "Graphite", "Gold", "Pacific Blue"],
+  },
+  "iPhone 12 Pro Max": {
+    storages: ["128GB", "256GB", "512GB"],
+    colors: ["Silver", "Graphite", "Gold", "Pacific Blue"],
   },
   "iPhone 13": {
     storages: ["128GB", "256GB", "512GB"],
     colors: ["Midnight", "Starlight", "Blue", "Pink", "Red", "Green"],
   },
   "iPhone 13 Pro": {
+    storages: ["128GB", "256GB", "512GB", "1TB"],
+    colors: ["Graphite", "Silver", "Gold", "Sierra Blue", "Alpine Green"],
+  },
+  "iPhone 13 Pro Max": {
     storages: ["128GB", "256GB", "512GB", "1TB"],
     colors: ["Graphite", "Silver", "Gold", "Sierra Blue", "Alpine Green"],
   },
@@ -63,6 +83,10 @@ export const IPHONE_OPTIONS = {
     storages: ["128GB", "256GB", "512GB", "1TB"],
     colors: ["Space Black", "Silver", "Gold", "Deep Purple"],
   },
+  "iPhone 14 Pro Max": {
+    storages: ["128GB", "256GB", "512GB", "1TB"],
+    colors: ["Space Black", "Silver", "Gold", "Deep Purple"],
+  },
   "iPhone 15": {
     storages: ["128GB", "256GB", "512GB"],
     colors: ["Black", "Blue", "Green", "Yellow", "Pink"],
@@ -71,12 +95,36 @@ export const IPHONE_OPTIONS = {
     storages: ["128GB", "256GB", "512GB", "1TB"],
     colors: ["Black Titanium", "White Titanium", "Blue Titanium", "Natural Titanium"],
   },
+  "iPhone 15 Pro Max": {
+    storages: ["256GB", "512GB", "1TB"],
+    colors: ["Black Titanium", "White Titanium", "Blue Titanium", "Natural Titanium"],
+  },
   "iPhone 16": {
     storages: ["128GB", "256GB", "512GB"],
     colors: ["Black", "White", "Pink", "Teal", "Ultramarine"],
   },
   "iPhone 16 Pro": {
     storages: ["128GB", "256GB", "512GB", "1TB"],
+    colors: ["Black Titanium", "White Titanium", "Natural Titanium", "Desert Titanium"],
+  },
+  "iPhone 16 Pro Max": {
+    storages: ["256GB", "512GB", "1TB"],
+    colors: ["Black Titanium", "White Titanium", "Natural Titanium", "Desert Titanium"],
+  },
+  "iPhone 17": {
+    storages: ["128GB", "256GB", "512GB"],
+    colors: ["Black", "White", "Blue", "Pink", "Teal"],
+  },
+  "iPhone 17 Air": {
+    storages: ["128GB", "256GB", "512GB"],
+    colors: ["Black", "White", "Blue", "Pink", "Teal"],
+  },
+  "iPhone 17 Pro": {
+    storages: ["256GB", "512GB", "1TB"],
+    colors: ["Black Titanium", "White Titanium", "Natural Titanium", "Desert Titanium"],
+  },
+  "iPhone 17 Pro Max": {
+    storages: ["256GB", "512GB", "1TB"],
     colors: ["Black Titanium", "White Titanium", "Natural Titanium", "Desert Titanium"],
   },
 };
