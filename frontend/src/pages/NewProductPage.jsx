@@ -15,7 +15,7 @@ const initialState = {
   imei: "", serial_number: "", battery_health: "", cosmetic_condition: "",
   functional_condition: "", sim_type: "", condition_type: "", purchase_date: "",
   purchase_price_usd: "", suggested_sale_price_usd: "", supplier: "",
-  notes: "", status: "in_stock", photo_url: "", created_by: "",
+  notes: "", status: "in_stock", photo_url: "", created_by: "", is_offer: false,
 };
 
 // Campos que se dictan en el modo guiado
@@ -548,6 +548,16 @@ export default function NewProductPage() {
             <MicButton listening={listeningField === "notes"} onClick={() => handleVoice("notes")} className="absolute top-3 right-3" />
           </div>
         </div>
+
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={form.is_offer}
+            onChange={(e) => setForm((prev) => ({ ...prev, is_offer: e.target.checked }))}
+            className="w-4 h-4 accent-xylo-500"
+          />
+          <span className="text-sm text-base-text font-medium">Marcar como oferta / oportunidad</span>
+        </label>
 
         {message && <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{message}</p>}
 

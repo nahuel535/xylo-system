@@ -58,6 +58,7 @@ export default function EditProductPage() {
           status: product.status || "in_stock",
           photo_url: product.photo_url || "",
           created_by: product.created_by ? String(product.created_by) : "",
+          is_offer: product.is_offer || false,
         });
       } catch (error) {
         console.error("Error cargando producto:", error);
@@ -371,6 +372,16 @@ export default function EditProductPage() {
             className="w-full min-h-[130px] bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
           />
         </div>
+
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={form.is_offer || false}
+            onChange={(e) => setForm((prev) => ({ ...prev, is_offer: e.target.checked }))}
+            className="w-4 h-4 accent-xylo-500"
+          />
+          <span className="text-sm text-base-text font-medium">Marcar como oferta / oportunidad</span>
+        </label>
 
         {message && (
           <p className="text-sm text-red-300">{message}</p>

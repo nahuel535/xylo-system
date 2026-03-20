@@ -26,7 +26,8 @@ class ProductCreate(BaseModel):
     status: str = "in_stock"
     photo_url: Optional[str] = None
     created_by: Optional[int] = None
-    
+    is_offer: bool = False
+
 class ProductUpdate(BaseModel):
     category: str
     brand: str = "Apple"
@@ -48,7 +49,7 @@ class ProductUpdate(BaseModel):
     status: str = "in_stock"
     photo_url: Optional[str] = None
     created_by: Optional[int] = None
-
+    is_offer: bool = False
 
 class ProductResponse(BaseModel):
     id: int
@@ -75,6 +76,7 @@ class ProductResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     qr_code_url: Optional[str]
+    is_offer: bool
 
     class Config:
         from_attributes = True
