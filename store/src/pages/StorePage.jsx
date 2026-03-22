@@ -858,11 +858,6 @@ const IPHONE_CATALOG = [
     id: "iphone17", generation: "iPhone 17", year: "2025", tag: "La próxima generación.",
     accent: "#ff453a",
     familyImg: null,
-    backImgs: [
-      `${CDN}/iphone-17-finish-select-black-202509_AV2${IP}`,
-      `${CDN}/iphone-17-pro-finish-select-deepblue-202509_AV2${IP}`,
-      `${CDN}/iphone-17-pro-max-finish-select-cosmicorange-202509_AV2${IP}`,
-    ],
     models: [
       {
         name: "iPhone 17",
