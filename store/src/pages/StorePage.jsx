@@ -549,7 +549,7 @@ function FeatureGrid() {
 //  iPhone Catalog Data
 // ─────────────────────────────────────────────────────────────────────────────
 const CDN = "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is";
-const IP = "?wid=470&hei=556&fmt=png-alpha";
+const IP = "?hei=556&fmt=png-alpha";
 
 const IPHONE_CATALOG = [
   {
