@@ -867,20 +867,7 @@ const IPHONE_CATALOG = [
         ],
         highlights: ["Apple Intelligence", "A19", "Camera Control", "USB-C", "48MP principal"],
       },
-      {
-        name: "iPhone 17 Air",
-        img: null,
-        display: '6.6" Super Retina XDR OLED — ultra delgado',
-        chip: "A19",
-        camera: "48MP — Gran angular principal",
-        battery: "Hasta 20 horas de video",
-        storage: ["128GB", "256GB"],
-        colors: [
-          { name: "Negro", hex: "#1c1c1e" }, { name: "Plata", hex: "#e8e8e8" },
-          { name: "Celeste", hex: "#a0c8e8" },
-        ],
-        highlights: ["El más delgado de Apple", "A19", "Apple Intelligence", "6.6\" OLED"],
-      },
+
       {
         name: "iPhone 17 Pro",
         img: `${CDN}/iphone-17-pro-finish-select-deepblue-202509${IP}`,
