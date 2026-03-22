@@ -97,7 +97,7 @@ function Navbar({ scrolled }) {
 // ─────────────────────────────────────────────────────────────────────────────
 //  Hero
 // ─────────────────────────────────────────────────────────────────────────────
-function Hero({ count }) {
+function Hero() {
   return (
     <section style={{
       minHeight: "100vh",
@@ -128,29 +128,6 @@ function Hero({ count }) {
         maskImage: "radial-gradient(ellipse 80% 70% at 50% 40%, black 30%, transparent 100%)",
         WebkitMaskImage: "radial-gradient(ellipse 80% 70% at 50% 40%, black 30%, transparent 100%)",
       }} />
-
-      {/* Badge */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-        style={{
-          display: "inline-flex", alignItems: "center", gap: "8px",
-          background: T.accentLight,
-          border: `1px solid ${T.accentBorder}`,
-          borderRadius: "980px", padding: "6px 16px",
-          marginBottom: "36px",
-        }}
-      >
-        <span style={{
-          width: "6px", height: "6px", borderRadius: "50%",
-          background: ACCENT, boxShadow: `0 0 8px ${ACCENT}`,
-          flexShrink: 0,
-        }} />
-        <span style={{ fontSize: "13px", fontWeight: 500, color: ACCENT, letterSpacing: "0.04em" }}>
-          {count > 0 ? <><AnimatedCount target={count} /> equipos en stock</> : "Stock disponible"}
-        </span>
-      </motion.div>
 
       {/* Headline */}
       <motion.h1
@@ -569,6 +546,96 @@ function FeatureGrid() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  All Models Section
+// ─────────────────────────────────────────────────────────────────────────────
+const ALL_MODELS = [
+  "iPhone 11", "iPhone 11 Pro", "iPhone 11 Pro Max",
+  "iPhone 12", "iPhone 12 Pro", "iPhone 12 Pro Max",
+  "iPhone 13", "iPhone 13 Pro", "iPhone 13 Pro Max",
+  "iPhone 14", "iPhone 14 Pro", "iPhone 14 Pro Max",
+  "iPhone 15", "iPhone 15 Pro", "iPhone 15 Pro Max",
+  "iPhone 16", "iPhone 16 Pro", "iPhone 16 Pro Max",
+  "iPhone 17", "iPhone 17 Air", "iPhone 17 Pro", "iPhone 17 Pro Max",
+];
+
+function ModelsSection() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+
+  return (
+    <section style={{
+      background: "#f8f8f6",
+      borderTop: `1px solid ${T.border}`,
+      padding: "96px clamp(20px, 6vw, 80px) 104px",
+      fontFamily: T.body,
+    }}>
+      <div style={{ maxWidth: "1060px", margin: "0 auto" }} ref={ref}>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6 }}
+          style={{ textAlign: "center", marginBottom: "52px" }}
+        >
+          <p style={{
+            fontSize: "11.5px", fontWeight: 600, letterSpacing: "0.14em",
+            textTransform: "uppercase", color: ACCENT, marginBottom: "12px",
+          }}>
+            Catálogo completo
+          </p>
+          <h2 style={{
+            fontFamily: T.heading,
+            fontSize: "clamp(26px, 3.5vw, 36px)",
+            fontWeight: 700, letterSpacing: "-0.03em",
+            color: T.text, lineHeight: 1.1, marginBottom: "14px",
+          }}>
+            Todos los modelos
+          </h2>
+          <p style={{ fontSize: "15px", color: T.textSec, lineHeight: 1.6, maxWidth: "420px", margin: "0 auto" }}>
+            ¿No ves el que buscás en stock? Consultanos directamente y te armamos una propuesta.
+          </p>
+        </motion.div>
+
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: "10px",
+        }}>
+          {ALL_MODELS.map((model, i) => (
+            <motion.a
+              key={model}
+              href={waLink(`Hola, me interesa el ${model}, ¿lo tienen disponible?`)}
+              target="_blank" rel="noreferrer"
+              initial={{ opacity: 0, y: 16 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.45, delay: i * 0.03, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{ y: -3, boxShadow: "0 8px 24px rgba(0,0,0,0.08)", borderColor: T.borderAccent }}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "14px 18px",
+                background: "#fff",
+                border: `1px solid ${T.border}`,
+                borderRadius: "14px",
+                textDecoration: "none",
+                transition: "border-color 0.2s, box-shadow 0.2s",
+                cursor: "pointer",
+              }}
+            >
+              <span style={{ fontSize: "14px", fontWeight: 500, color: T.text, letterSpacing: "-0.01em" }}>
+                {model}
+              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "5px", color: ACCENT, flexShrink: 0 }}>
+                <WhatsAppIcon size={13} />
+                <span style={{ fontSize: "11px", fontWeight: 600, color: ACCENT }}>Consultar</span>
+              </div>
+            </motion.a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  Filter Chip
 // ─────────────────────────────────────────────────────────────────────────────
 function FilterChip({ active, onClick, children }) {
@@ -971,11 +1038,12 @@ export default function StorePage() {
   return (
     <div style={{ background: T.bg, minHeight: "100vh", color: T.text, overflowX: "hidden" }}>
       <Navbar scrolled={scrolled} />
-      <Hero count={products.length} />
+      <Hero />
       <HowToBuy />
       <FeatureGrid />
+      <ModelsSection />
 
-      {/* ── Stock ─────────────────────────────────────────────────────── */}
+      {/* ── Oportunidades ─────────────────────────────────────────────── */}
       <section id="stock" style={{ maxWidth: "1280px", margin: "0 auto", padding: "100px clamp(20px, 6vw, 80px) 120px", fontFamily: T.body }}>
 
         {/* Header */}
@@ -986,14 +1054,14 @@ export default function StorePage() {
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
           style={{ marginBottom: "56px" }}
         >
-          <p style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: ACCENT, marginBottom: "16px" }}>Stock disponible</p>
+          <p style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: ACCENT, marginBottom: "16px" }}>Disponibles ahora</p>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
             <div>
               <h2 style={{ fontFamily: T.heading, fontSize: "clamp(34px, 5vw, 52px)", fontWeight: 700, letterSpacing: "-0.04em", color: T.text, lineHeight: 1, marginBottom: "10px" }}>
-                Equipos disponibles
+                Oportunidades
               </h2>
               <p style={{ fontSize: "15px", color: T.textSec }}>
-                {loading ? "Cargando..." : `${filtered.length} equipo${filtered.length !== 1 ? "s" : ""} en stock`}
+                {loading ? "Cargando..." : `${filtered.length} equipo${filtered.length !== 1 ? "s" : ""} con entrega inmediata`}
               </p>
             </div>
 
