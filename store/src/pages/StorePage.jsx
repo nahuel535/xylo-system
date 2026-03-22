@@ -1135,8 +1135,123 @@ function GenerationModal({ gen, onClose }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Models Catalog (generation cards)
+//  Models Catalog (Apple-style large image cards)
 // ─────────────────────────────────────────────────────────────────────────────
+function GenCard({ gen, i, inView, onClick }) {
+  const [imgErr, setImgErr] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const leadImg = gen.models[0].img;
+
+  return (
+    <motion.button
+      onClick={onClick}
+      initial={{ opacity: 0, y: 32 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
+      whileTap={{ scale: 0.99 }}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      style={{
+        background: "#fff",
+        border: "none",
+        borderRadius: "28px",
+        overflow: "hidden",
+        cursor: "pointer",
+        outline: "none",
+        textAlign: "left",
+        display: "flex",
+        flexDirection: "column",
+        boxShadow: hovered
+          ? "0 24px 64px rgba(0,0,0,0.13)"
+          : "0 2px 16px rgba(0,0,0,0.06)",
+        transform: hovered ? "translateY(-4px)" : "translateY(0)",
+        transition: "box-shadow 0.35s ease, transform 0.35s ease",
+      }}
+    >
+      {/* Image area */}
+      <div style={{
+        background: "linear-gradient(160deg, #f5f5f3 0%, #ececea 100%)",
+        height: "clamp(220px, 28vw, 340px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* Year pill */}
+        <div style={{
+          position: "absolute", top: "18px", left: "18px",
+          background: "rgba(255,255,255,0.75)",
+          backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+          borderRadius: "980px", padding: "5px 13px",
+          fontSize: "12px", fontWeight: 600, color: T.textSec, letterSpacing: "0.04em",
+        }}>{gen.year}</div>
+
+        {/* Models count pill */}
+        <div style={{
+          position: "absolute", top: "18px", right: "18px",
+          background: "rgba(255,255,255,0.75)",
+          backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+          borderRadius: "980px", padding: "5px 13px",
+          fontSize: "12px", fontWeight: 500, color: T.textSec,
+        }}>{gen.models.length} modelos</div>
+
+        {leadImg && !imgErr ? (
+          <motion.img
+            src={leadImg}
+            alt={gen.generation}
+            onError={() => setImgErr(true)}
+            animate={{ scale: hovered ? 1.06 : 1 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            style={{ height: "clamp(180px, 22vw, 290px)", width: "auto", objectFit: "contain" }}
+          />
+        ) : (
+          <div style={{ opacity: 0.18 }}>
+            <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke={T.text} strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" />
+              <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2" />
+            </svg>
+          </div>
+        )}
+
+        {/* Bottom gradient fade */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0, height: "60px",
+          background: "linear-gradient(to bottom, transparent, rgba(236,236,234,0.7))",
+          pointerEvents: "none",
+        }} />
+      </div>
+
+      {/* Text area */}
+      <div style={{ padding: "24px 28px 28px", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <div>
+          <h3 style={{
+            fontFamily: T.heading,
+            fontSize: "clamp(20px, 2.2vw, 26px)", fontWeight: 700,
+            letterSpacing: "-0.03em", color: T.text, margin: 0, lineHeight: 1.1,
+          }}>
+            {gen.generation}
+          </h3>
+          <p style={{ fontSize: "14px", color: T.textSec, marginTop: "6px", lineHeight: 1.5 }}>
+            {gen.tag}
+          </p>
+        </div>
+
+        <div style={{
+          display: "flex", alignItems: "center", gap: "5px",
+          color: gen.accent, marginTop: "4px",
+        }}>
+          <span style={{ fontSize: "14px", fontWeight: 600 }}>Ver modelos</span>
+          <motion.span
+            animate={{ x: hovered ? 3 : 0 }}
+            transition={{ duration: 0.25 }}
+            style={{ display: "flex" }}
+          >
+            <ChevronRight size={14} strokeWidth={2.5} />
+          </motion.span>
+        </div>
+      </div>
+    </motion.button>
+  );
+}
+
 function ModelsCatalog() {
   const [activeGen, setActiveGen] = useState(null);
   const ref = useRef(null);
@@ -1144,102 +1259,63 @@ function ModelsCatalog() {
 
   return (
     <section style={{
-      background: T.bg,
-      borderTop: `1px solid ${T.border}`,
+      background: "#f5f5f7",
       padding: "96px clamp(20px, 6vw, 80px) 104px",
       fontFamily: T.body,
     }}>
-      <div style={{ maxWidth: "1060px", margin: "0 auto" }} ref={ref}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }} ref={ref}>
 
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          style={{ marginBottom: "52px" }}
+          style={{ marginBottom: "56px", textAlign: "center" }}
         >
           <p style={{
             fontSize: "11.5px", fontWeight: 600, letterSpacing: "0.14em",
-            textTransform: "uppercase", color: ACCENT, marginBottom: "12px",
+            textTransform: "uppercase", color: ACCENT, marginBottom: "14px",
           }}>
             Catálogo completo
           </p>
           <h2 style={{
             fontFamily: T.heading,
-            fontSize: "clamp(28px, 3.8vw, 42px)",
-            fontWeight: 700, letterSpacing: "-0.035em",
-            color: T.text, lineHeight: 1.05, marginBottom: "12px",
+            fontSize: "clamp(32px, 4.5vw, 52px)",
+            fontWeight: 700, letterSpacing: "-0.04em",
+            color: T.text, lineHeight: 1.05, marginBottom: "14px",
           }}>
-            Todos los modelos
+            Todos los iPhones
           </h2>
-          <p style={{ fontSize: "15px", color: T.textSec, lineHeight: 1.6, maxWidth: "440px" }}>
-            Elegí la generación y conocé todas las opciones — specs, colores y almacenamiento. Si el que buscás no está en stock, consultanos directo.
+          <p style={{ fontSize: "16px", color: T.textSec, lineHeight: 1.6, maxWidth: "460px", margin: "0 auto" }}>
+            Explorá cada generación. Specs, colores y opciones de almacenamiento.
           </p>
         </motion.div>
 
-        {/* Generation cards */}
+        {/* Generation cards grid — Apple style */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-          gap: "16px",
-        }}
-          className="gen-grid"
-        >
-          {IPHONE_CATALOG.map((gen, i) => (
-            <motion.button
-              key={gen.id}
-              onClick={() => setActiveGen(gen)}
-              initial={{ opacity: 0, y: 24 }}
-              animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
-              whileHover={{ y: -5, boxShadow: "0 16px 40px rgba(0,0,0,0.09)" }}
-              whileTap={{ scale: 0.98 }}
-              style={{
-                background: "#fff",
-                border: `1px solid ${T.border}`,
-                borderRadius: "20px",
-                padding: "28px 26px",
-                textAlign: "left",
-                cursor: "pointer",
-                outline: "none",
-                transition: "box-shadow 0.25s, border-color 0.25s",
-                display: "flex",
-                flexDirection: "column",
-                gap: "20px",
-                position: "relative",
-                overflow: "hidden",
-              }}
-            >
-              {/* accent line */}
-              <div style={{
-                position: "absolute", top: 0, left: 0, right: 0, height: "3px",
-                background: gen.accent, opacity: 0.7,
-              }} />
-
-              <div>
-                <p style={{ fontSize: "11px", fontWeight: 600, color: T.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "8px" }}>
-                  {gen.year} · {gen.models.length} modelos
-                </p>
-                <h3 style={{
-                  fontFamily: T.heading,
-                  fontSize: "22px", fontWeight: 700,
-                  letterSpacing: "-0.03em", color: T.text,
-                  marginBottom: "8px",
-                }}>
-                  {gen.generation}
-                </h3>
-                <p style={{ fontSize: "13px", color: T.textSec, lineHeight: 1.5 }}>{gen.tag}</p>
+          gridTemplateColumns: "repeat(2, 1fr)",
+          gap: "20px",
+        }} className="gen-grid-apple">
+          {IPHONE_CATALOG.map((gen, i) => {
+            const isLast = i === IPHONE_CATALOG.length - 1;
+            const isOdd = IPHONE_CATALOG.length % 2 !== 0;
+            return (
+              <div
+                key={gen.id}
+                style={isLast && isOdd ? { gridColumn: "1 / -1", maxWidth: "540px", margin: "0 auto", width: "100%" } : {}}
+              >
+                <GenCard gen={gen} i={i} inView={inView} onClick={() => setActiveGen(gen)} />
               </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", color: gen.accent }}>
-                <span style={{ fontSize: "13px", fontWeight: 600 }}>Ver modelos</span>
-                <ChevronRight size={14} strokeWidth={2.5} />
-              </div>
-            </motion.button>
-          ))}
+            );
+          })}
         </div>
+
         <style>{`
-          @media (max-width: 600px) { .gen-grid { grid-template-columns: 1fr !important; } }
+          @media (max-width: 640px) {
+            .gen-grid-apple { grid-template-columns: 1fr !important; }
+            .gen-grid-apple > div { max-width: 100% !important; }
+          }
         `}</style>
       </div>
 
