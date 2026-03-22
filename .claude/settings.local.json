@@ -16,7 +16,17 @@
       "Bash(git commit:*)",
       "Bash(node -e \"const p = require\\(''''./store/node_modules/serve/package.json''''\\); console.log\\(JSON.stringify\\(p.bin\\)\\)\")",
       "Bash(python3 -c \"import sys,json; p=json.load\\(sys.stdin\\); print\\(p.get\\(''''bin''''\\)\\)\")",
-      "WebFetch(domain:chiringuitoserrano.com)"
+      "WebFetch(domain:chiringuitoserrano.com)",
+      "Bash(curl -s -I \"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-blacktitanium?wid=470&hei=556&fmt=png-alpha\")",
+      "Bash(curl -s -I \"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-14-finish-select-202209-6-1inch-midnight?wid=470&hei=556&fmt=png-alpha\")",
+      "Bash(curl -s -I \"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-13-midnight-select-2021?wid=470&hei=556&fmt=png-alpha\")",
+      "Bash(curl -s -I \"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-12-black-select-2020?wid=470&hei=556&fmt=png-alpha\")",
+      "Bash(curl -s -I \"https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is/iphone-11-black-select-2019?wid=470&hei=556&fmt=png-alpha\")",
+      "Bash(curl -s -I \"https://store.storeimages.cdn-apple.com/8756/as-images.apple.com/is/iphone-16-pro-finish-select-202409-6-3inch-blacktitanium?wid=470&hei=556&fmt=png-alpha\")",
+      "Bash(curl -s \"https://www.apple.com/shop/product-finder/iphone\")",
+      "Bash(curl -s https://www.apple.com/iphone/compare/)",
+      "Bash(curl -s \"https://www.apple.com/shop/buy-iphone\")",
+      "Bash(curl -sL \"https://www.apple.com/iphone/compare/\")"
     ]
   }
 }
