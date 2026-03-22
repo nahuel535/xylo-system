@@ -546,35 +546,629 @@ function FeatureGrid() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  All Models Section
+//  iPhone Catalog Data
 // ─────────────────────────────────────────────────────────────────────────────
-const ALL_MODELS = [
-  "iPhone 11", "iPhone 11 Pro", "iPhone 11 Pro Max",
-  "iPhone 12", "iPhone 12 Pro", "iPhone 12 Pro Max",
-  "iPhone 13", "iPhone 13 Pro", "iPhone 13 Pro Max",
-  "iPhone 14", "iPhone 14 Pro", "iPhone 14 Pro Max",
-  "iPhone 15", "iPhone 15 Pro", "iPhone 15 Pro Max",
-  "iPhone 16", "iPhone 16 Pro", "iPhone 16 Pro Max",
-  "iPhone 17", "iPhone 17 Air", "iPhone 17 Pro", "iPhone 17 Pro Max",
+const CDN = "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is";
+const IP = "?wid=470&hei=556&fmt=png-alpha";
+
+const IPHONE_CATALOG = [
+  {
+    id: "iphone11", generation: "iPhone 11", year: "2019", tag: "El inicio de una era",
+    accent: "#4a9b6f",
+    models: [
+      {
+        name: "iPhone 11",
+        img: `${CDN}/iphone-11-black-select-2019${IP}`,
+        display: '6.1" Liquid Retina HD (1792×828)',
+        chip: "A13 Bionic",
+        camera: "Dual 12MP — Gran angular + Ultra gran angular",
+        battery: "Hasta 17 horas de video",
+        storage: ["64GB", "128GB", "256GB"],
+        colors: [
+          { name: "Negro", hex: "#1c1c1e" }, { name: "Blanco", hex: "#f5f5f0" },
+          { name: "Rojo", hex: "#bf0000" }, { name: "Verde", hex: "#4a7c59" },
+          { name: "Amarillo", hex: "#d4b800" }, { name: "Violeta", hex: "#9b7fd4" },
+        ],
+        highlights: ["Face ID", "Modo Noche", "Video 4K 60fps", "Carga rápida"],
+      },
+      {
+        name: "iPhone 11 Pro",
+        img: `${CDN}/iphone-11-pro-space-gray-select-2019${IP}`,
+        display: '5.8" Super Retina XDR OLED (2436×1125)',
+        chip: "A13 Bionic",
+        camera: "Triple 12MP — Gran angular + Ultra gran angular + Teleobjetivo 2×",
+        battery: "Hasta 18 horas de video",
+        storage: ["64GB", "256GB", "512GB"],
+        colors: [
+          { name: "Space Gray", hex: "#1c1c1e" }, { name: "Plata", hex: "#e8e8e8" },
+          { name: "Dorado", hex: "#e8c97a" }, { name: "Verde Noche", hex: "#1c3a2a" },
+        ],
+        highlights: ["Face ID", "3× zoom óptico", "Pantalla OLED", "Video 4K 60fps"],
+      },
+      {
+        name: "iPhone 11 Pro Max",
+        img: `${CDN}/iphone-11-pro-max-space-gray-select-2019${IP}`,
+        display: '6.5" Super Retina XDR OLED (2688×1242)',
+        chip: "A13 Bionic",
+        camera: "Triple 12MP — Gran angular + Ultra gran angular + Teleobjetivo 2×",
+        battery: "Hasta 20 horas de video",
+        storage: ["64GB", "256GB", "512GB"],
+        colors: [
+          { name: "Space Gray", hex: "#1c1c1e" }, { name: "Plata", hex: "#e8e8e8" },
+          { name: "Dorado", hex: "#e8c97a" }, { name: "Verde Noche", hex: "#1c3a2a" },
+        ],
+        highlights: ["Pantalla 6.5\"", "3× zoom óptico", "20 horas batería", "OLED"],
+      },
+    ],
+  },
+  {
+    id: "iphone12", generation: "iPhone 12", year: "2020", tag: "5G. Un salto enorme.",
+    accent: "#0a84ff",
+    models: [
+      {
+        name: "iPhone 12",
+        img: `${CDN}/iphone-12-black-select-2020${IP}`,
+        display: '6.1" Super Retina XDR OLED (2532×1170)',
+        chip: "A14 Bionic",
+        camera: "Dual 12MP — Gran angular + Ultra gran angular",
+        battery: "Hasta 17 horas de video",
+        storage: ["64GB", "128GB", "256GB"],
+        colors: [
+          { name: "Negro", hex: "#1c1c1e" }, { name: "Blanco", hex: "#f5f5f0" },
+          { name: "Rojo", hex: "#bf0000" }, { name: "Verde", hex: "#4a7c59" },
+          { name: "Azul", hex: "#2c5d9c" }, { name: "Violeta", hex: "#8e6acc" },
+        ],
+        highlights: ["5G", "MagSafe", "Diseño plano", "OLED", "Face ID"],
+      },
+      {
+        name: "iPhone 12 Pro",
+        img: `${CDN}/iphone-12-pro-graphite-select-2020${IP}`,
+        display: '6.1" Super Retina XDR OLED (2532×1170)',
+        chip: "A14 Bionic",
+        camera: "Triple 12MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 2×",
+        battery: "Hasta 17 horas de video",
+        storage: ["128GB", "256GB", "512GB"],
+        colors: [
+          { name: "Grafito", hex: "#1c1c1e" }, { name: "Plata", hex: "#e8e8e8" },
+          { name: "Dorado", hex: "#e8c97a" }, { name: "Azul Pacífico", hex: "#2c5d8e" },
+        ],
+        highlights: ["5G", "LiDAR Scanner", "ProRAW", "2× zoom óptico", "MagSafe"],
+      },
+      {
+        name: "iPhone 12 Pro Max",
+        img: `${CDN}/iphone-12-pro-max-graphite-select-2020${IP}`,
+        display: '6.7" Super Retina XDR OLED (2778×1284)',
+        chip: "A14 Bionic",
+        camera: "Triple 12MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 2.5×",
+        battery: "Hasta 20 horas de video",
+        storage: ["128GB", "256GB", "512GB"],
+        colors: [
+          { name: "Grafito", hex: "#1c1c1e" }, { name: "Plata", hex: "#e8e8e8" },
+          { name: "Dorado", hex: "#e8c97a" }, { name: "Azul Pacífico", hex: "#2c5d8e" },
+        ],
+        highlights: ["Pantalla 6.7\"", "2.5× zoom óptico", "LiDAR", "20h batería", "5G"],
+      },
+    ],
+  },
+  {
+    id: "iphone13", generation: "iPhone 13", year: "2021", tag: "Tu película favorita. Por ti.",
+    accent: "#ff375f",
+    models: [
+      {
+        name: "iPhone 13",
+        img: `${CDN}/iphone-13-midnight-select-2021${IP}`,
+        display: '6.1" Super Retina XDR OLED (2532×1170)',
+        chip: "A15 Bionic",
+        camera: "Dual 12MP — Gran angular + Ultra gran angular con modo Cinematográfico",
+        battery: "Hasta 19 horas de video",
+        storage: ["128GB", "256GB", "512GB"],
+        colors: [
+          { name: "Medianoche", hex: "#1c1c2e" }, { name: "Blanco estelar", hex: "#f5f5f0" },
+          { name: "Rojo", hex: "#bf0000" }, { name: "Azul", hex: "#2c5d9c" },
+          { name: "Rosa", hex: "#e8a0b0" }, { name: "Verde", hex: "#4a7c59" },
+        ],
+        highlights: ["Modo Cinematográfico", "A15 Bionic", "Notch más pequeño", "19h batería"],
+      },
+      {
+        name: "iPhone 13 Pro",
+        img: `${CDN}/iphone-13-pro-graphite-select-2021${IP}`,
+        display: '6.1" Super Retina XDR ProMotion 120Hz (2532×1170)',
+        chip: "A15 Bionic",
+        camera: "Triple 12MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 3×",
+        battery: "Hasta 22 horas de video",
+        storage: ["128GB", "256GB", "512GB", "1TB"],
+        colors: [
+          { name: "Grafito", hex: "#1c1c1e" }, { name: "Plata", hex: "#e8e8e8" },
+          { name: "Dorado", hex: "#e8c97a" }, { name: "Azul Sierra", hex: "#4a7a9b" },
+          { name: "Verde Alpino", hex: "#4a7c59" },
+        ],
+        highlights: ["ProMotion 120Hz", "ProRes Video", "LiDAR", "3× zoom óptico", "Macro"],
+      },
+      {
+        name: "iPhone 13 Pro Max",
+        img: `${CDN}/iphone-13-pro-max-graphite-select-2021${IP}`,
+        display: '6.7" Super Retina XDR ProMotion 120Hz (2778×1284)',
+        chip: "A15 Bionic",
+        camera: "Triple 12MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 3×",
+        battery: "Hasta 28 horas de video",
+        storage: ["128GB", "256GB", "512GB", "1TB"],
+        colors: [
+          { name: "Grafito", hex: "#1c1c1e" }, { name: "Plata", hex: "#e8e8e8" },
+          { name: "Dorado", hex: "#e8c97a" }, { name: "Azul Sierra", hex: "#4a7a9b" },
+          { name: "Verde Alpino", hex: "#4a7c59" },
+        ],
+        highlights: ["Pantalla 6.7\"", "ProMotion 120Hz", "28h batería", "ProRes Video", "LiDAR"],
+      },
+    ],
+  },
+  {
+    id: "iphone14", generation: "iPhone 14", year: "2022", tag: "Seguridad. Siempre.",
+    accent: "#5e5ce6",
+    models: [
+      {
+        name: "iPhone 14",
+        img: `${CDN}/iphone-14-finish-select-202209-6-1inch-midnight${IP}`,
+        display: '6.1" Super Retina XDR OLED (2532×1170)',
+        chip: "A15 Bionic",
+        camera: "Dual 12MP — Gran angular + Ultra gran angular con Photonic Engine",
+        battery: "Hasta 20 horas de video",
+        storage: ["128GB", "256GB", "512GB"],
+        colors: [
+          { name: "Medianoche", hex: "#1c1c2e" }, { name: "Blanco estelar", hex: "#f5f5f0" },
+          { name: "Rojo", hex: "#bf0000" }, { name: "Azul", hex: "#2c5d9c" },
+          { name: "Violeta", hex: "#8e6acc" }, { name: "Amarillo", hex: "#d4b800" },
+        ],
+        highlights: ["SOS Emergencias vía satélite", "Detección de accidentes", "Photonic Engine", "Action Mode"],
+      },
+      {
+        name: "iPhone 14 Pro",
+        img: `${CDN}/iphone-14-pro-finish-select-202209-6-1inch-spaceblack${IP}`,
+        display: '6.1" Super Retina XDR ProMotion 120Hz (2556×1179)',
+        chip: "A16 Bionic",
+        camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 3×",
+        battery: "Hasta 23 horas de video",
+        storage: ["128GB", "256GB", "512GB", "1TB"],
+        colors: [
+          { name: "Negro Espacial", hex: "#1c1c1e" }, { name: "Plata", hex: "#e8e8e8" },
+          { name: "Dorado", hex: "#e8c97a" }, { name: "Violeta Oscuro", hex: "#5a3a7c" },
+        ],
+        highlights: ["Dynamic Island", "Always-On Display", "48MP ProRAW", "A16 Bionic", "ProRes 4K"],
+      },
+      {
+        name: "iPhone 14 Pro Max",
+        img: `${CDN}/iphone-14-pro-finish-select-202209-6-7inch-spaceblack${IP}`,
+        display: '6.7" Super Retina XDR ProMotion 120Hz (2796×1290)',
+        chip: "A16 Bionic",
+        camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 3×",
+        battery: "Hasta 29 horas de video",
+        storage: ["128GB", "256GB", "512GB", "1TB"],
+        colors: [
+          { name: "Negro Espacial", hex: "#1c1c1e" }, { name: "Plata", hex: "#e8e8e8" },
+          { name: "Dorado", hex: "#e8c97a" }, { name: "Violeta Oscuro", hex: "#5a3a7c" },
+        ],
+        highlights: ["Pantalla 6.7\"", "Dynamic Island", "Always-On Display", "29h batería", "ProRes 4K"],
+      },
+    ],
+  },
+  {
+    id: "iphone15", generation: "iPhone 15", year: "2023", tag: "USB-C. Un estándar, por fin.",
+    accent: "#ff9f0a",
+    models: [
+      {
+        name: "iPhone 15",
+        img: `${CDN}/iphone-15-finish-select-202309-6-1inch-black${IP}`,
+        display: '6.1" Super Retina XDR OLED (2556×1179)',
+        chip: "A16 Bionic",
+        camera: "Dual 48MP — Gran angular + Ultra gran angular con Photonic Engine",
+        battery: "Hasta 20 horas de video",
+        storage: ["128GB", "256GB", "512GB"],
+        colors: [
+          { name: "Negro", hex: "#1c1c1e" }, { name: "Azul", hex: "#2c5d9c" },
+          { name: "Verde", hex: "#4a7c59" }, { name: "Amarillo", hex: "#d4b800" },
+          { name: "Rosa", hex: "#e8a0b0" },
+        ],
+        highlights: ["USB-C", "Dynamic Island", "48MP principal", "A16 Bionic", "Photonic Engine"],
+      },
+      {
+        name: "iPhone 15 Pro",
+        img: `${CDN}/iphone-15-pro-finish-select-202309-6-1inch-blacktitanium${IP}`,
+        display: '6.1" Super Retina XDR ProMotion 120Hz (2556×1179)',
+        chip: "A17 Pro",
+        camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 3×",
+        battery: "Hasta 23 horas de video",
+        storage: ["128GB", "256GB", "512GB", "1TB"],
+        colors: [
+          { name: "Titanio Negro", hex: "#2a2a2a" }, { name: "Titanio Blanco", hex: "#e8e8e8" },
+          { name: "Titanio Azul", hex: "#4a7a9b" }, { name: "Titanio Natural", hex: "#c8b8a2" },
+        ],
+        highlights: ["Titanio", "USB-C 3.0", "Botón de Acción", "A17 Pro", "ProRes 4K 60fps Log"],
+      },
+      {
+        name: "iPhone 15 Pro Max",
+        img: `${CDN}/iphone-15-pro-finish-select-202309-6-7inch-blacktitanium${IP}`,
+        display: '6.7" Super Retina XDR ProMotion 120Hz (2796×1290)',
+        chip: "A17 Pro",
+        camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Zoom tetraprisma 5×",
+        battery: "Hasta 29 horas de video",
+        storage: ["256GB", "512GB", "1TB"],
+        colors: [
+          { name: "Titanio Negro", hex: "#2a2a2a" }, { name: "Titanio Blanco", hex: "#e8e8e8" },
+          { name: "Titanio Azul", hex: "#4a7a9b" }, { name: "Titanio Natural", hex: "#c8b8a2" },
+        ],
+        highlights: ["Zoom 5× tetraprisma", "Titanio", "A17 Pro", "29h batería", "ProRes 4K Log"],
+      },
+    ],
+  },
+  {
+    id: "iphone16", generation: "iPhone 16", year: "2024", tag: "Diseñado para Apple Intelligence.",
+    accent: "#30d158",
+    models: [
+      {
+        name: "iPhone 16",
+        img: `${CDN}/iphone-16-finish-select-202409-6-1inch-black${IP}`,
+        display: '6.1" Super Retina XDR OLED (2556×1179)',
+        chip: "A18",
+        camera: "Dual 48MP — Gran angular + Ultra gran angular con Fusion Camera",
+        battery: "Hasta 22 horas de video",
+        storage: ["128GB", "256GB", "512GB"],
+        colors: [
+          { name: "Negro", hex: "#1c1c1e" }, { name: "Blanco", hex: "#f5f5f0" },
+          { name: "Rosa", hex: "#e8a0b0" }, { name: "Teal", hex: "#4a9b8e" },
+          { name: "Ultramar", hex: "#2c5d9c" },
+        ],
+        highlights: ["Apple Intelligence", "Botón de Cámara", "A18", "USB-C", "Camera Control"],
+      },
+      {
+        name: "iPhone 16 Pro",
+        img: `${CDN}/iphone-16-pro-finish-select-202409-6-3inch-blacktitanium${IP}`,
+        display: '6.3" Super Retina XDR ProMotion 120Hz (2622×1206)',
+        chip: "A18 Pro",
+        camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 5×",
+        battery: "Hasta 27 horas de video",
+        storage: ["128GB", "256GB", "512GB", "1TB"],
+        colors: [
+          { name: "Titanio Negro", hex: "#2a2a2a" }, { name: "Titanio Blanco", hex: "#e8e8e8" },
+          { name: "Titanio Natural", hex: "#c8b8a2" }, { name: "Titanio Desierto", hex: "#c8a882" },
+        ],
+        highlights: ["A18 Pro", "Apple Intelligence", "Zoom 5×", "ProRes 4K 120fps", "Camera Control"],
+      },
+      {
+        name: "iPhone 16 Pro Max",
+        img: `${CDN}/iphone-16-pro-finish-select-202409-6-9inch-blacktitanium${IP}`,
+        display: '6.9" Super Retina XDR ProMotion 120Hz (2868×1320)',
+        chip: "A18 Pro",
+        camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 5×",
+        battery: "Hasta 33 horas de video",
+        storage: ["256GB", "512GB", "1TB"],
+        colors: [
+          { name: "Titanio Negro", hex: "#2a2a2a" }, { name: "Titanio Blanco", hex: "#e8e8e8" },
+          { name: "Titanio Natural", hex: "#c8b8a2" }, { name: "Titanio Desierto", hex: "#c8a882" },
+        ],
+        highlights: ["Pantalla 6.9\"", "33h batería", "A18 Pro", "ProRes 4K 120fps", "Apple Intelligence"],
+      },
+    ],
+  },
+  {
+    id: "iphone17", generation: "iPhone 17", year: "2025", tag: "La próxima generación.",
+    accent: "#ff453a",
+    models: [
+      {
+        name: "iPhone 17",
+        img: null,
+        display: '6.1" Super Retina XDR OLED',
+        chip: "A19",
+        camera: "Dual 48MP — Gran angular + Ultra gran angular",
+        battery: "Hasta 22 horas de video",
+        storage: ["128GB", "256GB", "512GB"],
+        colors: [
+          { name: "Negro", hex: "#1c1c1e" }, { name: "Blanco", hex: "#f5f5f0" },
+          { name: "Azul", hex: "#2c5d9c" }, { name: "Rosa", hex: "#e8a0b0" },
+        ],
+        highlights: ["Apple Intelligence", "A19", "Camera Control", "USB-C"],
+      },
+      {
+        name: "iPhone 17 Air",
+        img: null,
+        display: '6.6" Super Retina XDR OLED — ultra delgado',
+        chip: "A19",
+        camera: "48MP — Gran angular principal",
+        battery: "Hasta 20 horas de video",
+        storage: ["128GB", "256GB"],
+        colors: [
+          { name: "Negro", hex: "#1c1c1e" }, { name: "Plata", hex: "#e8e8e8" },
+          { name: "Celeste", hex: "#a0c8e8" },
+        ],
+        highlights: ["Ultra delgado", "Apple Intelligence", "A19", "Diseño revolucionario"],
+      },
+      {
+        name: "iPhone 17 Pro",
+        img: null,
+        display: '6.3" ProMotion OLED 120Hz',
+        chip: "A19 Pro",
+        camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 5×",
+        battery: "Hasta 27 horas de video",
+        storage: ["256GB", "512GB", "1TB"],
+        colors: [
+          { name: "Titanio Negro", hex: "#2a2a2a" }, { name: "Titanio Blanco", hex: "#e8e8e8" },
+          { name: "Titanio Natural", hex: "#c8b8a2" },
+        ],
+        highlights: ["A19 Pro", "Apple Intelligence", "ProRes 4K 120fps", "Zoom 5×"],
+      },
+      {
+        name: "iPhone 17 Pro Max",
+        img: null,
+        display: '6.9" ProMotion OLED 120Hz',
+        chip: "A19 Pro",
+        camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 5×",
+        battery: "Hasta 33 horas de video",
+        storage: ["256GB", "512GB", "1TB"],
+        colors: [
+          { name: "Titanio Negro", hex: "#2a2a2a" }, { name: "Titanio Blanco", hex: "#e8e8e8" },
+          { name: "Titanio Natural", hex: "#c8b8a2" },
+        ],
+        highlights: ["Pantalla 6.9\"", "33h batería", "A19 Pro", "Apple Intelligence"],
+      },
+    ],
+  },
 ];
 
-function ModelsSection() {
+// ─────────────────────────────────────────────────────────────────────────────
+//  Model Detail Card (inside modal)
+// ─────────────────────────────────────────────────────────────────────────────
+function ModelDetailCard({ model }) {
+  const [imgErr, setImgErr] = useState(false);
+
+  return (
+    <div style={{
+      background: "#fff",
+      border: `1px solid ${T.border}`,
+      borderRadius: "20px",
+      overflow: "hidden",
+      display: "flex",
+      flexDirection: "column",
+      fontFamily: T.body,
+    }}>
+      {/* Image */}
+      <div style={{
+        background: "linear-gradient(145deg, #f5f5f3 0%, #ebebea 100%)",
+        height: "220px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        overflow: "hidden",
+      }}>
+        {model.img && !imgErr ? (
+          <img
+            src={model.img}
+            alt={model.name}
+            onError={() => setImgErr(true)}
+            style={{ height: "200px", width: "auto", objectFit: "contain" }}
+          />
+        ) : (
+          <div style={{ textAlign: "center", opacity: 0.3 }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke={T.text} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" />
+              <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2.5" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div style={{ padding: "24px", flex: 1, display: "flex", flexDirection: "column", gap: "16px" }}>
+        <h3 style={{ fontSize: "18px", fontWeight: 700, color: T.text, letterSpacing: "-0.025em", margin: 0 }}>
+          {model.name}
+        </h3>
+
+        {/* Specs */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+          {[
+            { label: "Pantalla", value: model.display },
+            { label: "Chip", value: model.chip },
+            { label: "Cámara", value: model.camera },
+            { label: "Batería", value: model.battery },
+          ].map(({ label, value }) => (
+            <div key={label} style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, color: T.textMuted, minWidth: "56px", paddingTop: "1px", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                {label}
+              </span>
+              <span style={{ fontSize: "12.5px", color: T.textSec, lineHeight: 1.5 }}>{value}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Storage */}
+        <div>
+          <p style={{ fontSize: "11px", fontWeight: 600, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "8px" }}>Almacenamiento</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            {model.storage.map((s) => (
+              <span key={s} style={{
+                fontSize: "12px", fontWeight: 500, color: T.text,
+                background: "rgba(0,0,0,0.04)", border: `1px solid ${T.border}`,
+                borderRadius: "8px", padding: "4px 10px",
+              }}>{s}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Colors */}
+        <div>
+          <p style={{ fontSize: "11px", fontWeight: 600, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: "8px" }}>Colores</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
+            {model.colors.map((c) => (
+              <div key={c.name} title={c.name} style={{
+                width: "18px", height: "18px", borderRadius: "50%",
+                background: c.hex,
+                border: c.hex === "#f5f5f0" || c.hex === "#e8e8e8" ? "1.5px solid rgba(0,0,0,0.15)" : "1.5px solid transparent",
+                flexShrink: 0,
+              }} />
+            ))}
+            <span style={{ fontSize: "11px", color: T.textMuted, marginLeft: "2px" }}>
+              {model.colors.map(c => c.name).join(", ")}
+            </span>
+          </div>
+        </div>
+
+        {/* Highlights */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "auto" }}>
+          {model.highlights.map((h) => (
+            <span key={h} style={{
+              fontSize: "11px", fontWeight: 500, color: ACCENT,
+              background: T.accentLight, border: `1px solid ${T.accentBorder}`,
+              borderRadius: "6px", padding: "3px 8px",
+            }}>{h}</span>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <a
+          href={waLink(`Hola, me interesa el ${model.name}. ¿Lo tienen disponible?`)}
+          target="_blank" rel="noreferrer"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+            background: "#25d366", color: "#fff",
+            padding: "12px 16px", borderRadius: "12px",
+            fontSize: "13px", fontWeight: 600, textDecoration: "none",
+            marginTop: "4px",
+          }}
+        >
+          <WhatsAppIcon size={14} />
+          Consultar disponibilidad
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Generation Modal
+// ─────────────────────────────────────────────────────────────────────────────
+function GenerationModal({ gen, onClose }) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: "fixed", inset: 0, zIndex: 1000,
+        background: "rgba(0,0,0,0.55)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        overflowY: "auto",
+        display: "flex", flexDirection: "column",
+        justifyContent: "flex-end",
+        fontFamily: T.body,
+      }}
+    >
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 32 }}
+        style={{
+          background: "#fafaf8",
+          borderRadius: "28px 28px 0 0",
+          minHeight: "75vh",
+          maxHeight: "92vh",
+          overflowY: "auto",
+          padding: "0 0 60px",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Drag handle */}
+        <div style={{ display: "flex", justifyContent: "center", padding: "14px 0 0" }}>
+          <div style={{ width: "40px", height: "4px", background: "rgba(0,0,0,0.1)", borderRadius: "2px" }} />
+        </div>
+
+        {/* Header */}
+        <div style={{
+          display: "flex", alignItems: "flex-start", justifyContent: "space-between",
+          padding: "20px clamp(20px, 4vw, 56px) 32px",
+          position: "sticky", top: 0, background: "#fafaf8", zIndex: 10,
+          borderBottom: `1px solid ${T.border}`,
+        }}>
+          <div>
+            <p style={{
+              fontSize: "11px", fontWeight: 700, letterSpacing: "0.14em",
+              textTransform: "uppercase", color: gen.accent, marginBottom: "6px",
+            }}>
+              {gen.year} · {gen.models.length} modelos
+            </p>
+            <h2 style={{
+              fontFamily: T.heading,
+              fontSize: "clamp(26px, 4vw, 38px)",
+              fontWeight: 700, letterSpacing: "-0.03em",
+              color: T.text, margin: 0, lineHeight: 1.1,
+            }}>
+              {gen.generation}
+            </h2>
+            <p style={{ fontSize: "14px", color: T.textSec, marginTop: "6px" }}>{gen.tag}</p>
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              width: "36px", height: "36px",
+              background: "rgba(0,0,0,0.06)", border: "none",
+              borderRadius: "50%", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: T.textSec, flexShrink: 0, marginTop: "4px",
+            }}
+          >
+            <X size={16} strokeWidth={2.5} />
+          </button>
+        </div>
+
+        {/* Models grid */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: "20px",
+          padding: "32px clamp(20px, 4vw, 56px) 0",
+        }}
+          className="modal-models-grid"
+        >
+          {gen.models.map((model) => (
+            <ModelDetailCard key={model.name} model={model} />
+          ))}
+        </div>
+        <style>{`
+          @media (max-width: 640px) { .modal-models-grid { grid-template-columns: 1fr !important; } }
+        `}</style>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Models Catalog (generation cards)
+// ─────────────────────────────────────────────────────────────────────────────
+function ModelsCatalog() {
+  const [activeGen, setActiveGen] = useState(null);
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
     <section style={{
-      background: "#f8f8f6",
+      background: T.bg,
       borderTop: `1px solid ${T.border}`,
       padding: "96px clamp(20px, 6vw, 80px) 104px",
       fontFamily: T.body,
     }}>
       <div style={{ maxWidth: "1060px", margin: "0 auto" }} ref={ref}>
+
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          style={{ textAlign: "center", marginBottom: "52px" }}
+          style={{ marginBottom: "52px" }}
         >
           <p style={{
             fontSize: "11.5px", fontWeight: 600, letterSpacing: "0.14em",
@@ -584,53 +1178,88 @@ function ModelsSection() {
           </p>
           <h2 style={{
             fontFamily: T.heading,
-            fontSize: "clamp(26px, 3.5vw, 36px)",
-            fontWeight: 700, letterSpacing: "-0.03em",
-            color: T.text, lineHeight: 1.1, marginBottom: "14px",
+            fontSize: "clamp(28px, 3.8vw, 42px)",
+            fontWeight: 700, letterSpacing: "-0.035em",
+            color: T.text, lineHeight: 1.05, marginBottom: "12px",
           }}>
             Todos los modelos
           </h2>
-          <p style={{ fontSize: "15px", color: T.textSec, lineHeight: 1.6, maxWidth: "420px", margin: "0 auto" }}>
-            ¿No ves el que buscás en stock? Consultanos directamente y te armamos una propuesta.
+          <p style={{ fontSize: "15px", color: T.textSec, lineHeight: 1.6, maxWidth: "440px" }}>
+            Elegí la generación y conocé todas las opciones — specs, colores y almacenamiento. Si el que buscás no está en stock, consultanos directo.
           </p>
         </motion.div>
 
+        {/* Generation cards */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-          gap: "10px",
-        }}>
-          {ALL_MODELS.map((model, i) => (
-            <motion.a
-              key={model}
-              href={waLink(`Hola, me interesa el ${model}, ¿lo tienen disponible?`)}
-              target="_blank" rel="noreferrer"
-              initial={{ opacity: 0, y: 16 }}
+          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+          gap: "16px",
+        }}
+          className="gen-grid"
+        >
+          {IPHONE_CATALOG.map((gen, i) => (
+            <motion.button
+              key={gen.id}
+              onClick={() => setActiveGen(gen)}
+              initial={{ opacity: 0, y: 24 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.45, delay: i * 0.03, ease: [0.22, 1, 0.36, 1] }}
-              whileHover={{ y: -3, boxShadow: "0 8px 24px rgba(0,0,0,0.08)", borderColor: T.borderAccent }}
+              transition={{ duration: 0.5, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{ y: -5, boxShadow: "0 16px 40px rgba(0,0,0,0.09)" }}
+              whileTap={{ scale: 0.98 }}
               style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-                padding: "14px 18px",
                 background: "#fff",
                 border: `1px solid ${T.border}`,
-                borderRadius: "14px",
-                textDecoration: "none",
-                transition: "border-color 0.2s, box-shadow 0.2s",
+                borderRadius: "20px",
+                padding: "28px 26px",
+                textAlign: "left",
                 cursor: "pointer",
+                outline: "none",
+                transition: "box-shadow 0.25s, border-color 0.25s",
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
+                position: "relative",
+                overflow: "hidden",
               }}
             >
-              <span style={{ fontSize: "14px", fontWeight: 500, color: T.text, letterSpacing: "-0.01em" }}>
-                {model}
-              </span>
-              <div style={{ display: "flex", alignItems: "center", gap: "5px", color: ACCENT, flexShrink: 0 }}>
-                <WhatsAppIcon size={13} />
-                <span style={{ fontSize: "11px", fontWeight: 600, color: ACCENT }}>Consultar</span>
+              {/* accent line */}
+              <div style={{
+                position: "absolute", top: 0, left: 0, right: 0, height: "3px",
+                background: gen.accent, opacity: 0.7,
+              }} />
+
+              <div>
+                <p style={{ fontSize: "11px", fontWeight: 600, color: T.textMuted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "8px" }}>
+                  {gen.year} · {gen.models.length} modelos
+                </p>
+                <h3 style={{
+                  fontFamily: T.heading,
+                  fontSize: "22px", fontWeight: 700,
+                  letterSpacing: "-0.03em", color: T.text,
+                  marginBottom: "8px",
+                }}>
+                  {gen.generation}
+                </h3>
+                <p style={{ fontSize: "13px", color: T.textSec, lineHeight: 1.5 }}>{gen.tag}</p>
               </div>
-            </motion.a>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", color: gen.accent }}>
+                <span style={{ fontSize: "13px", fontWeight: 600 }}>Ver modelos</span>
+                <ChevronRight size={14} strokeWidth={2.5} />
+              </div>
+            </motion.button>
           ))}
         </div>
+        <style>{`
+          @media (max-width: 600px) { .gen-grid { grid-template-columns: 1fr !important; } }
+        `}</style>
       </div>
+
+      <AnimatePresence>
+        {activeGen && (
+          <GenerationModal gen={activeGen} onClose={() => setActiveGen(null)} />
+        )}
+      </AnimatePresence>
     </section>
   );
 }
@@ -1040,8 +1669,6 @@ export default function StorePage() {
       <Navbar scrolled={scrolled} />
       <Hero />
       <HowToBuy />
-      <FeatureGrid />
-      <ModelsSection />
 
       {/* ── Oportunidades ─────────────────────────────────────────────── */}
       <section id="stock" style={{ maxWidth: "1280px", margin: "0 auto", padding: "100px clamp(20px, 6vw, 80px) 120px", fontFamily: T.body }}>
@@ -1186,6 +1813,9 @@ export default function StorePage() {
           </motion.div>
         )}
       </section>
+
+      <ModelsCatalog />
+      <FeatureGrid />
 
       <CTABanner />
       <Footer />
