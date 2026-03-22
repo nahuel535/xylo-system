@@ -555,6 +555,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone11", generation: "iPhone 11", year: "2019", tag: "El inicio de una era",
     accent: "#4a9b6f",
+    familyImg: null,
     models: [
       {
         name: "iPhone 11",
@@ -604,6 +605,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone12", generation: "iPhone 12", year: "2020", tag: "5G. Un salto enorme.",
     accent: "#0a84ff",
+    familyImg: `${CDN}/iphone-12-family-select-2020${IP}`,
     models: [
       {
         name: "iPhone 12",
@@ -653,6 +655,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone13", generation: "iPhone 13", year: "2021", tag: "Tu película favorita. Por ti.",
     accent: "#ff375f",
+    familyImg: `${CDN}/iphone-13-family-select-2021${IP}`,
     models: [
       {
         name: "iPhone 13",
@@ -704,6 +707,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone14", generation: "iPhone 14", year: "2022", tag: "Seguridad. Siempre.",
     accent: "#5e5ce6",
+    familyImg: `${CDN}/iphone-14-family-select-202209${IP}`,
     models: [
       {
         name: "iPhone 14",
@@ -753,6 +757,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone15", generation: "iPhone 15", year: "2023", tag: "USB-C. Un estándar, por fin.",
     accent: "#ff9f0a",
+    familyImg: `${CDN}/iphone-15-family-select-202309${IP}`,
     models: [
       {
         name: "iPhone 15",
@@ -802,6 +807,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone16", generation: "iPhone 16", year: "2024", tag: "Diseñado para Apple Intelligence.",
     accent: "#30d158",
+    familyImg: `${CDN}/iphone-16-family-select-202409${IP}`,
     models: [
       {
         name: "iPhone 16",
@@ -851,6 +857,12 @@ const IPHONE_CATALOG = [
   {
     id: "iphone17", generation: "iPhone 17", year: "2025", tag: "La próxima generación.",
     accent: "#ff453a",
+    familyImg: null,
+    backImgs: [
+      `${CDN}/iphone-17-finish-select-black-202509_AV2${IP}`,
+      `${CDN}/iphone-17-pro-finish-select-deepblue-202509_AV2${IP}`,
+      `${CDN}/iphone-17-pro-max-finish-select-cosmicorange-202509_AV2${IP}`,
+    ],
     models: [
       {
         name: "iPhone 17",
@@ -1138,8 +1150,7 @@ function GenerationModal({ gen, onClose }) {
 //  Models Catalog (Apple-style large image cards)
 // ─────────────────────────────────────────────────────────────────────────────
 function GenCard({ gen, i, inView, onClick }) {
-  const [imgErr, setImgErr] = useState(false);
-  const leadImg = gen.models[0].img;
+  const displayName = gen.generation.replace("iPhone ", "Línea ");
 
   return (
     <motion.button
@@ -1175,17 +1186,18 @@ function GenCard({ gen, i, inView, onClick }) {
           background: "rgba(255,255,255,0.80)",
           backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
           borderRadius: "980px", padding: "5px 12px",
+          zIndex: 1,
         }}>
           <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: gen.accent, flexShrink: 0 }} />
           <span style={{ fontSize: "12px", fontWeight: 600, color: T.textSec, letterSpacing: "0.02em" }}>{gen.year}</span>
         </div>
 
-        {leadImg && !imgErr ? (
+        {/* Family image (3 models) or 3 front imgs composed */}
+        {gen.familyImg ? (
           <img
-            src={leadImg}
+            src={gen.familyImg}
             alt={gen.generation}
-            onError={() => setImgErr(true)}
-            className={`gen-card-img-${gen.id}`}
+            className="gen-card-img"
             style={{
               height: "clamp(170px, 20vw, 255px)", width: "auto",
               objectFit: "contain",
@@ -1193,11 +1205,29 @@ function GenCard({ gen, i, inView, onClick }) {
             }}
           />
         ) : (
-          <div style={{ opacity: 0.15 }}>
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke={T.text} strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="5" y="2" width="14" height="20" rx="2" />
-              <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2" />
-            </svg>
+          /* iPhone 11: compose 3 front images side by side */
+          <div style={{
+            display: "flex", alignItems: "flex-end", justifyContent: "center",
+            gap: "clamp(-12px, -1vw, -6px)", height: "100%", width: "100%",
+            padding: "24px 12px 0",
+          }}>
+            {gen.models.map((m, idx) => (
+              <img
+                key={m.name}
+                src={m.img}
+                alt={m.name}
+                className="gen-card-img"
+                style={{
+                  height: idx === 1
+                    ? "clamp(150px, 18vw, 225px)"
+                    : "clamp(130px, 15vw, 195px)",
+                  width: "auto", objectFit: "contain",
+                  transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
+                  zIndex: idx === 1 ? 2 : 1,
+                  position: "relative",
+                }}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -1210,7 +1240,7 @@ function GenCard({ gen, i, inView, onClick }) {
             fontSize: "clamp(18px, 2vw, 23px)", fontWeight: 700,
             letterSpacing: "-0.03em", color: T.text, margin: 0, lineHeight: 1.15,
           }}>
-            {gen.generation}
+            {displayName}
           </h3>
           <p style={{ fontSize: "13px", color: T.textSec, marginTop: "5px", lineHeight: 1.55 }}>
             {gen.tag}
@@ -1241,8 +1271,7 @@ function GenCard({ gen, i, inView, onClick }) {
 
 // Full-width featured card for the newest generation
 function FeaturedGenCard({ gen, i, inView, onClick }) {
-  const [imgErr, setImgErr] = useState(false);
-  const leadImg = gen.models[0].img;
+  const displayName = gen.generation.replace("iPhone ", "Línea ");
 
   return (
     <motion.button
@@ -1294,7 +1323,7 @@ function FeaturedGenCard({ gen, i, inView, onClick }) {
             letterSpacing: "-0.04em", color: T.text,
             margin: 0, lineHeight: 1.05,
           }}>
-            {gen.generation}
+            {displayName}
           </h3>
           <p style={{ fontSize: "15px", color: T.textSec, marginTop: "10px", lineHeight: 1.6, maxWidth: "280px" }}>
             {gen.tag}
@@ -1313,32 +1342,30 @@ function FeaturedGenCard({ gen, i, inView, onClick }) {
         </div>
       </div>
 
-      {/* Image side */}
+      {/* Image side — 3 back views composed */}
       <div style={{
         background: "linear-gradient(155deg, #f7f7f5 0%, #ebebea 100%)",
-        display: "flex", alignItems: "center", justifyContent: "center",
+        display: "flex", alignItems: "flex-end", justifyContent: "center",
         position: "relative", overflow: "hidden",
+        gap: "clamp(-16px, -2vw, -8px)",
+        padding: "28px 12px 0",
       }}>
-        {leadImg && !imgErr ? (
+        {(gen.backImgs || gen.models.map((m) => m.img)).map((src, idx) => (
           <img
-            src={leadImg}
-            alt={gen.generation}
-            onError={() => setImgErr(true)}
+            key={idx}
+            src={src}
+            alt={`${gen.generation} ${idx + 1}`}
+            className="featured-gen-img"
             style={{
-              height: "clamp(200px, 22vw, 300px)", width: "auto",
-              objectFit: "contain",
+              height: idx === 1
+                ? "clamp(190px, 21vw, 280px)"
+                : "clamp(165px, 18vw, 245px)",
+              width: "auto", objectFit: "contain",
+              position: "relative", zIndex: idx === 1 ? 2 : 1,
               transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
             }}
-            className="featured-gen-img"
           />
-        ) : (
-          <div style={{ opacity: 0.15 }}>
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke={T.text} strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="5" y="2" width="14" height="20" rx="2" />
-              <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2" />
-            </svg>
-          </div>
-        )}
+        ))}
       </div>
     </motion.button>
   );
@@ -1859,7 +1886,7 @@ export default function StorePage() {
                 Oportunidades
               </h2>
               <p style={{ fontSize: "15px", color: T.textSec }}>
-                {loading ? "Cargando..." : `${filtered.length} equipo${filtered.length !== 1 ? "s" : ""} con entrega inmediata`}
+                No pagues de más, ofertas especiales para vos
               </p>
             </div>
 
