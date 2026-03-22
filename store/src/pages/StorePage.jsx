@@ -854,7 +854,7 @@ const IPHONE_CATALOG = [
     models: [
       {
         name: "iPhone 17",
-        img: `${CDN}/iphone-17-finish-select-black-202509_AV2${IP}`,
+        img: `${CDN}/iphone-17-finish-select-black-202509_AV1${IP}`,
         display: '6.1" Super Retina XDR OLED (2556×1179)',
         chip: "A19",
         camera: "Dual 48MP — Gran angular + Ultra gran angular con Fusion Camera",
@@ -1139,114 +1139,206 @@ function GenerationModal({ gen, onClose }) {
 // ─────────────────────────────────────────────────────────────────────────────
 function GenCard({ gen, i, inView, onClick }) {
   const [imgErr, setImgErr] = useState(false);
-  const [hovered, setHovered] = useState(false);
   const leadImg = gen.models[0].img;
 
   return (
     <motion.button
       onClick={onClick}
-      initial={{ opacity: 0, y: 32 }}
+      initial={{ opacity: 0, y: 28 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.6, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
-      whileTap={{ scale: 0.99 }}
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
+      transition={{ duration: 0.58, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -6 }}
+      whileTap={{ scale: 0.985 }}
       style={{
-        background: "#fff",
-        border: "none",
-        borderRadius: "28px",
-        overflow: "hidden",
-        cursor: "pointer",
-        outline: "none",
-        textAlign: "left",
-        display: "flex",
-        flexDirection: "column",
-        boxShadow: hovered
-          ? "0 24px 64px rgba(0,0,0,0.13)"
-          : "0 2px 16px rgba(0,0,0,0.06)",
-        transform: hovered ? "translateY(-4px)" : "translateY(0)",
-        transition: "box-shadow 0.35s ease, transform 0.35s ease",
+        background: "#fff", border: "none",
+        borderRadius: "24px", overflow: "hidden",
+        cursor: "pointer", outline: "none",
+        textAlign: "left", display: "flex",
+        flexDirection: "column", width: "100%",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
+        transition: "box-shadow 0.3s ease",
       }}
+      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 20px 56px rgba(0,0,0,0.12)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }}
     >
       {/* Image area */}
       <div style={{
-        background: "linear-gradient(160deg, #f5f5f3 0%, #ececea 100%)",
-        height: "clamp(220px, 28vw, 340px)",
+        background: "linear-gradient(155deg, #f7f7f5 0%, #ebebea 100%)",
+        height: "clamp(200px, 25vw, 300px)",
         display: "flex", alignItems: "center", justifyContent: "center",
         position: "relative", overflow: "hidden",
       }}>
-        {/* Year pill */}
+        {/* Accent dot + year */}
         <div style={{
-          position: "absolute", top: "18px", left: "18px",
-          background: "rgba(255,255,255,0.75)",
-          backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-          borderRadius: "980px", padding: "5px 13px",
-          fontSize: "12px", fontWeight: 600, color: T.textSec, letterSpacing: "0.04em",
-        }}>{gen.year}</div>
-
-        {/* Models count pill */}
-        <div style={{
-          position: "absolute", top: "18px", right: "18px",
-          background: "rgba(255,255,255,0.75)",
-          backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-          borderRadius: "980px", padding: "5px 13px",
-          fontSize: "12px", fontWeight: 500, color: T.textSec,
-        }}>{gen.models.length} modelos</div>
+          position: "absolute", top: "16px", left: "16px",
+          display: "flex", alignItems: "center", gap: "6px",
+          background: "rgba(255,255,255,0.80)",
+          backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+          borderRadius: "980px", padding: "5px 12px",
+        }}>
+          <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: gen.accent, flexShrink: 0 }} />
+          <span style={{ fontSize: "12px", fontWeight: 600, color: T.textSec, letterSpacing: "0.02em" }}>{gen.year}</span>
+        </div>
 
         {leadImg && !imgErr ? (
-          <motion.img
+          <img
             src={leadImg}
             alt={gen.generation}
             onError={() => setImgErr(true)}
-            animate={{ scale: hovered ? 1.06 : 1 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            style={{ height: "clamp(180px, 22vw, 290px)", width: "auto", objectFit: "contain" }}
+            className={`gen-card-img-${gen.id}`}
+            style={{
+              height: "clamp(170px, 20vw, 255px)", width: "auto",
+              objectFit: "contain",
+              transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
+            }}
           />
         ) : (
-          <div style={{ opacity: 0.18 }}>
-            <svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke={T.text} strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+          <div style={{ opacity: 0.15 }}>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke={T.text} strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round">
               <rect x="5" y="2" width="14" height="20" rx="2" />
               <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2" />
             </svg>
           </div>
         )}
-
-        {/* Bottom gradient fade */}
-        <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0, height: "60px",
-          background: "linear-gradient(to bottom, transparent, rgba(236,236,234,0.7))",
-          pointerEvents: "none",
-        }} />
       </div>
 
       {/* Text area */}
-      <div style={{ padding: "24px 28px 28px", display: "flex", flexDirection: "column", gap: "10px" }}>
-        <div>
+      <div style={{ padding: "20px 24px 24px", display: "flex", flexDirection: "column", gap: "12px", flex: 1 }}>
+        <div style={{ flex: 1 }}>
           <h3 style={{
             fontFamily: T.heading,
-            fontSize: "clamp(20px, 2.2vw, 26px)", fontWeight: 700,
-            letterSpacing: "-0.03em", color: T.text, margin: 0, lineHeight: 1.1,
+            fontSize: "clamp(18px, 2vw, 23px)", fontWeight: 700,
+            letterSpacing: "-0.03em", color: T.text, margin: 0, lineHeight: 1.15,
           }}>
             {gen.generation}
           </h3>
-          <p style={{ fontSize: "14px", color: T.textSec, marginTop: "6px", lineHeight: 1.5 }}>
+          <p style={{ fontSize: "13px", color: T.textSec, marginTop: "5px", lineHeight: 1.55 }}>
             {gen.tag}
           </p>
         </div>
 
         <div style={{
-          display: "flex", alignItems: "center", gap: "5px",
-          color: gen.accent, marginTop: "4px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          paddingTop: "12px",
+          borderTop: `1px solid ${T.border}`,
         }}>
-          <span style={{ fontSize: "14px", fontWeight: 600 }}>Ver modelos</span>
-          <motion.span
-            animate={{ x: hovered ? 3 : 0 }}
-            transition={{ duration: 0.25 }}
-            style={{ display: "flex" }}
-          >
-            <ChevronRight size={14} strokeWidth={2.5} />
-          </motion.span>
+          <span style={{ fontSize: "13px", fontWeight: 600, color: gen.accent }}>
+            Ver {gen.models.length} modelos
+          </span>
+          <div style={{
+            width: "28px", height: "28px", borderRadius: "50%",
+            background: `${gen.accent}18`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: gen.accent,
+          }}>
+            <ChevronRight size={13} strokeWidth={2.8} />
+          </div>
         </div>
+      </div>
+    </motion.button>
+  );
+}
+
+// Full-width featured card for the newest generation
+function FeaturedGenCard({ gen, i, inView, onClick }) {
+  const [imgErr, setImgErr] = useState(false);
+  const leadImg = gen.models[0].img;
+
+  return (
+    <motion.button
+      onClick={onClick}
+      initial={{ opacity: 0, y: 28 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+      whileHover={{ y: -5 }}
+      whileTap={{ scale: 0.992 }}
+      style={{
+        background: "#fff", border: "none",
+        borderRadius: "24px", overflow: "hidden",
+        cursor: "pointer", outline: "none",
+        textAlign: "left", width: "100%",
+        display: "grid", gridTemplateColumns: "1fr 1fr",
+        minHeight: "clamp(240px, 28vw, 340px)",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
+        transition: "box-shadow 0.3s ease",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 20px 56px rgba(0,0,0,0.12)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }}
+      className="featured-gen-card"
+    >
+      {/* Text side */}
+      <div style={{
+        padding: "clamp(32px, 4vw, 52px)",
+        display: "flex", flexDirection: "column",
+        justifyContent: "center", gap: "16px",
+      }}>
+        {/* Badge */}
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: "7px",
+          background: `${gen.accent}15`, borderRadius: "980px",
+          padding: "5px 14px", width: "fit-content",
+        }}>
+          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: gen.accent }} />
+          <span style={{
+            fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em",
+            textTransform: "uppercase", color: gen.accent,
+          }}>
+            {gen.year} · Lo más nuevo
+          </span>
+        </div>
+
+        <div>
+          <h3 style={{
+            fontFamily: T.heading,
+            fontSize: "clamp(26px, 3.5vw, 42px)", fontWeight: 700,
+            letterSpacing: "-0.04em", color: T.text,
+            margin: 0, lineHeight: 1.05,
+          }}>
+            {gen.generation}
+          </h3>
+          <p style={{ fontSize: "15px", color: T.textSec, marginTop: "10px", lineHeight: 1.6, maxWidth: "280px" }}>
+            {gen.tag}
+          </p>
+        </div>
+
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: "8px",
+          background: gen.accent, color: "#fff",
+          borderRadius: "980px", padding: "11px 22px",
+          width: "fit-content", fontSize: "14px", fontWeight: 600,
+          marginTop: "4px",
+        }}>
+          Ver {gen.models.length} modelos
+          <ChevronRight size={14} strokeWidth={2.5} />
+        </div>
+      </div>
+
+      {/* Image side */}
+      <div style={{
+        background: "linear-gradient(155deg, #f7f7f5 0%, #ebebea 100%)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        position: "relative", overflow: "hidden",
+      }}>
+        {leadImg && !imgErr ? (
+          <img
+            src={leadImg}
+            alt={gen.generation}
+            onError={() => setImgErr(true)}
+            style={{
+              height: "clamp(200px, 22vw, 300px)", width: "auto",
+              objectFit: "contain",
+              transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
+            }}
+            className="featured-gen-img"
+          />
+        ) : (
+          <div style={{ opacity: 0.15 }}>
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke={T.text} strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="2" />
+              <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2" />
+            </svg>
+          </div>
+        )}
       </div>
     </motion.button>
   );
@@ -1256,6 +1348,9 @@ function ModelsCatalog() {
   const [activeGen, setActiveGen] = useState(null);
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
+
+  const regularGens = IPHONE_CATALOG.slice(0, -1);
+  const featuredGen = IPHONE_CATALOG[IPHONE_CATALOG.length - 1];
 
   return (
     <section style={{
@@ -1270,51 +1365,63 @@ function ModelsCatalog() {
           initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          style={{ marginBottom: "56px", textAlign: "center" }}
+          style={{ marginBottom: "52px", textAlign: "center" }}
         >
           <p style={{
-            fontSize: "11.5px", fontWeight: 600, letterSpacing: "0.14em",
-            textTransform: "uppercase", color: ACCENT, marginBottom: "14px",
+            fontSize: "11px", fontWeight: 600, letterSpacing: "0.16em",
+            textTransform: "uppercase", color: ACCENT, marginBottom: "12px",
           }}>
             Catálogo completo
           </p>
           <h2 style={{
             fontFamily: T.heading,
-            fontSize: "clamp(32px, 4.5vw, 52px)",
+            fontSize: "clamp(30px, 4vw, 48px)",
             fontWeight: 700, letterSpacing: "-0.04em",
-            color: T.text, lineHeight: 1.05, marginBottom: "14px",
+            color: T.text, lineHeight: 1.05, marginBottom: "12px",
           }}>
             Todos los iPhones
           </h2>
-          <p style={{ fontSize: "16px", color: T.textSec, lineHeight: 1.6, maxWidth: "460px", margin: "0 auto" }}>
-            Explorá cada generación. Specs, colores y opciones de almacenamiento.
+          <p style={{ fontSize: "15px", color: T.textSec, lineHeight: 1.6, maxWidth: "420px", margin: "0 auto" }}>
+            Explorá cada generación. Specs, colores y almacenamiento.
           </p>
         </motion.div>
 
-        {/* Generation cards grid — Apple style */}
+        {/* Featured card — newest generation (full width) */}
+        <div style={{ marginBottom: "16px" }}>
+          <FeaturedGenCard
+            gen={featuredGen}
+            i={0}
+            inView={inView}
+            onClick={() => setActiveGen(featuredGen)}
+          />
+        </div>
+
+        {/* Regular 2-col grid */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(2, 1fr)",
-          gap: "20px",
+          gap: "16px",
         }} className="gen-grid-apple">
-          {IPHONE_CATALOG.map((gen, i) => {
-            const isLast = i === IPHONE_CATALOG.length - 1;
-            const isOdd = IPHONE_CATALOG.length % 2 !== 0;
-            return (
-              <div
-                key={gen.id}
-                style={isLast && isOdd ? { gridColumn: "1 / -1", maxWidth: "540px", margin: "0 auto", width: "100%" } : {}}
-              >
-                <GenCard gen={gen} i={i} inView={inView} onClick={() => setActiveGen(gen)} />
-              </div>
-            );
-          })}
+          {regularGens.map((gen, i) => (
+            <GenCard
+              key={gen.id}
+              gen={gen}
+              i={i + 1}
+              inView={inView}
+              onClick={() => setActiveGen(gen)}
+            />
+          ))}
         </div>
 
         <style>{`
           @media (max-width: 640px) {
             .gen-grid-apple { grid-template-columns: 1fr !important; }
-            .gen-grid-apple > div { max-width: 100% !important; }
+            .featured-gen-card { grid-template-columns: 1fr !important; }
+            .featured-gen-card > div:last-child { min-height: 220px; }
+          }
+          .gen-grid-apple button:hover img,
+          .featured-gen-card:hover .featured-gen-img {
+            transform: scale(1.06);
           }
         `}</style>
       </div>
