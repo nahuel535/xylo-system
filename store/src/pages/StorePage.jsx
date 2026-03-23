@@ -605,11 +605,11 @@ const IPHONE_CATALOG = [
   {
     id: "iphone12", generation: "iPhone 12", year: "2020", tag: "5G. Un salto enorme.",
     accent: "#0a84ff",
-    familyImg: `${CDN}/iphone-12-family-select-2020${IP}`,
+    familyImg: null,
     models: [
       {
         name: "iPhone 12",
-        img: `${CDN}/iphone-12-black-select-2020${IP}`,
+        img: `${CDN}/iphone-12-red-select-2020${IP}`,
         display: '6.1" Super Retina XDR OLED (2532×1170)',
         chip: "A14 Bionic",
         camera: "Dual 12MP — Gran angular + Ultra gran angular",
@@ -624,7 +624,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 12 Pro",
-        img: `${CDN}/iphone-12-pro-graphite-select-2020${IP}`,
+        img: `${CDN}/iphone-12-black-select-2020${IP}`,
         display: '6.1" Super Retina XDR OLED (2532×1170)',
         chip: "A14 Bionic",
         camera: "Triple 12MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 2×",
@@ -638,7 +638,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 12 Pro Max",
-        img: `${CDN}/iphone-12-pro-max-graphite-select-2020${IP}`,
+        img: `${CDN}/iphone-12-purple-select-2021${IP}`,
         display: '6.7" Super Retina XDR OLED (2778×1284)',
         chip: "A14 Bionic",
         camera: "Triple 12MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 2.5×",
