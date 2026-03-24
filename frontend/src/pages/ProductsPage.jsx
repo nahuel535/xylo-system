@@ -10,6 +10,7 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [modelFilter, setModelFilter] = useState("");
   const [capacityFilter, setCapacityFilter] = useState("");
   const [colorFilter, setColorFilter] = useState("");
@@ -37,12 +38,13 @@ export default function ProductsPage() {
     loadProducts();
   }, []);
 
+  const categories = useMemo(() => [...new Set(products.map((p) => p.category).filter(Boolean))].sort(), [products]);
   const models = useMemo(() => [...new Set(products.map((p) => p.model).filter(Boolean))], [products]);
   const capacities = useMemo(() => [...new Set(products.map((p) => p.storage).filter(Boolean))], [products]);
   const colors = useMemo(() => [...new Set(products.map((p) => p.color).filter(Boolean))], [products]);
   const conditions = useMemo(() => [...new Set(products.map((p) => p.condition_type).filter(Boolean))], [products]);
 
-  const activeFilters = [search, modelFilter, capacityFilter, colorFilter, conditionFilter, minPrice, maxPrice].filter(Boolean).length;
+  const activeFilters = [search, categoryFilter, modelFilter, capacityFilter, colorFilter, conditionFilter, minPrice, maxPrice].filter(Boolean).length;
 
   function handleSort(field) {
     if (sortField === field) {
@@ -54,7 +56,7 @@ export default function ProductsPage() {
   }
 
   function clearFilters() {
-    setSearch(""); setModelFilter(""); setCapacityFilter("");
+    setSearch(""); setCategoryFilter(""); setModelFilter(""); setCapacityFilter("");
     setColorFilter(""); setConditionFilter(""); setMinPrice("");
     setMaxPrice(""); setSortField(null);
   }
@@ -70,6 +72,7 @@ export default function ProductsPage() {
         p.storage?.toLowerCase().includes(text);
       return (
         matchesSearch &&
+        (!categoryFilter || p.category === categoryFilter) &&
         (!modelFilter || p.model === modelFilter) &&
         (!capacityFilter || p.storage === capacityFilter) &&
         (!colorFilter || p.color === colorFilter) &&
@@ -121,6 +124,10 @@ export default function ProductsPage() {
             onChange={(e) => setSearch(e.target.value)}
             className={`${inputClass} sm:col-span-2 xl:col-span-1`}
           />
+          <select value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)} className={inputClass}>
+            <option value="">Todas las categorías</option>
+            {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
           <select value={modelFilter} onChange={(e) => setModelFilter(e.target.value)} className={inputClass}>
             <option value="">Todos los modelos</option>
             {models.map((m) => <option key={m} value={m}>{m}</option>)}

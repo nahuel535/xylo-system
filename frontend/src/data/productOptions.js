@@ -1,3 +1,17 @@
+export const ACCESSORY_TYPE_OPTIONS = [
+  "Cargador",
+  "Cable",
+  "Funda / Case",
+  "AirPods",
+  "Apple Watch",
+  "Banda Apple Watch",
+  "MagSafe",
+  "Adaptador",
+  "Auriculares",
+  "Soporte",
+  "Otro",
+];
+
 export const CATEGORY_OPTIONS = [
   "iPhone",
   "iPad",

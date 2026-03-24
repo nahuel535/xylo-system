@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
@@ -7,7 +7,7 @@ import { Mic, MicOff, X, CheckCircle, SkipForward, ChevronRight } from "lucide-r
 import {
   CATEGORY_OPTIONS, CONDITION_OPTIONS, COSMETIC_CONDITION_OPTIONS,
   FUNCTIONAL_CONDITION_OPTIONS, SIM_TYPE_OPTIONS, SUPPLIER_OPTIONS,
-  MODEL_OPTIONS, IPHONE_OPTIONS,
+  MODEL_OPTIONS, IPHONE_OPTIONS, ACCESSORY_TYPE_OPTIONS,
 } from "../data/productOptions";
 
 const initialState = {
@@ -19,13 +19,19 @@ const initialState = {
 };
 
 // Campos que se dictan en el modo guiado
-const VOICE_FIELDS = [
+const VOICE_FIELDS_IPHONE = [
   { key: "imei", label: "IMEI", hint: "Dictá los 15 dígitos del IMEI", type: "number" },
   { key: "serial_number", label: "Número de serie", hint: "Dictá el número de serie", type: "text" },
   { key: "battery_health", label: "Salud de batería", hint: "Decí el porcentaje, por ejemplo: ochenta y nueve", type: "number" },
   { key: "purchase_price_usd", label: "Costo en dólares", hint: "Decí el precio de costo, por ejemplo: trescientos cincuenta", type: "number" },
   { key: "suggested_sale_price_usd", label: "Precio de venta en dólares", hint: "Decí el precio de venta sugerido", type: "number" },
   { key: "notes", label: "Observaciones", hint: "Describí el estado del equipo, accesorios, etc.", type: "text" },
+];
+
+const VOICE_FIELDS_ACCESSORY = [
+  { key: "purchase_price_usd", label: "Costo en dólares", hint: "Decí el precio de costo, por ejemplo: trescientos cincuenta", type: "number" },
+  { key: "suggested_sale_price_usd", label: "Precio de venta en dólares", hint: "Decí el precio de venta sugerido", type: "number" },
+  { key: "notes", label: "Observaciones", hint: "Describí el estado del accesorio", type: "text" },
 ];
 
 // Convierte texto a número limpio
@@ -87,6 +93,9 @@ export default function NewProductPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
 
+  const isAccessory = form.category === "Accesorio";
+  const voiceFields = isAccessory ? VOICE_FIELDS_ACCESSORY : VOICE_FIELDS_IPHONE;
+
   // Modo dictado guiado
   const [voiceMode, setVoiceMode] = useState(false);
   const [voiceStep, setVoiceStep] = useState(0);
@@ -144,7 +153,7 @@ export default function NewProductPage() {
   }
 
   function speakField(step) {
-    const field = VOICE_FIELDS[step];
+    const field = voiceFields[step];
     if (!field) return;
     speak(`${field.label}. ${field.hint}`);
     // No arranca solo — el usuario presiona el botón
@@ -163,7 +172,7 @@ export default function NewProductPage() {
     setVoiceListening(true);
 
     recognition.onresult = (event) => {
-      const field = VOICE_FIELDS[step];
+      const field = voiceFields[step];
       let raw = event.results[0][0].transcript;
 
       // Limpiar según tipo
@@ -186,13 +195,13 @@ export default function NewProductPage() {
   }
 
   function confirmVoiceField() {
-    const field = VOICE_FIELDS[voiceStep];
+    const field = voiceFields[voiceStep];
     setForm((prev) => ({ ...prev, [field.key]: voiceTranscript }));
     setVoiceConfirming(false);
     setVoiceTranscript("");
 
     const nextStep = voiceStep + 1;
-    if (nextStep >= VOICE_FIELDS.length) {
+    if (nextStep >= voiceFields.length) {
       setVoiceDone(true);
       speak("¡Listo! Revisá los datos y guardá el producto.");
     } else {
@@ -212,7 +221,7 @@ export default function NewProductPage() {
     setVoiceConfirming(false);
     setVoiceTranscript("");
     const nextStep = voiceStep + 1;
-    if (nextStep >= VOICE_FIELDS.length) {
+    if (nextStep >= voiceFields.length) {
       setVoiceDone(true);
       speak("¡Listo! Revisá los datos y guardá el producto.");
     } else {
@@ -287,6 +296,13 @@ export default function NewProductPage() {
     setForm((prev) => {
       const updated = { ...prev, [name]: value };
       if (name === "model") { updated.storage = ""; updated.color = ""; }
+      if (name === "category" && value === "Accesorio") {
+        updated.model = ""; updated.storage = ""; updated.color = "";
+        updated.imei = ""; updated.battery_health = ""; updated.sim_type = "";
+      }
+      if (name === "category" && value !== "Accesorio") {
+        updated.model = ""; updated.storage = ""; updated.color = "";
+      }
       return updated;
     });
   }
@@ -312,7 +328,7 @@ export default function NewProductPage() {
     }
   }
 
-  const currentField = VOICE_FIELDS[voiceStep];
+  const currentField = voiceFields[voiceStep];
 
   return (
     <div>
@@ -338,7 +354,7 @@ export default function NewProductPage() {
 
             {/* Progreso */}
             <div className="flex gap-1.5 mb-6">
-              {VOICE_FIELDS.map((_, i) => (
+              {voiceFields.map((_, i) => (
                 <div
                   key={i}
                   className={`h-1.5 flex-1 rounded-full transition-all ${
@@ -370,7 +386,7 @@ export default function NewProductPage() {
                 {/* Campo actual */}
                 <div className="bg-base-subtle rounded-2xl p-5 mb-5">
                   <p className="text-xs font-medium text-base-muted uppercase tracking-wide mb-1">
-                    Campo {voiceStep + 1} de {VOICE_FIELDS.length}
+                    Campo {voiceStep + 1} de {voiceFields.length}
                   </p>
                   <p className="text-xl font-semibold text-base-text mb-1">{currentField?.label}</p>
                   <p className="text-sm text-base-muted">{currentField?.hint}</p>
@@ -453,15 +469,49 @@ export default function NewProductPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           <SelectField label="Categoría" name="category" value={form.category} onChange={handleChange} options={CATEGORY_OPTIONS} />
           <Field label="Marca" name="brand" value={form.brand} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "brand"} />
-          <SelectField label="Modelo" name="model" value={form.model} onChange={handleChange} options={MODEL_OPTIONS} required placeholder="Seleccionar modelo" />
-          <SelectField label="Capacidad" name="storage" value={form.storage} onChange={handleChange} options={availableStorages} placeholder={form.model ? "Seleccionar capacidad" : "Elegí modelo primero"} disabled={!form.model} />
-          <SelectField label="Color" name="color" value={form.color} onChange={handleChange} options={availableColors} placeholder={form.model ? "Seleccionar color" : "Elegí modelo primero"} disabled={!form.model} />
-          <Field label="IMEI" name="imei" value={form.imei} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "imei"} required />
-          <Field label="Número de serie" name="serial_number" value={form.serial_number} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "serial_number"} />
-          <Field label="Batería (%)" name="battery_health" value={form.battery_health} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "battery_health"} type="number" />
+
+          {/* Modelo / Nombre del accesorio */}
+          {isAccessory ? (
+            <Field label="Nombre del accesorio" name="model" value={form.model} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "model"} required placeholder="Ej: AirPods Pro 2, Funda iPhone 16..." />
+          ) : (
+            <SelectField label="Modelo" name="model" value={form.model} onChange={handleChange} options={MODEL_OPTIONS} required placeholder="Seleccionar modelo" />
+          )}
+
+          {/* Tipo de accesorio (solo accesorios — usa el campo storage) */}
+          {isAccessory && (
+            <SelectField label="Tipo de accesorio" name="storage" value={form.storage} onChange={handleChange} options={ACCESSORY_TYPE_OPTIONS} placeholder="Seleccionar tipo" />
+          )}
+
+          {/* Capacidad (solo iPhone) */}
+          {!isAccessory && (
+            <SelectField label="Capacidad" name="storage" value={form.storage} onChange={handleChange} options={availableStorages} placeholder={form.model ? "Seleccionar capacidad" : "Elegí modelo primero"} disabled={!form.model} />
+          )}
+
+          {/* Color — select para iPhone, texto libre para accesorios */}
+          {isAccessory ? (
+            <Field label="Color" name="color" value={form.color} onChange={handleChange} placeholder="Ej: Negro, Blanco, Transparente..." />
+          ) : (
+            <SelectField label="Color" name="color" value={form.color} onChange={handleChange} options={availableColors} placeholder={form.model ? "Seleccionar color" : "Elegí modelo primero"} disabled={!form.model} />
+          )}
+
+          {/* Campos exclusivos de iPhone */}
+          {!isAccessory && (
+            <Field label="IMEI" name="imei" value={form.imei} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "imei"} required />
+          )}
+          {!isAccessory && (
+            <Field label="Número de serie" name="serial_number" value={form.serial_number} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "serial_number"} />
+          )}
+          {!isAccessory && (
+            <Field label="Batería (%)" name="battery_health" value={form.battery_health} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "battery_health"} type="number" />
+          )}
+
           <SelectField label="Estado estético" name="cosmetic_condition" value={form.cosmetic_condition} onChange={handleChange} options={COSMETIC_CONDITION_OPTIONS} placeholder="Seleccionar estado" />
           <SelectField label="Estado funcional" name="functional_condition" value={form.functional_condition} onChange={handleChange} options={FUNCTIONAL_CONDITION_OPTIONS} placeholder="Seleccionar estado" />
-          <SelectField label="Tipo de SIM" name="sim_type" value={form.sim_type} onChange={handleChange} options={SIM_TYPE_OPTIONS} placeholder="Seleccionar tipo" />
+
+          {!isAccessory && (
+            <SelectField label="Tipo de SIM" name="sim_type" value={form.sim_type} onChange={handleChange} options={SIM_TYPE_OPTIONS} placeholder="Seleccionar tipo" />
+          )}
+
           <SelectField label="Condición" name="condition_type" value={form.condition_type} onChange={handleChange} options={CONDITION_OPTIONS} placeholder="Seleccionar condición" />
           <Field label="Fecha de compra" name="purchase_date" value={form.purchase_date} onChange={handleChange} type="date" />
           <Field label="Costo USD" name="purchase_price_usd" value={form.purchase_price_usd} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "purchase_price_usd"} type="number" step="0.01" required />
