@@ -134,9 +134,16 @@ function Hero() {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-        style={{ marginBottom: "32px" }}
+        style={{ marginBottom: "28px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}
       >
-        <XyloLogo size={48} />
+        <XyloLogo size={72} />
+        <span style={{
+          fontFamily: T.heading,
+          fontSize: "32px", fontWeight: 700,
+          letterSpacing: "-0.04em", color: T.text,
+        }}>
+          Xylo
+        </span>
       </motion.div>
 
       {/* Headline */}
@@ -146,13 +153,13 @@ function Hero() {
         transition={{ duration: 0.7, delay: 0.2 }}
         style={{
           fontFamily: T.heading,
-          fontSize: "clamp(52px, 8.5vw, 104px)",
-          fontWeight: 800,
-          letterSpacing: "-0.04em",
-          lineHeight: 0.92,
+          fontSize: "clamp(28px, 4vw, 48px)",
+          fontWeight: 700,
+          letterSpacing: "-0.03em",
+          lineHeight: 1,
           color: T.text,
           marginBottom: "28px",
-          maxWidth: "820px",
+          whiteSpace: "nowrap",
         }}
       >
         iPhones{" "}
@@ -1889,9 +1896,6 @@ export default function StorePage() {
               <h2 style={{ fontFamily: T.heading, fontSize: "clamp(34px, 5vw, 52px)", fontWeight: 700, letterSpacing: "-0.04em", color: T.text, lineHeight: 1, marginBottom: "10px" }}>
                 Oportunidades
               </h2>
-              <p style={{ fontSize: "15px", color: T.textSec }}>
-                No pagues de más, ofertas especiales para vos
-              </p>
             </div>
 
             {/* View toggle */}
