@@ -7,7 +7,7 @@ import { Mic, MicOff, X, CheckCircle, SkipForward, ChevronRight } from "lucide-r
 import {
   CATEGORY_OPTIONS, CONDITION_OPTIONS, COSMETIC_CONDITION_OPTIONS,
   FUNCTIONAL_CONDITION_OPTIONS, SIM_TYPE_OPTIONS, SUPPLIER_OPTIONS,
-  MODEL_OPTIONS, IPHONE_OPTIONS, ACCESSORY_TYPE_OPTIONS,
+  MODEL_OPTIONS, IPHONE_OPTIONS, ACCESSORY_TYPE_OPTIONS, COMBO_ITEMS, COMBO_TEMPLATES,
 } from "../data/productOptions";
 
 const initialState = {
@@ -32,6 +32,11 @@ const VOICE_FIELDS_ACCESSORY = [
   { key: "purchase_price_usd", label: "Costo en dólares", hint: "Decí el precio de costo, por ejemplo: trescientos cincuenta", type: "number" },
   { key: "suggested_sale_price_usd", label: "Precio de venta en dólares", hint: "Decí el precio de venta sugerido", type: "number" },
   { key: "notes", label: "Observaciones", hint: "Describí el estado del accesorio", type: "text" },
+];
+
+const VOICE_FIELDS_COMBO = [
+  { key: "purchase_price_usd", label: "Costo en dólares", hint: "Decí el precio de costo del combo", type: "number" },
+  { key: "suggested_sale_price_usd", label: "Precio de venta en dólares", hint: "Decí el precio de venta del combo", type: "number" },
 ];
 
 // Convierte texto a número limpio
@@ -94,7 +99,10 @@ export default function NewProductPage() {
   const [photoPreview, setPhotoPreview] = useState(null);
 
   const isAccessory = form.category === "Accesorio";
-  const voiceFields = isAccessory ? VOICE_FIELDS_ACCESSORY : VOICE_FIELDS_IPHONE;
+  const isCombo = form.category === "Combo";
+  const voiceFields = isCombo ? VOICE_FIELDS_COMBO : isAccessory ? VOICE_FIELDS_ACCESSORY : VOICE_FIELDS_IPHONE;
+
+  const [comboItems, setComboItems] = useState([]);
 
   // Modo dictado guiado
   const [voiceMode, setVoiceMode] = useState(false);
@@ -291,6 +299,23 @@ export default function NewProductPage() {
     }
   }
 
+  function toggleComboItem(item) {
+    setComboItems((prev) => {
+      const next = prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item];
+      setForm((f) => ({ ...f, notes: next.length ? `Incluye: ${next.join(", ")}` : "" }));
+      return next;
+    });
+  }
+
+  function applyComboTemplate(template) {
+    setComboItems(template.items);
+    setForm((f) => ({
+      ...f,
+      model: template.name,
+      notes: `Incluye: ${template.items.join(", ")}`,
+    }));
+  }
+
   function handleChange(event) {
     const { name, value } = event.target;
     setForm((prev) => {
@@ -300,7 +325,12 @@ export default function NewProductPage() {
         updated.model = ""; updated.storage = ""; updated.color = "";
         updated.imei = ""; updated.battery_health = ""; updated.sim_type = "";
       }
-      if (name === "category" && value !== "Accesorio") {
+      if (name === "category" && value === "Combo") {
+        updated.model = ""; updated.storage = ""; updated.color = "";
+        updated.imei = ""; updated.battery_health = ""; updated.sim_type = ""; updated.notes = "";
+        setComboItems([]);
+      }
+      if (name === "category" && value !== "Accesorio" && value !== "Combo") {
         updated.model = ""; updated.storage = ""; updated.color = "";
       }
       return updated;
@@ -468,13 +498,71 @@ export default function NewProductPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           <SelectField label="Categoría" name="category" value={form.category} onChange={handleChange} options={CATEGORY_OPTIONS} />
-          <Field label="Marca" name="brand" value={form.brand} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "brand"} />
 
-          {/* Modelo / Nombre del accesorio */}
-          {isAccessory ? (
+          {!isCombo && (
+            <Field label="Marca" name="brand" value={form.brand} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "brand"} />
+          )}
+
+          {/* Modelo / Nombre */}
+          {isCombo ? (
+            <Field label="Nombre del combo" name="model" value={form.model} onChange={handleChange} required placeholder="Ej: Combo Carga Rápida 20W..." />
+          ) : isAccessory ? (
             <Field label="Nombre del accesorio" name="model" value={form.model} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "model"} required placeholder="Ej: AirPods Pro 2, Funda iPhone 16..." />
           ) : (
             <SelectField label="Modelo" name="model" value={form.model} onChange={handleChange} options={MODEL_OPTIONS} required placeholder="Seleccionar modelo" />
+          )}
+
+          {/* Sección de combo — ancho completo */}
+          {isCombo && (
+            <div className="md:col-span-2 xl:col-span-3 border border-base-border rounded-2xl p-5 space-y-4">
+              {/* Plantillas rápidas */}
+              <div>
+                <p className="text-xs font-medium text-base-muted uppercase tracking-wide mb-2.5">Plantillas rápidas</p>
+                <div className="flex flex-wrap gap-2">
+                  {COMBO_TEMPLATES.map((t) => (
+                    <button
+                      key={t.name}
+                      type="button"
+                      onClick={() => applyComboTemplate(t)}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition cursor-pointer ${
+                        t.items.every((i) => comboItems.includes(i)) && comboItems.length === t.items.length
+                          ? "bg-xylo-500/10 border-xylo-500/30 text-xylo-600"
+                          : "bg-base-subtle border-base-border text-base-muted hover:border-xylo-500/30 hover:text-xylo-600"
+                      }`}
+                    >
+                      {t.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Artículos individuales */}
+              <div>
+                <p className="text-xs font-medium text-base-muted uppercase tracking-wide mb-2.5">
+                  Artículos incluidos {comboItems.length > 0 && <span className="text-xylo-600">({comboItems.length})</span>}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {COMBO_ITEMS.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => toggleComboItem(item)}
+                      className={`px-3 py-1.5 text-xs rounded-lg border transition cursor-pointer ${
+                        comboItems.includes(item)
+                          ? "bg-xylo-500/10 border-xylo-500/30 text-xylo-600 font-medium"
+                          : "bg-base-subtle border-base-border text-base-muted hover:border-base-text"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {comboItems.length > 0 && (
+                <p className="text-xs text-base-muted bg-base-subtle rounded-xl px-4 py-2.5">
+                  {`Incluye: ${comboItems.join(", ")}`}
+                </p>
+              )}
+            </div>
           )}
 
           {/* Tipo de accesorio (solo accesorios — usa el campo storage) */}
@@ -482,33 +570,39 @@ export default function NewProductPage() {
             <SelectField label="Tipo de accesorio" name="storage" value={form.storage} onChange={handleChange} options={ACCESSORY_TYPE_OPTIONS} placeholder="Seleccionar tipo" />
           )}
 
-          {/* Capacidad (solo iPhone) */}
-          {!isAccessory && (
+          {/* Capacidad (solo iPhone/iPad/etc) */}
+          {!isAccessory && !isCombo && (
             <SelectField label="Capacidad" name="storage" value={form.storage} onChange={handleChange} options={availableStorages} placeholder={form.model ? "Seleccionar capacidad" : "Elegí modelo primero"} disabled={!form.model} />
           )}
 
-          {/* Color — select para iPhone, texto libre para accesorios */}
-          {isAccessory ? (
-            <Field label="Color" name="color" value={form.color} onChange={handleChange} placeholder="Ej: Negro, Blanco, Transparente..." />
-          ) : (
-            <SelectField label="Color" name="color" value={form.color} onChange={handleChange} options={availableColors} placeholder={form.model ? "Seleccionar color" : "Elegí modelo primero"} disabled={!form.model} />
+          {/* Color */}
+          {!isCombo && (
+            isAccessory ? (
+              <Field label="Color" name="color" value={form.color} onChange={handleChange} placeholder="Ej: Negro, Blanco, Transparente..." />
+            ) : (
+              <SelectField label="Color" name="color" value={form.color} onChange={handleChange} options={availableColors} placeholder={form.model ? "Seleccionar color" : "Elegí modelo primero"} disabled={!form.model} />
+            )
           )}
 
           {/* Campos exclusivos de iPhone */}
-          {!isAccessory && (
+          {!isAccessory && !isCombo && (
             <Field label="IMEI" name="imei" value={form.imei} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "imei"} required />
           )}
-          {!isAccessory && (
+          {!isAccessory && !isCombo && (
             <Field label="Número de serie" name="serial_number" value={form.serial_number} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "serial_number"} />
           )}
-          {!isAccessory && (
+          {!isAccessory && !isCombo && (
             <Field label="Batería (%)" name="battery_health" value={form.battery_health} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "battery_health"} type="number" />
           )}
 
-          <SelectField label="Estado estético" name="cosmetic_condition" value={form.cosmetic_condition} onChange={handleChange} options={COSMETIC_CONDITION_OPTIONS} placeholder="Seleccionar estado" />
-          <SelectField label="Estado funcional" name="functional_condition" value={form.functional_condition} onChange={handleChange} options={FUNCTIONAL_CONDITION_OPTIONS} placeholder="Seleccionar estado" />
+          {!isCombo && (
+            <SelectField label="Estado estético" name="cosmetic_condition" value={form.cosmetic_condition} onChange={handleChange} options={COSMETIC_CONDITION_OPTIONS} placeholder="Seleccionar estado" />
+          )}
+          {!isCombo && (
+            <SelectField label="Estado funcional" name="functional_condition" value={form.functional_condition} onChange={handleChange} options={FUNCTIONAL_CONDITION_OPTIONS} placeholder="Seleccionar estado" />
+          )}
 
-          {!isAccessory && (
+          {!isAccessory && !isCombo && (
             <SelectField label="Tipo de SIM" name="sim_type" value={form.sim_type} onChange={handleChange} options={SIM_TYPE_OPTIONS} placeholder="Seleccionar tipo" />
           )}
 

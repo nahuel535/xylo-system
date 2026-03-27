@@ -129,6 +129,16 @@ function Hero() {
         WebkitMaskImage: "radial-gradient(ellipse 80% 70% at 50% 40%, black 30%, transparent 100%)",
       }} />
 
+      {/* Logo centrado */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+        style={{ marginBottom: "32px" }}
+      >
+        <XyloLogo size={48} />
+      </motion.div>
+
       {/* Headline */}
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
@@ -145,7 +155,7 @@ function Hero() {
           maxWidth: "820px",
         }}
       >
-        iPhones<br />
+        iPhones{" "}
         <em style={{
           fontStyle: "italic",
           background: `linear-gradient(135deg, ${ACCENT} 0%, #00e0aa 60%, ${ACCENT} 100%)`,
@@ -1814,7 +1824,7 @@ export default function StorePage() {
   const [search, setSearch] = useState("");
   const [modelFilter, setModelFilter] = useState("");
   const [storageFilter, setStorageFilter] = useState("");
-  const [sortBy, setSortBy] = useState("");
+  const [sortBy, setSortBy] = useState("offers");
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
   const [scrolled, setScrolled] = useState(false);
   const stockHeaderRef = useRef(null);
@@ -1874,7 +1884,6 @@ export default function StorePage() {
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
           style={{ marginBottom: "56px" }}
         >
-          <p style={{ fontSize: "12px", fontWeight: 600, letterSpacing: "0.15em", textTransform: "uppercase", color: ACCENT, marginBottom: "16px" }}>Disponibles ahora</p>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
             <div>
               <h2 style={{ fontFamily: T.heading, fontSize: "clamp(34px, 5vw, 52px)", fontWeight: 700, letterSpacing: "-0.04em", color: T.text, lineHeight: 1, marginBottom: "10px" }}>

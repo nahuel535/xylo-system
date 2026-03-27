@@ -19,6 +19,32 @@ export const CATEGORY_OPTIONS = [
   "Apple Watch",
   "AirPods",
   "Accesorio",
+  "Combo",
+];
+
+export const COMBO_ITEMS = [
+  "Base de carga",
+  "Base de carga MagSafe",
+  "Cable Lightning",
+  "Cable USB-C",
+  "Adaptador 20W",
+  "Adaptador 30W",
+  "Adaptador 35W",
+  "Auriculares EarPods Lightning",
+  "Auriculares EarPods USB-C",
+  "Funda transparente",
+  "Funda de silicona",
+  "Protector de pantalla",
+  "Paño de limpieza",
+  "Apple Pencil",
+];
+
+export const COMBO_TEMPLATES = [
+  { name: "Base + Cable USB-C", items: ["Base de carga", "Cable USB-C"] },
+  { name: "Carga Rápida 20W", items: ["Base de carga", "Cable USB-C", "Adaptador 20W"] },
+  { name: "Carga MagSafe", items: ["Base de carga MagSafe", "Cable USB-C", "Adaptador 20W"] },
+  { name: "Funda + Protector", items: ["Funda transparente", "Protector de pantalla"] },
+  { name: "Kit completo", items: ["Base de carga", "Cable USB-C", "Adaptador 20W", "Funda transparente"] },
 ];
 
 export const CONDITION_OPTIONS = [
