@@ -1824,7 +1824,7 @@ export default function StorePage() {
   const [search, setSearch] = useState("");
   const [modelFilter, setModelFilter] = useState("");
   const [storageFilter, setStorageFilter] = useState("");
-  const [sortBy, setSortBy] = useState("offers");
+  const [sortBy, setSortBy] = useState("");
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
   const [scrolled, setScrolled] = useState(false);
   const stockHeaderRef = useRef(null);
@@ -1963,7 +1963,6 @@ export default function StorePage() {
             <span style={{ fontSize: "12px", fontWeight: 500, color: T.textMuted, marginRight: "4px" }}>Ordenar:</span>
             {[
               { key: "", label: "Relevante" },
-              { key: "offers", label: "🔥 Ofertas primero" },
               { key: "price_asc", label: "Menor precio" },
               { key: "price_desc", label: "Mayor precio" },
               { key: "battery", label: "Mejor batería" },
