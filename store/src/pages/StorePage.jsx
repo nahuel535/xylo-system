@@ -136,14 +136,7 @@ function Hero() {
         transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         style={{ marginBottom: "28px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}
       >
-        <XyloLogo size={96} />
-        <span style={{
-          fontFamily: T.heading,
-          fontSize: "42px", fontWeight: 700,
-          letterSpacing: "-0.05em", color: T.text,
-        }}>
-          Xylo
-        </span>
+        <XyloLogo size={120} />
       </motion.div>
 
       {/* Headline */}
@@ -153,9 +146,9 @@ function Hero() {
         transition={{ duration: 0.7, delay: 0.2 }}
         style={{
           fontFamily: T.heading,
-          fontSize: "clamp(20px, 2.5vw, 32px)",
-          fontWeight: 600,
-          letterSpacing: "-0.02em",
+          fontSize: "clamp(26px, 3.5vw, 44px)",
+          fontWeight: 700,
+          letterSpacing: "-0.03em",
           lineHeight: 1,
           color: T.text,
           marginBottom: "28px",
