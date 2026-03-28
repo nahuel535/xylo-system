@@ -5,7 +5,7 @@ import { Search, X, ChevronRight, ArrowRight, LayoutGrid, List } from "lucide-re
 import api from "../services/api";
 import { XyloLogo, WhatsAppIcon } from "../components/Icons";
 
-const WHATSAPP = "5493512345678";
+const WHATSAPP = "5493518916482";
 const ACCENT = "#00C896";
 const NEW_DAYS = 7; // días para mostrar "Nuevo ingreso"
 
@@ -136,11 +136,11 @@ function Hero() {
         transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         style={{ marginBottom: "28px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}
       >
-        <XyloLogo size={72} />
+        <XyloLogo size={96} />
         <span style={{
           fontFamily: T.heading,
-          fontSize: "32px", fontWeight: 700,
-          letterSpacing: "-0.04em", color: T.text,
+          fontSize: "42px", fontWeight: 700,
+          letterSpacing: "-0.05em", color: T.text,
         }}>
           Xylo
         </span>
@@ -153,9 +153,9 @@ function Hero() {
         transition={{ duration: 0.7, delay: 0.2 }}
         style={{
           fontFamily: T.heading,
-          fontSize: "clamp(28px, 4vw, 48px)",
-          fontWeight: 700,
-          letterSpacing: "-0.03em",
+          fontSize: "clamp(20px, 2.5vw, 32px)",
+          fontWeight: 600,
+          letterSpacing: "-0.02em",
           lineHeight: 1,
           color: T.text,
           marginBottom: "28px",
