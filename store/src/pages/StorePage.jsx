@@ -1713,20 +1713,20 @@ function ProductRow({ product, exchange }) {
       <motion.div
         whileHover={{ backgroundColor: "#fafaf9" }}
         style={{
-          display: "flex", alignItems: "center", gap: "20px",
-          padding: "16px 20px",
+          display: "flex", alignItems: "center", gap: "14px",
+          padding: "14px 16px",
           background: T.card, border: `1px solid ${T.border}`,
           borderRadius: "16px", cursor: "pointer",
           fontFamily: T.body, transition: "background 0.15s",
         }}
       >
         {/* Thumb */}
-        <div style={{ width: "64px", height: "64px", borderRadius: "12px", background: T.surface, overflow: "hidden", flexShrink: 0 }}>
+        <div style={{ width: "56px", height: "56px", borderRadius: "10px", background: T.surface, overflow: "hidden", flexShrink: 0 }}>
           {product.photo_url ? (
             <img src={product.photo_url} alt={product.model} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
           ) : (
             <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
                 <rect x="5" y="2" width="14" height="20" rx="2" /><line x1="12" y1="18" x2="12.01" y2="18" />
               </svg>
             </div>
@@ -1735,22 +1735,33 @@ function ProductRow({ product, exchange }) {
 
         {/* Info */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "3px" }}>
-            <p style={{ fontSize: "15px", fontWeight: 600, color: T.text, letterSpacing: "-0.02em" }}>{product.model}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px", flexWrap: "wrap" }}>
+            <p style={{ fontSize: "14px", fontWeight: 600, color: T.text, letterSpacing: "-0.02em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{product.model}</p>
             {product.is_offer && (
-              <span style={{ fontSize: "10px", fontWeight: 700, color: "#ef4444", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "6px", padding: "1px 7px" }}>Oportunidad</span>
+              <span style={{ fontSize: "9px", fontWeight: 700, color: "#ef4444", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "5px", padding: "1px 6px", flexShrink: 0 }}>Oportunidad</span>
             )}
             {isNewProduct && !product.is_offer && (
-              <span style={{ fontSize: "10px", fontWeight: 600, color: ACCENT, background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: "6px", padding: "1px 7px" }}>Nuevo</span>
+              <span style={{ fontSize: "9px", fontWeight: 600, color: ACCENT, background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: "5px", padding: "1px 6px", flexShrink: 0 }}>Nuevo</span>
             )}
           </div>
-          <p style={{ fontSize: "13px", color: T.textSec }}>{[product.storage, product.color].filter(Boolean).join(" · ")}</p>
+          <p style={{ fontSize: "12px", color: T.textSec, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {[product.storage, product.color].filter(Boolean).join(" · ")}
+          </p>
+          {/* Battery shown inline on mobile */}
+          {product.battery_health && (
+            <div className="row-battery-mobile" style={{ display: "none", alignItems: "center", gap: "6px", marginTop: "5px" }}>
+              <div style={{ width: "40px", height: "2px", background: "rgba(0,0,0,0.07)", borderRadius: "2px", overflow: "hidden" }}>
+                <div style={{ width: `${product.battery_health}%`, height: "100%", background: batteryColor, borderRadius: "2px" }} />
+              </div>
+              <span style={{ fontSize: "10px", color: batteryColor, fontWeight: 600 }}>{product.battery_health}%</span>
+            </div>
+          )}
         </div>
 
-        {/* Battery */}
+        {/* Battery — desktop only */}
         {product.battery_health && (
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-            <div style={{ width: "48px", height: "3px", background: "rgba(0,0,0,0.07)", borderRadius: "2px", overflow: "hidden" }}>
+          <div className="row-battery-desktop" style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+            <div style={{ width: "44px", height: "3px", background: "rgba(0,0,0,0.07)", borderRadius: "2px", overflow: "hidden" }}>
               <div style={{ width: `${product.battery_health}%`, height: "100%", background: batteryColor, borderRadius: "2px" }} />
             </div>
             <span style={{ fontSize: "11px", color: batteryColor, fontWeight: 600, minWidth: "28px" }}>{product.battery_health}%</span>
@@ -1759,13 +1770,13 @@ function ProductRow({ product, exchange }) {
 
         {/* Price */}
         <div style={{ textAlign: "right", flexShrink: 0 }}>
-          <p style={{ fontSize: "17px", fontWeight: 700, color: product.is_offer ? "#ef4444" : T.text, letterSpacing: "-0.03em", lineHeight: 1 }}>
+          <p style={{ fontSize: "15px", fontWeight: 700, color: product.is_offer ? "#ef4444" : T.text, letterSpacing: "-0.03em", lineHeight: 1, whiteSpace: "nowrap" }}>
             USD {Number(product.suggested_sale_price_usd).toLocaleString("es-AR")}
           </p>
-          {ars && <p style={{ fontSize: "11px", color: T.textMuted, marginTop: "3px" }}>ARS {ars}</p>}
+          {ars && <p style={{ fontSize: "10px", color: T.textMuted, marginTop: "3px", whiteSpace: "nowrap" }}>ARS {ars}</p>}
         </div>
 
-        <ChevronRight size={16} color={T.textMuted} />
+        <ChevronRight size={14} color={T.textMuted} style={{ flexShrink: 0 }} />
       </motion.div>
     </Link>
   );
@@ -2123,6 +2134,13 @@ export default function StorePage() {
           </motion.div>
         )}
       </section>
+
+      <style>{`
+        @media (max-width: 540px) {
+          .row-battery-desktop { display: none !important; }
+          .row-battery-mobile { display: flex !important; }
+        }
+      `}</style>
 
       <ModelsCatalog />
       <FeatureGrid />
