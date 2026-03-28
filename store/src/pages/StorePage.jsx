@@ -854,7 +854,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone15", generation: "iPhone 15", year: "2023", tag: "USB-C. Un estándar, por fin.",
     accent: "#ff9f0a",
-    familyImg: `${CDN}/iphone-15-family-select-202309${IP}`,
+    familyImg: null,
     models: [
       {
         name: "iPhone 15",
@@ -904,7 +904,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone16", generation: "iPhone 16", year: "2024", tag: "Diseñado para Apple Intelligence.",
     accent: "#30d158",
-    familyImg: `${CDN}/iphone-16-family-select-202409${IP}`,
+    familyImg: null,
     models: [
       {
         name: "iPhone 16",
