@@ -804,11 +804,11 @@ const IPHONE_CATALOG = [
   {
     id: "iphone14", generation: "iPhone 14", year: "2022", tag: "Seguridad. Siempre.",
     accent: "#5e5ce6",
-    familyImg: `${CDN}/iphone-14-family-select-202209${IP}`,
+    familyImg: null,
     models: [
       {
         name: "iPhone 14",
-        img: `${CDN}/iphone-14-finish-select-202209-6-1inch-midnight${IP}`,
+        img: `${CDN}/iphone-14-midnight-select-202209${IP}`,
         display: '6.1" Super Retina XDR OLED (2532×1170)',
         chip: "A15 Bionic",
         camera: "Dual 12MP — Gran angular + Ultra gran angular con Photonic Engine",
@@ -823,7 +823,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 14 Pro",
-        img: `${CDN}/iphone-14-pro-finish-select-202209-6-1inch-spaceblack${IP}`,
+        img: `${CDN}/iphone-14-pro-spaceblack-select${IP}`,
         display: '6.1" Super Retina XDR ProMotion 120Hz (2556×1179)',
         chip: "A16 Bionic",
         camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 3×",
@@ -837,7 +837,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 14 Pro Max",
-        img: `${CDN}/iphone-14-pro-finish-select-202209-6-7inch-deeppurple${IP}`,
+        img: `${CDN}/iphone-14-pro-max-spaceblack-select${IP}`,
         display: '6.7" Super Retina XDR ProMotion 120Hz (2796×1290)',
         chip: "A16 Bionic",
         camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 3×",
@@ -873,7 +873,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 15 Pro",
-        img: `${CDN}/iphone-15-pro-finish-select-202309-6-1inch-blacktitanium${IP}`,
+        img: `${CDN}/iphone-15-pro-blacktitanium-select${IP}`,
         display: '6.1" Super Retina XDR ProMotion 120Hz (2556×1179)',
         chip: "A17 Pro",
         camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 3×",
@@ -887,7 +887,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 15 Pro Max",
-        img: `${CDN}/iphone-15-pro-finish-select-202309-6-7inch-blacktitanium${IP}`,
+        img: `${CDN}/iphone-15-pro-max-blacktitanium-select${IP}`,
         display: '6.7" Super Retina XDR ProMotion 120Hz (2796×1290)',
         chip: "A17 Pro",
         camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Zoom tetraprisma 5×",
@@ -923,7 +923,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 16 Pro",
-        img: `${CDN}/iphone-16-pro-finish-select-202409-6-3inch-blacktitanium${IP}`,
+        img: `${CDN}/iphone-16-pro-blacktitanium-select${IP}`,
         display: '6.3" Super Retina XDR ProMotion 120Hz (2622×1206)',
         chip: "A18 Pro",
         camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 5×",
@@ -937,7 +937,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 16 Pro Max",
-        img: `${CDN}/iphone-16-pro-finish-select-202409-6-9inch-naturaltitanium${IP}`,
+        img: `${CDN}/iphone-16-pro-max-blacktitanium-select${IP}`,
         display: '6.9" Super Retina XDR ProMotion 120Hz (2868×1320)',
         chip: "A18 Pro",
         camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 5×",
