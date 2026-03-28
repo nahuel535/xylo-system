@@ -631,7 +631,7 @@ const IPHONE_CATALOG = [
     models: [
       {
         name: "iPhone 11",
-        img: `${CDN}/iphone11-black-select-2019${IP}`,
+        img: `${CDN}/iphone11-yellow-select-2019${IP}`,
         display: '6.1" Liquid Retina HD (1792×828)',
         chip: "A13 Bionic",
         camera: "Dual 12MP — Gran angular + Ultra gran angular",
@@ -681,7 +681,7 @@ const IPHONE_CATALOG = [
     models: [
       {
         name: "iPhone 12",
-        img: `${CDN}/iphone-12-black-select-2020${IP}`,
+        img: `${CDN}/iphone-12-blue-select-2020${IP}`,
         display: '6.1" Super Retina XDR OLED (2532×1170)',
         chip: "A14 Bionic",
         camera: "Dual 12MP — Gran angular + Ultra gran angular",
@@ -731,7 +731,7 @@ const IPHONE_CATALOG = [
     models: [
       {
         name: "iPhone 13",
-        img: `${CDN}/iphone-13-midnight-select-2021${IP}`,
+        img: `${CDN}/iphone-13-pink-select-2021${IP}`,
         display: '6.1" Super Retina XDR OLED (2532×1170)',
         chip: "A15 Bionic",
         camera: "Dual 12MP — Gran angular + Ultra gran angular con modo Cinematográfico",
@@ -783,7 +783,7 @@ const IPHONE_CATALOG = [
     models: [
       {
         name: "iPhone 14",
-        img: `${CDN}/iphone-14-midnight-select-202209${IP}`,
+        img: `${CDN}/iphone-14-purple-select-202209${IP}`,
         display: '6.1" Super Retina XDR OLED (2532×1170)',
         chip: "A15 Bionic",
         camera: "Dual 12MP — Gran angular + Ultra gran angular con Photonic Engine",
@@ -833,7 +833,7 @@ const IPHONE_CATALOG = [
     models: [
       {
         name: "iPhone 15",
-        img: `${CDN}/iphone-15-black-select-202309${IP}`,
+        img: `${CDN}/iphone-15-pink-select-202309${IP}`,
         display: '6.1" Super Retina XDR OLED (2556×1179)',
         chip: "A16 Bionic",
         camera: "Dual 48MP — Gran angular + Ultra gran angular con Photonic Engine",
@@ -883,7 +883,7 @@ const IPHONE_CATALOG = [
     models: [
       {
         name: "iPhone 16",
-        img: `${CDN}/iphone-16-black-select-202409${IP}`,
+        img: `${CDN}/iphone-16-teal-select-202409${IP}`,
         display: '6.1" Super Retina XDR OLED (2556×1179)',
         chip: "A18",
         camera: "Dual 48MP — Gran angular + Ultra gran angular con Fusion Camera",
@@ -1294,25 +1294,29 @@ function GenCard({ gen, i, inView, onClick }) {
             display: "flex", alignItems: "flex-end", justifyContent: "center",
             paddingLeft: "6px", paddingRight: "6px",
           }}>
-            {gen.models.map((m, idx) => {
+            {/* Display order: Pro (left) | base (center) | Pro Max (right) */}
+            {(gen.models.length === 3
+              ? [gen.models[1], gen.models[0], gen.models[2]]
+              : gen.models
+            ).map((m, idx) => {
               const isCenter = idx === 1;
-              const heights = ["69%", "88%", "74%"];
+              const heights = ["71%", "90%", "75%"];
               return (
                 <img
                   key={m.name}
                   src={m.img}
                   alt={m.name}
-                  className={`gen-card-img gen-card-model-img`}
+                  className="gen-card-img gen-card-model-img"
                   style={{
-                    height: heights[idx] ?? "69%",
+                    height: heights[idx] ?? "71%",
                     width: "auto", objectFit: "contain",
                     flexShrink: 0,
                     position: "relative",
                     zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
-                    marginLeft: idx > 0 ? "-18px" : "0",
+                    marginLeft: idx > 0 ? "-20px" : "0",
                     filter: isCenter
-                      ? "drop-shadow(0 14px 28px rgba(0,0,0,0.18))"
-                      : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))",
+                      ? "drop-shadow(0 16px 32px rgba(0,0,0,0.20))"
+                      : "drop-shadow(0 8px 18px rgba(0,0,0,0.10))",
                     transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
                   }}
                 />
