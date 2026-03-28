@@ -752,7 +752,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone13", generation: "iPhone 13", year: "2021", tag: "Tu película favorita. Por ti.",
     accent: "#ff375f",
-    familyImg: `${CDN}/iphone-13-family-select-2021${IP}`,
+    familyImg: null,
     models: [
       {
         name: "iPhone 13",
