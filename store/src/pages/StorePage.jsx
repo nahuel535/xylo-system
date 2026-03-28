@@ -274,131 +274,218 @@ function HowToBuy() {
     {
       num: "01",
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
       ),
       title: "Elegís el equipo",
       desc: "Explorá el stock, filtrá por modelo, capacidad y precio. Toda la info está visible antes de consultar.",
+      tag: "Vidriera",
     },
     {
       num: "02",
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
       ),
       title: "Consultás por WhatsApp",
       desc: "Te respondemos al instante. Coordinamos pago y entrega sin vueltas.",
+      tag: "Atención directa",
     },
     {
       num: "03",
       icon: (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12" />
         </svg>
       ),
       title: "Recibís el equipo",
       desc: "Retiro en mano o envío. El equipo llega revisado, listo para usar desde el primer día.",
+      tag: "Certificado",
     },
   ];
 
   return (
     <section style={{
-      background: T.bg,
-      borderTop: `1px solid ${T.border}`,
-      padding: "80px clamp(20px, 6vw, 80px)",
+      background: "#07080b",
+      padding: "100px clamp(20px, 6vw, 80px) 110px",
       fontFamily: T.body,
+      position: "relative",
+      overflow: "hidden",
+      backgroundImage: `
+        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px)
+      `,
+      backgroundSize: "64px 64px",
     }}>
-      <div style={{ maxWidth: "960px", margin: "0 auto" }} ref={ref}>
+      {/* Ambient glow */}
+      <div style={{
+        position: "absolute", top: "40%", left: "50%",
+        transform: "translate(-50%, -50%)",
+        width: "900px", height: "500px",
+        background: "radial-gradient(ellipse at center, rgba(0,200,150,0.07) 0%, transparent 65%)",
+        pointerEvents: "none",
+      }} />
+      {/* Top edge fade */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: "1px",
+        background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)",
+        pointerEvents: "none",
+      }} />
+
+      <div style={{ maxWidth: "1040px", margin: "0 auto", position: "relative", zIndex: 1 }} ref={ref}>
+
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
-          style={{ textAlign: "center", marginBottom: "52px" }}
+          transition={{ duration: 0.65 }}
+          style={{ textAlign: "center", marginBottom: "72px" }}
         >
-          <p style={{
-            fontSize: "11.5px", fontWeight: 600, letterSpacing: "0.14em",
-            textTransform: "uppercase", color: ACCENT, marginBottom: "12px",
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: "8px",
+            background: "rgba(0,200,150,0.08)", border: "1px solid rgba(0,200,150,0.18)",
+            borderRadius: "980px", padding: "5px 14px",
+            marginBottom: "24px",
           }}>
-            Simple y directo
-          </p>
+            <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: ACCENT }} />
+            <span style={{
+              fontSize: "11px", fontWeight: 600, letterSpacing: "0.14em",
+              textTransform: "uppercase", color: ACCENT,
+            }}>
+              Simple y directo
+            </span>
+          </div>
           <h2 style={{
             fontFamily: T.heading,
-            fontSize: "clamp(26px, 3.5vw, 36px)",
-            fontWeight: 700, letterSpacing: "-0.03em",
-            color: T.text, lineHeight: 1.1,
+            fontSize: "clamp(34px, 4.5vw, 52px)",
+            fontWeight: 700, letterSpacing: "-0.04em",
+            color: "#f4f4f2", lineHeight: 1.05, margin: 0,
           }}>
             ¿Cómo comprás?
           </h2>
+          <p style={{
+            marginTop: "16px", fontSize: "16px",
+            color: "rgba(255,255,255,0.38)", lineHeight: 1.6,
+          }}>
+            Tres pasos. Sin complicaciones.
+          </p>
         </motion.div>
 
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "24px",
-        }}
-          className="how-grid"
-        >
+        {/* Cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "14px" }} className="how-grid">
           {steps.map((step, i) => (
             <motion.div
               key={step.num}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 36 }}
               animate={inView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.55, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{ y: -8, transition: { duration: 0.22, ease: "easeOut" } }}
+              transition={{ duration: 0.65, delay: 0.1 + i * 0.13, ease: [0.22, 1, 0.36, 1] }}
               style={{
                 position: "relative",
-                padding: "32px 28px",
-                background: "#fff",
-                border: `1px solid ${T.border}`,
-                borderRadius: "20px",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                padding: "40px 32px 36px",
+                background: "rgba(255,255,255,0.026)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                borderRadius: "24px",
+                overflow: "hidden",
+                cursor: "default",
               }}
+              className="how-card"
             >
-              {/* connector line between steps */}
-              {i < 2 && (
-                <div style={{
-                  position: "absolute", right: "-12px", top: "42px",
-                  width: "24px", height: "1px",
-                  background: `linear-gradient(90deg, ${ACCENT}44, ${ACCENT}44)`,
-                  zIndex: 1,
-                }} className="step-connector" />
-              )}
+              {/* Top shimmer line */}
               <div style={{
-                width: "44px", height: "44px",
-                background: T.accentLight,
-                border: `1px solid ${T.accentBorder}`,
-                borderRadius: "14px",
+                position: "absolute", top: 0, left: "15%", right: "15%", height: "1px",
+                background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.13), transparent)",
+                pointerEvents: "none",
+              }} />
+
+              {/* Corner accent glow */}
+              <div style={{
+                position: "absolute", top: "-40px", right: "-40px",
+                width: "120px", height: "120px",
+                background: "radial-gradient(circle, rgba(0,200,150,0.09) 0%, transparent 70%)",
+                pointerEvents: "none",
+              }} />
+
+              {/* Watermark number */}
+              <div style={{
+                position: "absolute", bottom: "-16px", right: "16px",
+                fontSize: "130px", fontWeight: 800,
+                color: "rgba(255,255,255,0.022)",
+                fontFamily: T.heading,
+                letterSpacing: "-0.06em",
+                lineHeight: 1,
+                pointerEvents: "none",
+                userSelect: "none",
+              }}>
+                {step.num}
+              </div>
+
+              {/* Icon */}
+              <div style={{
+                width: "54px", height: "54px",
+                background: "rgba(0,200,150,0.10)",
+                border: "1px solid rgba(0,200,150,0.22)",
+                borderRadius: "17px",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 color: ACCENT,
-                marginBottom: "20px",
+                marginBottom: "28px",
+                boxShadow: "0 0 28px rgba(0,200,150,0.14)",
               }}>
                 {step.icon}
               </div>
-              <span style={{
-                fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em",
-                color: T.textMuted, textTransform: "uppercase",
-                display: "block", marginBottom: "8px",
+
+              {/* Tag pill */}
+              <div style={{
+                display: "inline-flex", alignItems: "center",
+                background: "rgba(255,255,255,0.055)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "980px",
+                padding: "3px 10px",
+                marginBottom: "14px",
               }}>
-                Paso {step.num}
-              </span>
-              <p style={{ fontSize: "15px", fontWeight: 600, color: T.text, marginBottom: "8px", letterSpacing: "-0.015em" }}>
+                <span style={{
+                  fontSize: "10px", fontWeight: 600, letterSpacing: "0.1em",
+                  color: "rgba(255,255,255,0.38)", textTransform: "uppercase",
+                }}>
+                  {step.tag}
+                </span>
+              </div>
+
+              {/* Title */}
+              <p style={{
+                fontFamily: T.heading,
+                fontSize: "19px", fontWeight: 600,
+                color: "#f0f0ee", letterSpacing: "-0.03em",
+                marginBottom: "12px", lineHeight: 1.2,
+              }}>
                 {step.title}
               </p>
-              <p style={{ fontSize: "13px", color: T.textSec, lineHeight: 1.65 }}>
+
+              {/* Desc */}
+              <p style={{
+                fontSize: "13.5px",
+                color: "rgba(255,255,255,0.40)",
+                lineHeight: 1.72,
+              }}>
                 {step.desc}
               </p>
             </motion.div>
           ))}
         </div>
       </div>
+
       <style>{`
         @media (max-width: 700px) {
           .how-grid { grid-template-columns: 1fr !important; }
-          .step-connector { display: none; }
         }
         @media (max-width: 900px) and (min-width: 701px) {
           .how-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+        .how-card:hover {
+          border-color: rgba(0,200,150,0.28) !important;
+          box-shadow: 0 0 0 1px rgba(0,200,150,0.12), 0 28px 64px rgba(0,0,0,0.55) !important;
         }
       `}</style>
     </section>
