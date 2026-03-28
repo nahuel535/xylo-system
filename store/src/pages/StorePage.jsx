@@ -702,7 +702,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone12", generation: "iPhone 12", year: "2020", tag: "5G. Un salto enorme.",
     accent: "#0a84ff",
-    familyImg: null,
+    familyImg: `${CDN}/iphone-12-family-select-2020${IP}`,
     models: [
       {
         name: "iPhone 12",
