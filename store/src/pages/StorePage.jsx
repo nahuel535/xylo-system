@@ -1313,7 +1313,7 @@ function GenCard({ gen, i, inView, onClick }) {
                     flexShrink: 0,
                     position: "relative",
                     zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
-                    marginLeft: idx > 0 ? "-20px" : "0",
+                    marginLeft: idx > 0 ? "-32px" : "0",
                     filter: isCenter
                       ? "drop-shadow(0 16px 32px rgba(0,0,0,0.20))"
                       : "drop-shadow(0 8px 18px rgba(0,0,0,0.10))",
