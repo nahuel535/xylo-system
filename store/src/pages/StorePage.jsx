@@ -702,7 +702,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone12", generation: "iPhone 12", year: "2020", tag: "5G. Un salto enorme.",
     accent: "#0a84ff",
-    familyImg: null,
+    familyImg: `${CDN}/iphone-12-family-select-2020${IP}`,
     models: [
       {
         name: "iPhone 12",
@@ -752,7 +752,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone13", generation: "iPhone 13", year: "2021", tag: "Tu película favorita. Por ti.",
     accent: "#ff375f",
-    familyImg: null,
+    familyImg: `${CDN}/iphone-13-family-select-2021${IP}`,
     models: [
       {
         name: "iPhone 13",
@@ -804,7 +804,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone14", generation: "iPhone 14", year: "2022", tag: "Seguridad. Siempre.",
     accent: "#5e5ce6",
-    familyImg: null,
+    familyImg: `${CDN}/iphone-14-family-select-202209${IP}`,
     models: [
       {
         name: "iPhone 14",
@@ -854,7 +854,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone15", generation: "iPhone 15", year: "2023", tag: "USB-C. Un estándar, por fin.",
     accent: "#ff9f0a",
-    familyImg: null,
+    familyImg: `${CDN}/iphone-15-family-select-202309${IP}`,
     models: [
       {
         name: "iPhone 15",
@@ -904,7 +904,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone16", generation: "iPhone 16", year: "2024", tag: "Diseñado para Apple Intelligence.",
     accent: "#30d158",
-    familyImg: null,
+    familyImg: `${CDN}/iphone-16-family-select-202409${IP}`,
     models: [
       {
         name: "iPhone 16",
@@ -1242,66 +1242,83 @@ function GenerationModal({ gen, onClose }) {
 //  Models Catalog (Apple-style large image cards)
 // ─────────────────────────────────────────────────────────────────────────────
 function GenCard({ gen, i, inView, onClick }) {
-  const displayName = gen.generation.replace("iPhone ", "Línea ");
-
   return (
     <motion.button
       onClick={onClick}
       initial={{ opacity: 0, y: 28 }}
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.58, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -6 }}
-      whileTap={{ scale: 0.985 }}
+      whileHover={{ y: -8, transition: { duration: 0.28, ease: "easeOut" } }}
+      whileTap={{ scale: 0.983 }}
       style={{
-        background: "#fff", border: "none",
-        borderRadius: "24px", overflow: "hidden",
+        background: "#fff",
+        border: "1px solid rgba(0,0,0,0.07)",
+        borderRadius: "28px", overflow: "hidden",
         cursor: "pointer", outline: "none",
         textAlign: "left", display: "flex",
         flexDirection: "column", width: "100%",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
-        transition: "box-shadow 0.3s ease",
+        boxShadow: "0 2px 16px rgba(0,0,0,0.05)",
+        transition: "box-shadow 0.35s ease, border-color 0.35s ease",
       }}
-      onMouseEnter={(e) => { e.currentTarget.style.boxShadow = "0 20px 56px rgba(0,0,0,0.12)"; }}
-      onMouseLeave={(e) => { e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }}
+      className="gen-card"
     >
-      {/* Image area */}
+      {/* ── Image zone ── */}
       <div style={{
-        background: "linear-gradient(155deg, #f7f7f5 0%, #ebebea 100%)",
-        height: "clamp(200px, 25vw, 300px)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        position: "relative", overflow: "hidden",
+        position: "relative",
+        height: "clamp(210px, 26vw, 310px)",
+        overflow: "hidden",
+        background: `radial-gradient(ellipse 100% 90% at 50% 75%, ${gen.accent}1e 0%, #f5f5f3 52%, #eeecea 100%)`,
       }}>
-        {/* Accent dot + year */}
+        {/* Year pill */}
         <div style={{
-          position: "absolute", top: "16px", left: "16px",
+          position: "absolute", top: "14px", left: "14px", zIndex: 10,
           display: "flex", alignItems: "center", gap: "6px",
-          background: "rgba(255,255,255,0.80)",
-          backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
-          borderRadius: "980px", padding: "5px 12px",
-          zIndex: 1,
+          background: "rgba(255,255,255,0.78)",
+          backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+          border: "1px solid rgba(255,255,255,0.9)",
+          borderRadius: "980px", padding: "5px 11px",
+          boxShadow: "0 1px 6px rgba(0,0,0,0.08)",
         }}>
-          <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: gen.accent, flexShrink: 0 }} />
-          <span style={{ fontSize: "12px", fontWeight: 600, color: T.textSec, letterSpacing: "0.02em" }}>{gen.year}</span>
+          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: gen.accent, flexShrink: 0 }} />
+          <span style={{ fontSize: "11.5px", fontWeight: 600, color: T.textSec }}>{gen.year}</span>
         </div>
 
-        {/* Family image (3 models) or 3 front imgs composed */}
+        {/* Models count pill */}
+        <div style={{
+          position: "absolute", top: "14px", right: "14px", zIndex: 10,
+          background: "rgba(255,255,255,0.78)",
+          backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
+          border: "1px solid rgba(255,255,255,0.9)",
+          borderRadius: "980px", padding: "5px 11px",
+          boxShadow: "0 1px 6px rgba(0,0,0,0.08)",
+        }}>
+          <span style={{ fontSize: "11.5px", fontWeight: 600, color: T.textMuted }}>
+            {gen.models.length} modelos
+          </span>
+        </div>
+
+        {/* Phone image(s) */}
         {gen.familyImg ? (
           <img
             src={gen.familyImg}
             alt={gen.generation}
             className="gen-card-img"
             style={{
-              height: "clamp(170px, 20vw, 255px)", width: "auto",
+              position: "absolute",
+              bottom: "-2px", left: "50%",
+              transform: "translateX(-50%)",
+              height: "93%", width: "auto",
+              maxWidth: "none",
               objectFit: "contain",
-              transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
+              transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
             }}
           />
         ) : (
-          /* iPhone 11: compose 3 front images side by side */
           <div style={{
+            position: "absolute", inset: 0,
             display: "flex", alignItems: "flex-end", justifyContent: "center",
-            gap: "clamp(-12px, -1vw, -6px)", height: "100%", width: "100%",
-            padding: "24px 12px 0",
+            gap: "clamp(-14px, -1.2vw, -6px)",
+            padding: "0 6px",
           }}>
             {gen.models.map((m, idx) => (
               <img
@@ -1310,50 +1327,65 @@ function GenCard({ gen, i, inView, onClick }) {
                 alt={m.name}
                 className="gen-card-img"
                 style={{
-                  height: idx === 1
-                    ? "clamp(150px, 18vw, 225px)"
-                    : "clamp(130px, 15vw, 195px)",
+                  height: idx === 1 ? "86%" : "70%",
                   width: "auto", objectFit: "contain",
-                  transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
-                  zIndex: idx === 1 ? 2 : 1,
                   position: "relative",
+                  zIndex: idx === 1 ? 3 : idx === 0 ? 2 : 1,
+                  transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
                 }}
               />
             ))}
           </div>
         )}
+
+        {/* Bottom fade */}
+        <div style={{
+          position: "absolute", bottom: 0, left: 0, right: 0, height: "48px",
+          background: "linear-gradient(to bottom, transparent, rgba(238,236,234,0.6))",
+          pointerEvents: "none", zIndex: 5,
+        }} />
       </div>
 
-      {/* Text area */}
-      <div style={{ padding: "20px 24px 24px", display: "flex", flexDirection: "column", gap: "12px", flex: 1 }}>
+      {/* ── Text zone ── */}
+      <div style={{ padding: "18px 20px 20px", flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
         <div style={{ flex: 1 }}>
           <h3 style={{
             fontFamily: T.heading,
-            fontSize: "clamp(18px, 2vw, 23px)", fontWeight: 700,
+            fontSize: "clamp(16px, 1.7vw, 20px)", fontWeight: 700,
             letterSpacing: "-0.03em", color: T.text, margin: 0, lineHeight: 1.15,
           }}>
-            {displayName}
+            {gen.generation}
           </h3>
-          <p style={{ fontSize: "13px", color: T.textSec, marginTop: "5px", lineHeight: 1.55 }}>
+          <p style={{ fontSize: "12.5px", color: T.textSec, marginTop: "4px", lineHeight: 1.5 }}>
             {gen.tag}
           </p>
         </div>
 
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          paddingTop: "12px",
-          borderTop: `1px solid ${T.border}`,
+          paddingTop: "12px", borderTop: `1px solid ${T.border}`,
         }}>
-          <span style={{ fontSize: "13px", fontWeight: 600, color: gen.accent }}>
-            Ver {gen.models.length} modelos
-          </span>
+          <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+            {gen.models.map((m) => {
+              const label = m.name.replace(gen.generation, "").trim() || "base";
+              return (
+                <span key={m.name} style={{
+                  fontSize: "10px", fontWeight: 600, letterSpacing: "0.03em",
+                  color: T.textMuted,
+                  background: "rgba(0,0,0,0.055)", borderRadius: "6px", padding: "3px 7px",
+                }}>
+                  {label}
+                </span>
+              );
+            })}
+          </div>
           <div style={{
-            width: "28px", height: "28px", borderRadius: "50%",
-            background: `${gen.accent}18`,
+            width: "28px", height: "28px", borderRadius: "50%", flexShrink: 0,
+            background: `${gen.accent}18`, border: `1px solid ${gen.accent}30`,
             display: "flex", alignItems: "center", justifyContent: "center",
             color: gen.accent,
           }}>
-            <ChevronRight size={13} strokeWidth={2.8} />
+            <ChevronRight size={12} strokeWidth={2.8} />
           </div>
         </div>
       </div>
@@ -1538,9 +1570,18 @@ function ModelsCatalog() {
             .featured-gen-card { grid-template-columns: 1fr !important; }
             .featured-gen-card > div:last-child { min-height: 220px; }
           }
-          .gen-grid-apple button:hover img,
+          .gen-card:hover {
+            box-shadow: 0 24px 64px rgba(0,0,0,0.11) !important;
+            border-color: rgba(0,0,0,0.11) !important;
+          }
+          .gen-card:hover .gen-card-img {
+            transform: translateX(-50%) scale(1.05) translateY(-6px) !important;
+          }
+          .gen-card:hover .gen-card-img[style*="position: relative"] {
+            transform: scale(1.04) translateY(-5px) !important;
+          }
           .featured-gen-card:hover .featured-gen-img {
-            transform: scale(1.06);
+            transform: scale(1.05) translateY(-4px);
           }
         `}</style>
       </div>
