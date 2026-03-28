@@ -5,7 +5,7 @@ import { ChevronLeft, Smartphone } from "lucide-react";
 import api from "../services/api";
 import { XyloLogo, WhatsAppIcon } from "../components/Icons";
 
-const WHATSAPP = "5493512345678";
+const WHATSAPP = "5493518916482";
 const ACCENT = "#00C896";
 
 const T = {
@@ -152,7 +152,7 @@ function BatteryArc({ value, color }) {
   }
 
   return (
-    <svg width={size} height={size} style={{ overflow: "visible" }}>
+    <svg width={size} height={size} style={{ overflow: "visible", display: "block", margin: "0 auto" }}>
       <path d={arc(startAngle, startAngle + totalAngle)}
         fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth={stroke} strokeLinecap="round" />
       {value > 0 && (
