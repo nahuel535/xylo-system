@@ -771,7 +771,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 13 Pro",
-        img: `${CDN}/iphone-13-pro-graphite-select-2021${IP}`,
+        img: `${CDN}/iphone-13-pro-graphite-select${IP}`,
         display: '6.1" Super Retina XDR ProMotion 120Hz (2532×1170)',
         chip: "A15 Bionic",
         camera: "Triple 12MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 3×",
