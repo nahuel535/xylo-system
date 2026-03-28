@@ -35,31 +35,6 @@ const T = {
   accentBorder: "rgba(0,200,150,0.20)",
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  Animated counter
-// ─────────────────────────────────────────────────────────────────────────────
-function AnimatedCount({ target, duration = 1200 }) {
-  const [count, setCount] = useState(0);
-  const started = useRef(false);
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-
-  useEffect(() => {
-    if (!inView || started.current || target === 0) return;
-    started.current = true;
-    const steps = 40;
-    const step = Math.ceil(target / steps);
-    let current = 0;
-    const interval = setInterval(() => {
-      current = Math.min(current + step, target);
-      setCount(current);
-      if (current >= target) clearInterval(interval);
-    }, duration / steps);
-    return () => clearInterval(interval);
-  }, [inView, target, duration]);
-
-  return <span ref={ref}>{count}</span>;
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  Navbar
@@ -702,11 +677,11 @@ const IPHONE_CATALOG = [
   {
     id: "iphone12", generation: "iPhone 12", year: "2020", tag: "5G. Un salto enorme.",
     accent: "#0a84ff",
-    familyImg: `${CDN}/iphone-12-family-select-2020${IP}`,
+    familyImg: null,
     models: [
       {
         name: "iPhone 12",
-        img: `${CDN}/iphone-12-red-select-2020${IP}`,
+        img: `${CDN}/iphone-12-black-select-2020${IP}`,
         display: '6.1" Super Retina XDR OLED (2532×1170)',
         chip: "A14 Bionic",
         camera: "Dual 12MP — Gran angular + Ultra gran angular",
@@ -752,7 +727,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone13", generation: "iPhone 13", year: "2021", tag: "Tu película favorita. Por ti.",
     accent: "#ff375f",
-    familyImg: `${CDN}/iphone-13-family-select-2021${IP}`,
+    familyImg: null,
     models: [
       {
         name: "iPhone 13",
@@ -804,7 +779,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone14", generation: "iPhone 14", year: "2022", tag: "Seguridad. Siempre.",
     accent: "#5e5ce6",
-    familyImg: `${CDN}/iphone-14-family-select-202209${IP}`,
+    familyImg: null,
     models: [
       {
         name: "iPhone 14",
@@ -854,11 +829,11 @@ const IPHONE_CATALOG = [
   {
     id: "iphone15", generation: "iPhone 15", year: "2023", tag: "USB-C. Un estándar, por fin.",
     accent: "#ff9f0a",
-    familyImg: `${CDN}/iphone-15-family-select-202309${IP}`,
+    familyImg: null,
     models: [
       {
         name: "iPhone 15",
-        img: `${CDN}/iphone-15-finish-select-202309-6-1inch-black${IP}`,
+        img: `${CDN}/iphone-15-black-select-202309${IP}`,
         display: '6.1" Super Retina XDR OLED (2556×1179)',
         chip: "A16 Bionic",
         camera: "Dual 48MP — Gran angular + Ultra gran angular con Photonic Engine",
@@ -904,11 +879,11 @@ const IPHONE_CATALOG = [
   {
     id: "iphone16", generation: "iPhone 16", year: "2024", tag: "Diseñado para Apple Intelligence.",
     accent: "#30d158",
-    familyImg: `${CDN}/iphone-16-family-select-202409${IP}`,
+    familyImg: null,
     models: [
       {
         name: "iPhone 16",
-        img: `${CDN}/iphone-16-finish-select-202409-6-1inch-black${IP}`,
+        img: `${CDN}/iphone-16-black-select-202409${IP}`,
         display: '6.1" Super Retina XDR OLED (2556×1179)',
         chip: "A18",
         camera: "Dual 48MP — Gran angular + Ultra gran angular con Fusion Camera",
@@ -1317,24 +1292,32 @@ function GenCard({ gen, i, inView, onClick }) {
           <div style={{
             position: "absolute", inset: 0,
             display: "flex", alignItems: "flex-end", justifyContent: "center",
-            gap: "clamp(-14px, -1.2vw, -6px)",
-            padding: "0 6px",
+            paddingLeft: "6px", paddingRight: "6px",
           }}>
-            {gen.models.map((m, idx) => (
-              <img
-                key={m.name}
-                src={m.img}
-                alt={m.name}
-                className="gen-card-img"
-                style={{
-                  height: idx === 1 ? "86%" : "70%",
-                  width: "auto", objectFit: "contain",
-                  position: "relative",
-                  zIndex: idx === 1 ? 3 : idx === 0 ? 2 : 1,
-                  transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
-                }}
-              />
-            ))}
+            {gen.models.map((m, idx) => {
+              const isCenter = idx === 1;
+              const heights = ["69%", "88%", "74%"];
+              return (
+                <img
+                  key={m.name}
+                  src={m.img}
+                  alt={m.name}
+                  className={`gen-card-img gen-card-model-img`}
+                  style={{
+                    height: heights[idx] ?? "69%",
+                    width: "auto", objectFit: "contain",
+                    flexShrink: 0,
+                    position: "relative",
+                    zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
+                    marginLeft: idx > 0 ? "-18px" : "0",
+                    filter: isCenter
+                      ? "drop-shadow(0 14px 28px rgba(0,0,0,0.18))"
+                      : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))",
+                    transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
+                  }}
+                />
+              );
+            })}
           </div>
         )}
 
@@ -1574,11 +1557,8 @@ function ModelsCatalog() {
             box-shadow: 0 24px 64px rgba(0,0,0,0.11) !important;
             border-color: rgba(0,0,0,0.11) !important;
           }
-          .gen-card:hover .gen-card-img {
-            transform: translateX(-50%) scale(1.05) translateY(-6px) !important;
-          }
-          .gen-card:hover .gen-card-img[style*="position: relative"] {
-            transform: scale(1.04) translateY(-5px) !important;
+          .gen-card:hover .gen-card-model-img {
+            transform: scale(1.05) translateY(-6px) !important;
           }
           .featured-gen-card:hover .featured-gen-img {
             transform: scale(1.05) translateY(-4px);
