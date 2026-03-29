@@ -965,7 +965,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 17 Pro Max",
-        img: `${CDN}/iphone-17-pro-max-select-202509${IP}`,
+        img: `${CDN}/iphone-17-pro-max-witb-deepblue-202509${IP}`,
         imgDetail: `${CDN}/iphone-17-pro-max-finish-select-cosmicorange-202509${IP}`,
         display: '6.9" ProMotion OLED 120Hz (2868×1320)',
         chip: "A19 Pro",
