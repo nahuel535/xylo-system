@@ -1291,6 +1291,39 @@ function GenCard({ gen, i, inView, onClick }) {
               transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
             }}
           />
+        ) : gen.useClip ? (
+          /* iPhone 17: absolute positioning para controlar posición exacta del contenido visible */
+          <div style={{ position: "absolute", inset: 0 }}>
+            {([gen.models[1], gen.models[0], gen.models[2]]).map((m, idx) => {
+              const isCenter = idx === 1;
+              const pos = [
+                { left: "5%",  width: "38%", height: "71%", zIndex: 2 },
+                { left: "31%", width: "40%", height: "90%", zIndex: 3 },
+                { left: "57%", width: "38%", height: "75%", zIndex: 1 },
+              ][idx];
+              return (
+                <div
+                  key={m.name}
+                  className="gen-card-model-img"
+                  style={{
+                    position: "absolute", bottom: 0, overflow: "hidden",
+                    ...pos,
+                    transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
+                  }}
+                >
+                  <img
+                    src={m.img}
+                    alt={m.name}
+                    className="gen-card-img"
+                    style={{
+                      position: "absolute", height: "100%", width: "auto",
+                      bottom: 0, left: "50%", transform: "translateX(-50%)",
+                    }}
+                  />
+                </div>
+              );
+            })}
+          </div>
         ) : (
           <div style={{
             position: "absolute", inset: 0,
@@ -1304,40 +1337,6 @@ function GenCard({ gen, i, inView, onClick }) {
               const isCenter = idx === 1;
               const widths = ["27%", "36%", "29%"];
               const maxHeights = ["78%", "93%", "82%"];
-              const useClip = gen.useClip;
-              const sharedWrap = {
-                flexShrink: 0, alignSelf: "flex-end", position: "relative",
-                zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
-                marginLeft: idx > 0 ? (gen.overlap || "-9%") : "0",
-                transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
-              };
-              if (useClip) {
-                return (
-                  <div
-                    key={m.name}
-                    className="gen-card-model-img"
-                    style={{
-                      ...sharedWrap,
-                      width: widths[idx] ?? "27%",
-                      height: maxHeights[idx] ?? "78%",
-                      overflow: "hidden",
-                      filter: isCenter
-                        ? "drop-shadow(0 16px 32px rgba(0,0,0,0.22))"
-                        : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))",
-                    }}
-                  >
-                    <img
-                      src={m.img}
-                      alt={m.name}
-                      className="gen-card-img"
-                      style={{
-                        position: "absolute", height: "100%", width: "auto",
-                        top: 0, left: "50%", transform: "translateX(-50%)",
-                      }}
-                    />
-                  </div>
-                );
-              }
               return (
                 <img
                   key={m.name}
@@ -1345,15 +1344,20 @@ function GenCard({ gen, i, inView, onClick }) {
                   alt={m.name}
                   className="gen-card-img gen-card-model-img"
                   style={{
-                    ...sharedWrap,
                     width: widths[idx] ?? "27%",
                     height: "auto",
                     maxHeight: maxHeights[idx] ?? "78%",
                     objectFit: "contain",
                     objectPosition: "bottom",
+                    flexShrink: 0,
+                    alignSelf: "flex-end",
+                    position: "relative",
+                    zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
+                    marginLeft: idx > 0 ? "-9%" : "0",
                     filter: isCenter
                       ? "drop-shadow(0 16px 32px rgba(0,0,0,0.22))"
                       : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))",
+                    transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
                   }}
                 />
               );
