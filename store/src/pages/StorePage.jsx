@@ -1292,7 +1292,7 @@ function GenCard({ gen, i, inView, onClick }) {
           <div style={{
             position: "absolute", inset: 0,
             display: "flex", alignItems: "flex-end", justifyContent: "center",
-            paddingLeft: "6px", paddingRight: "6px",
+            paddingBottom: "0px",
           }}>
             {/* Display order: Pro (left) | base (center) | Pro Max (right) */}
             {(gen.models.length === 3
@@ -1300,7 +1300,8 @@ function GenCard({ gen, i, inView, onClick }) {
               : gen.models
             ).map((m, idx) => {
               const isCenter = idx === 1;
-              const heights = ["71%", "90%", "75%"];
+              const widths = ["27%", "36%", "29%"];
+              const maxHeights = ["78%", "93%", "82%"];
               return (
                 <img
                   key={m.name}
@@ -1308,15 +1309,19 @@ function GenCard({ gen, i, inView, onClick }) {
                   alt={m.name}
                   className="gen-card-img gen-card-model-img"
                   style={{
-                    height: heights[idx] ?? "71%",
-                    width: "auto", objectFit: "contain",
+                    width: widths[idx] ?? "27%",
+                    height: "auto",
+                    maxHeight: maxHeights[idx] ?? "78%",
+                    objectFit: "contain",
+                    objectPosition: "bottom",
                     flexShrink: 0,
+                    alignSelf: "flex-end",
                     position: "relative",
                     zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
-                    marginLeft: idx > 0 ? "-32px" : "0",
+                    marginLeft: idx > 0 ? "-9%" : "0",
                     filter: isCenter
-                      ? "drop-shadow(0 16px 32px rgba(0,0,0,0.20))"
-                      : "drop-shadow(0 8px 18px rgba(0,0,0,0.10))",
+                      ? "drop-shadow(0 16px 32px rgba(0,0,0,0.22))"
+                      : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))",
                     transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
                   }}
                 />
