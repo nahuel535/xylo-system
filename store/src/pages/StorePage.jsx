@@ -1245,7 +1245,7 @@ function GenCard({ gen, i, inView, onClick }) {
         position: "relative",
         height: "clamp(210px, 26vw, 310px)",
         overflow: "hidden",
-        background: `radial-gradient(ellipse 100% 90% at 50% 75%, ${gen.accent}1e 0%, #f5f5f3 52%, #eeecea 100%)`,
+        background: gen.mixBlend ? "#ffffff" : `radial-gradient(ellipse 100% 90% at 50% 75%, ${gen.accent}1e 0%, #f5f5f3 52%, #eeecea 100%)`,
       }}>
         {/* Year pill */}
         <div style={{
@@ -1359,7 +1359,6 @@ function GenCard({ gen, i, inView, onClick }) {
                     position: "relative",
                     zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
                     marginLeft: idx > 0 ? overlap : "0",
-                    mixBlendMode: gen.mixBlend ? "multiply" : undefined,
                     filter: gen.mixBlend ? undefined : (isCenter
                       ? "drop-shadow(0 16px 32px rgba(0,0,0,0.22))"
                       : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))"),
@@ -1501,7 +1500,7 @@ function FeaturedGenCard({ gen, i, inView, onClick }) {
 
       {/* Image side — 3 back views composed */}
       <div style={{
-        background: "linear-gradient(155deg, #f7f7f5 0%, #ebebea 100%)",
+        background: gen.mixBlend ? "#ffffff" : "linear-gradient(155deg, #f7f7f5 0%, #ebebea 100%)",
         display: "flex", alignItems: "flex-end", justifyContent: "center",
         position: "relative", overflow: "hidden",
         gap: "clamp(-16px, -2vw, -8px)",
@@ -1519,7 +1518,6 @@ function FeaturedGenCard({ gen, i, inView, onClick }) {
                 : "clamp(165px, 18vw, 245px)",
               width: "auto", objectFit: "contain",
               position: "relative", zIndex: idx === 1 ? 2 : 1,
-              mixBlendMode: gen.mixBlend ? "multiply" : undefined,
               transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
             }}
           />
