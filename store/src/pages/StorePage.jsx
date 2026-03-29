@@ -1321,6 +1321,7 @@ function GenCard({ gen, i, inView, onClick }) {
                     position: "relative",
                     zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
                     marginLeft: idx > 0 ? "-9%" : "0",
+                    mixBlendMode: m.img.includes("witb") ? "multiply" : "normal",
                     filter: isCenter
                       ? "drop-shadow(0 16px 32px rgba(0,0,0,0.22))"
                       : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))",
