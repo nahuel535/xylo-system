@@ -933,7 +933,8 @@ const IPHONE_CATALOG = [
     models: [
       {
         name: "iPhone 17",
-        img: `${CDN}/iphone-17-finish-select-black-202509_AV1${IP}`,
+        img: `${CDN}/iphone-17-black-select-202509${IP}`,
+        imgDetail: `${CDN}/iphone-17-finish-select-black-202509_AV1${IP}`,
         display: '6.1" Super Retina XDR OLED (2556×1179)',
         chip: "A19",
         camera: "Dual 48MP — Gran angular + Ultra gran angular con Fusion Camera",
@@ -949,7 +950,8 @@ const IPHONE_CATALOG = [
 
       {
         name: "iPhone 17 Pro",
-        img: `${CDN}/iphone-17-pro-finish-select-deepblue-202509${IP}`,
+        img: `${CDN}/iphone-17-pro-finish-deepblue-202509${IP}`,
+        imgDetail: `${CDN}/iphone-17-pro-finish-select-deepblue-202509${IP}`,
         display: '6.3" ProMotion OLED 120Hz (2622×1206)',
         chip: "A19 Pro",
         camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 5×",
@@ -963,7 +965,8 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 17 Pro Max",
-        img: `${CDN}/iphone-17-pro-max-finish-select-cosmicorange-202509${IP}`,
+        img: `${CDN}/iphone-17-pro-max-select-202509${IP}`,
+        imgDetail: `${CDN}/iphone-17-pro-max-finish-select-cosmicorange-202509${IP}`,
         display: '6.9" ProMotion OLED 120Hz (2868×1320)',
         chip: "A19 Pro",
         camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 5×",
@@ -1004,9 +1007,9 @@ function ModelDetailCard({ model }) {
         justifyContent: "center",
         overflow: "hidden",
       }}>
-        {model.img && !imgErr ? (
+        {(model.imgDetail || model.img) && !imgErr ? (
           <img
-            src={model.img}
+            src={model.imgDetail || model.img}
             alt={model.name}
             onError={() => setImgErr(true)}
             style={{ height: "200px", width: "auto", objectFit: "contain" }}
