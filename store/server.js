@@ -28,13 +28,17 @@ createServer(async (req, res) => {
   try {
     const content = await readFile(join(DIST, url));
     const mime = MIME[extname(url)] || "application/octet-stream";
-    res.writeHead(200, { "Content-Type": mime });
+    const ext = extname(url);
+    const cacheHeader = ext === ".html"
+      ? "no-cache, no-store, must-revalidate"
+      : "public, max-age=31536000, immutable";
+    res.writeHead(200, { "Content-Type": mime, "Cache-Control": cacheHeader });
     res.end(content);
   } catch {
     // SPA fallback
     try {
       const content = await readFile(join(DIST, "index.html"));
-      res.writeHead(200, { "Content-Type": "text/html" });
+      res.writeHead(200, { "Content-Type": "text/html", "Cache-Control": "no-cache, no-store, must-revalidate" });
       res.end(content);
     } catch {
       res.writeHead(404);
