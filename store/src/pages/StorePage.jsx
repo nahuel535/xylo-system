@@ -1246,7 +1246,7 @@ function GenCard({ gen, i, inView, onClick }) {
         position: "relative",
         height: "clamp(210px, 26vw, 310px)",
         overflow: "hidden",
-        background: gen.mixBlend ? "#ffffff" : `radial-gradient(ellipse 100% 90% at 50% 75%, ${gen.accent}1e 0%, #f5f5f3 52%, #eeecea 100%)`,
+        background: `radial-gradient(ellipse 100% 90% at 50% 75%, ${gen.accent}1e 0%, #f5f5f3 52%, #eeecea 100%)`,
       }}>
         {/* Year pill */}
         <div style={{
@@ -1501,7 +1501,7 @@ function FeaturedGenCard({ gen, i, inView, onClick }) {
 
       {/* Image side — 3 back views composed */}
       <div style={{
-        background: gen.mixBlend ? "#ffffff" : "linear-gradient(155deg, #f7f7f5 0%, #ebebea 100%)",
+        background: "linear-gradient(155deg, #f7f7f5 0%, #ebebea 100%)",
         display: "flex", alignItems: "flex-end", justifyContent: "center",
         position: "relative", overflow: "hidden",
         gap: "clamp(-16px, -2vw, -8px)",
