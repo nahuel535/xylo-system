@@ -929,7 +929,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone17", generation: "iPhone 17", year: "2025", tag: "La próxima generación.",
     accent: "#ff453a",
-    familyImg: null, useClip: true, overlap: "-22%",
+    familyImg: null, useClip: true, overlap: "-38%",
     models: [
       {
         name: "iPhone 17",
