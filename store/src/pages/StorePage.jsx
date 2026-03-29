@@ -1335,8 +1335,13 @@ function GenCard({ gen, i, inView, onClick }) {
               : gen.models
             ).map((m, idx) => {
               const isCenter = idx === 1;
-              const widths = ["27%", "36%", "29%"];
-              const maxHeights = ["78%", "93%", "82%"];
+              const widths = gen.mixBlend
+                ? ["30%", "40%", "30%"]
+                : ["27%", "36%", "29%"];
+              const maxHeights = gen.mixBlend
+                ? ["86%", "100%", "90%"]
+                : ["78%", "93%", "82%"];
+              const overlap = gen.mixBlend ? "-17%" : "-9%";
               return (
                 <img
                   key={m.name}
@@ -1353,7 +1358,7 @@ function GenCard({ gen, i, inView, onClick }) {
                     alignSelf: "flex-end",
                     position: "relative",
                     zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
-                    marginLeft: idx > 0 ? "-9%" : "0",
+                    marginLeft: idx > 0 ? overlap : "0",
                     filter: gen.mixBlend ? undefined : (isCenter
                       ? "drop-shadow(0 16px 32px rgba(0,0,0,0.22))"
                       : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))"),
