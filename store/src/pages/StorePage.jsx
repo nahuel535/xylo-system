@@ -933,7 +933,7 @@ const IPHONE_CATALOG = [
     models: [
       {
         name: "iPhone 17",
-        img: `${CDN}/iphone-17-black-select-202509${IP}`,
+        img: `${CDN}/iphone-17-witb-black-202509${IP}`,
         imgDetail: `${CDN}/iphone-17-finish-select-black-202509_AV1${IP}`,
         display: '6.1" Super Retina XDR OLED (2556×1179)',
         chip: "A19",
@@ -950,7 +950,7 @@ const IPHONE_CATALOG = [
 
       {
         name: "iPhone 17 Pro",
-        img: `${CDN}/iphone-17-pro-finish-deepblue-202509${IP}`,
+        img: `${CDN}/iphone-17-pro-witb-deepblue-202509${IP}`,
         imgDetail: `${CDN}/iphone-17-pro-finish-select-deepblue-202509${IP}`,
         display: '6.3" ProMotion OLED 120Hz (2622×1206)',
         chip: "A19 Pro",
@@ -965,7 +965,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 17 Pro Max",
-        img: `${CDN}/iphone-17-pro-max-witb-deepblue-202509${IP}`,
+        img: `${CDN}/iphone-17-pro-max-witb-cosmicorange-202509${IP}`,
         imgDetail: `${CDN}/iphone-17-pro-max-finish-select-cosmicorange-202509${IP}`,
         display: '6.9" ProMotion OLED 120Hz (2868×1320)',
         chip: "A19 Pro",
