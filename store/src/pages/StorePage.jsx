@@ -933,7 +933,7 @@ const IPHONE_CATALOG = [
     models: [
       {
         name: "iPhone 17",
-        img: `${CDN}/iphone-17-black-select-202509${IP}`,
+        img: `${CDN}/iphone-17-finish-select-black-202509${IP}`,
         display: '6.1" Super Retina XDR OLED (2556×1179)',
         chip: "A19",
         camera: "Dual 48MP — Gran angular + Ultra gran angular con Fusion Camera",
@@ -949,7 +949,7 @@ const IPHONE_CATALOG = [
 
       {
         name: "iPhone 17 Pro",
-        img: `${CDN}/iphone-17-pro-finish-deepblue-202509${IP}`,
+        img: `${CDN}/iphone-17-pro-finish-select-deepblue-202509${IP}`,
         display: '6.3" ProMotion OLED 120Hz (2622×1206)',
         chip: "A19 Pro",
         camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 5×",
@@ -963,7 +963,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 17 Pro Max",
-        img: `${CDN}/iphone-17-pro-max-witb-cosmicorange-202509${IP}`,
+        img: `${CDN}/iphone-17-pro-max-finish-select-cosmicorange-202509${IP}`,
         display: '6.9" ProMotion OLED 120Hz (2868×1320)',
         chip: "A19 Pro",
         camera: "Triple 48MP + LiDAR — Gran angular + Ultra gran angular + Teleobjetivo 5×",
@@ -1292,7 +1292,6 @@ function GenCard({ gen, i, inView, onClick }) {
           <div style={{
             position: "absolute", inset: 0,
             display: "flex", alignItems: "flex-end", justifyContent: "center",
-            paddingBottom: "0px",
           }}>
             {/* Display order: Pro (left) | base (center) | Pro Max (right) */}
             {(gen.models.length === 3
@@ -1300,31 +1299,40 @@ function GenCard({ gen, i, inView, onClick }) {
               : gen.models
             ).map((m, idx) => {
               const isCenter = idx === 1;
-              const widths = ["27%", "36%", "29%"];
-              const maxHeights = ["78%", "93%", "82%"];
+              const heights = ["71%", "90%", "75%"];
               return (
-                <img
+                <div
                   key={m.name}
-                  src={m.img}
-                  alt={m.name}
-                  className="gen-card-img gen-card-model-img"
+                  className="gen-card-model-img"
                   style={{
-                    width: widths[idx] ?? "27%",
-                    height: "auto",
-                    maxHeight: maxHeights[idx] ?? "78%",
-                    objectFit: "contain",
-                    objectPosition: "bottom",
+                    height: heights[idx] ?? "71%",
+                    aspectRatio: "9 / 19.5",
+                    overflow: "hidden",
                     flexShrink: 0,
                     alignSelf: "flex-end",
                     position: "relative",
                     zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
-                    marginLeft: idx > 0 ? "-9%" : "0",
-                    filter: isCenter
-                      ? "drop-shadow(0 16px 32px rgba(0,0,0,0.22))"
-                      : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))",
+                    marginLeft: idx > 0 ? "-13px" : "0",
+                    boxShadow: isCenter
+                      ? "0 16px 36px rgba(0,0,0,0.20)"
+                      : "0 8px 20px rgba(0,0,0,0.10)",
                     transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
                   }}
-                />
+                >
+                  <img
+                    src={m.img}
+                    alt={m.name}
+                    className="gen-card-img"
+                    style={{
+                      position: "absolute",
+                      height: "100%",
+                      width: "auto",
+                      top: "0",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                    }}
+                  />
+                </div>
               );
             })}
           </div>
