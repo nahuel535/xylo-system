@@ -1519,6 +1519,7 @@ function FeaturedGenCard({ gen, i, inView, onClick }) {
                 : "clamp(165px, 18vw, 245px)",
               width: "auto", objectFit: "contain",
               position: "relative", zIndex: idx === 1 ? 2 : 1,
+              mixBlendMode: gen.mixBlend ? "multiply" : undefined,
               transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
             }}
           />
