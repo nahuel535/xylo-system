@@ -929,11 +929,11 @@ const IPHONE_CATALOG = [
   {
     id: "iphone17", generation: "iPhone 17", year: "2025", tag: "La próxima generación.",
     accent: "#ff453a",
-    familyImg: null,
+    familyImg: null, useClip: true,
     models: [
       {
         name: "iPhone 17",
-        img: `${CDN}/iphone-17-witb-black-202509${IP}`,
+        img: `${CDN}/iphone-17-finish-select-black-202509${IP}`,
         imgDetail: `${CDN}/iphone-17-finish-select-black-202509_AV1${IP}`,
         display: '6.1" Super Retina XDR OLED (2556×1179)',
         chip: "A19",
@@ -950,7 +950,7 @@ const IPHONE_CATALOG = [
 
       {
         name: "iPhone 17 Pro",
-        img: `${CDN}/iphone-17-pro-witb-deepblue-202509${IP}`,
+        img: `${CDN}/iphone-17-pro-finish-select-deepblue-202509${IP}`,
         imgDetail: `${CDN}/iphone-17-pro-finish-select-deepblue-202509${IP}`,
         display: '6.3" ProMotion OLED 120Hz (2622×1206)',
         chip: "A19 Pro",
@@ -965,7 +965,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 17 Pro Max",
-        img: `${CDN}/iphone-17-pro-max-witb-cosmicorange-202509${IP}`,
+        img: `${CDN}/iphone-17-pro-max-finish-select-cosmicorange-202509${IP}`,
         imgDetail: `${CDN}/iphone-17-pro-max-finish-select-cosmicorange-202509${IP}`,
         display: '6.9" ProMotion OLED 120Hz (2868×1320)',
         chip: "A19 Pro",
@@ -1304,6 +1304,40 @@ function GenCard({ gen, i, inView, onClick }) {
               const isCenter = idx === 1;
               const widths = ["27%", "36%", "29%"];
               const maxHeights = ["78%", "93%", "82%"];
+              const useClip = gen.useClip;
+              const sharedWrap = {
+                flexShrink: 0, alignSelf: "flex-end", position: "relative",
+                zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
+                marginLeft: idx > 0 ? "-9%" : "0",
+                transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
+              };
+              if (useClip) {
+                return (
+                  <div
+                    key={m.name}
+                    className="gen-card-model-img"
+                    style={{
+                      ...sharedWrap,
+                      width: widths[idx] ?? "27%",
+                      height: maxHeights[idx] ?? "78%",
+                      overflow: "hidden",
+                      filter: isCenter
+                        ? "drop-shadow(0 16px 32px rgba(0,0,0,0.22))"
+                        : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))",
+                    }}
+                  >
+                    <img
+                      src={m.img}
+                      alt={m.name}
+                      className="gen-card-img"
+                      style={{
+                        position: "absolute", height: "100%", width: "auto",
+                        top: 0, left: "50%", transform: "translateX(-50%)",
+                      }}
+                    />
+                  </div>
+                );
+              }
               return (
                 <img
                   key={m.name}
@@ -1311,21 +1345,15 @@ function GenCard({ gen, i, inView, onClick }) {
                   alt={m.name}
                   className="gen-card-img gen-card-model-img"
                   style={{
+                    ...sharedWrap,
                     width: widths[idx] ?? "27%",
                     height: "auto",
                     maxHeight: maxHeights[idx] ?? "78%",
                     objectFit: "contain",
                     objectPosition: "bottom",
-                    flexShrink: 0,
-                    alignSelf: "flex-end",
-                    position: "relative",
-                    zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
-                    marginLeft: idx > 0 ? "-9%" : "0",
-                    mixBlendMode: m.img.includes("witb") ? "multiply" : "normal",
-                    filter: m.img.includes("witb") ? "none" : isCenter
+                    filter: isCenter
                       ? "drop-shadow(0 16px 32px rgba(0,0,0,0.22))"
                       : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))",
-                    transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
                   }}
                 />
               );
