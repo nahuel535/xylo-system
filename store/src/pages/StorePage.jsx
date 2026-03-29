@@ -1245,7 +1245,7 @@ function GenCard({ gen, i, inView, onClick }) {
         position: "relative",
         height: "clamp(210px, 26vw, 310px)",
         overflow: "hidden",
-        background: gen.mixBlend ? "#ffffff" : `radial-gradient(ellipse 100% 90% at 50% 75%, ${gen.accent}1e 0%, #f5f5f3 52%, #eeecea 100%)`,
+        background: `radial-gradient(ellipse 100% 90% at 50% 75%, ${gen.accent}1e 0%, #f5f5f3 52%, #eeecea 100%)`,
       }}>
         {/* Year pill */}
         <div style={{
@@ -1359,6 +1359,7 @@ function GenCard({ gen, i, inView, onClick }) {
                     position: "relative",
                     zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
                     marginLeft: idx > 0 ? overlap : "0",
+                    mixBlendMode: gen.mixBlend ? "multiply" : undefined,
                     filter: gen.mixBlend ? undefined : (isCenter
                       ? "drop-shadow(0 16px 32px rgba(0,0,0,0.22))"
                       : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))"),
