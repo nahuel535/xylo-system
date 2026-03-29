@@ -929,7 +929,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone17", generation: "iPhone 17", year: "2025", tag: "La próxima generación.",
     accent: "#ff453a",
-    familyImg: null, useClip: true,
+    familyImg: null, useClip: true, overlap: "-22%",
     models: [
       {
         name: "iPhone 17",
@@ -1308,7 +1308,7 @@ function GenCard({ gen, i, inView, onClick }) {
               const sharedWrap = {
                 flexShrink: 0, alignSelf: "flex-end", position: "relative",
                 zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
-                marginLeft: idx > 0 ? "-9%" : "0",
+                marginLeft: idx > 0 ? (gen.overlap || "-9%") : "0",
                 transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
               };
               if (useClip) {
