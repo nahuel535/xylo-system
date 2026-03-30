@@ -31,6 +31,8 @@ app.add_middleware(
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "https://xylo-system.vercel.app",
+        "https://xylobox.online",
+        "https://www.xylobox.online",
     ],
     allow_origin_regex=r"https://.*(\.vercel\.app|\.railway\.app|\.up\.railway\.app)",
     allow_credentials=True,
