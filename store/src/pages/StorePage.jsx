@@ -1674,9 +1674,9 @@ function ProductCard({ product, exchange }) {
         }}
       >
         {/* Image */}
-        <div style={{ width: "100%", aspectRatio: "4/3", background: T.surface, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderBottom: `1px solid ${T.border}`, position: "relative" }}>
+        <div style={{ width: "100%", aspectRatio: product.is_offer ? "3/4" : "4/3", background: T.surface, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderBottom: `1px solid ${T.border}`, position: "relative" }}>
           {product.photo_url ? (
-            <img src={product.photo_url} alt={product.model} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
+            <img src={product.photo_url} alt={product.model} style={{ width: "100%", height: "100%", objectFit: product.is_offer ? "contain" : "cover" }} loading="lazy" />
           ) : (
             <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px", background: "linear-gradient(145deg, #f5f5f3 0%, #ebebea 100%)" }}>
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
