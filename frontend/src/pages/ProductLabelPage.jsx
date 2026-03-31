@@ -272,7 +272,7 @@ function Label({ product }) {
       <div style={S.footer}>
         <div style={S.qrWrap}>
           <img
-            src={`https://xylo-system-production.up.railway.app/products/${product.id}/qr`}
+            src={`https://xylobox.online/products/${product.id}/qr`}
             alt="QR producto"
             style={S.qrImg}
           />

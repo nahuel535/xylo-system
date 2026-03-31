@@ -33,6 +33,8 @@ app.add_middleware(
         "https://xylo-system.vercel.app",
         "https://xylobox.online",
         "https://www.xylobox.online",
+        "https://xylobox.store",
+        "https://www.xylobox.store",
     ],
     allow_origin_regex=r"https://.*(\.vercel\.app|\.railway\.app|\.up\.railway\.app)",
     allow_credentials=True,

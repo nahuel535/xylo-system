@@ -111,7 +111,7 @@ export default function ProductDetailPage() {
             )}
 
             <a
-              href={`https://xylo-system-production.up.railway.app/products/${product.id}/qr`}
+              href={`https://xylobox.online/products/${product.id}/qr`}
               target="_blank"
               rel="noreferrer"
               className="block w-full text-center bg-base-subtle hover:bg-base-border transition text-base-text rounded-xl px-4 py-2.5 text-sm"
