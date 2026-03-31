@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://xylobox.online",
+  baseURL: "https://xylo-system-production.up.railway.app",
 });
 
 api.interceptors.request.use((config) => {
