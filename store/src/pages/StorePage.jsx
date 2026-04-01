@@ -1729,6 +1729,11 @@ function ProductCard({ product, exchange }) {
 
           <div style={{ marginTop: "auto", paddingTop: "14px", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
+              {product.is_offer && (
+                <p style={{ fontSize: "13px", color: T.textMuted, textDecoration: "line-through", lineHeight: 1, marginBottom: "3px" }}>
+                  USD {Math.round(Number(product.suggested_sale_price_usd) * 1.2).toLocaleString("es-AR")}
+                </p>
+              )}
               <p style={{ fontSize: "20px", fontWeight: 700, color: product.is_offer ? "#ef4444" : T.text, letterSpacing: "-0.04em", lineHeight: 1 }}>
                 USD {Number(product.suggested_sale_price_usd).toLocaleString("es-AR")}
               </p>
