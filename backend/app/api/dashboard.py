@@ -1,6 +1,7 @@
 from datetime import datetime, date
 from decimal import Decimal
-from fastapi import APIRouter, Depends
+from typing import Optional
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import extract, func
 from sqlalchemy.orm import Session
 
@@ -17,17 +18,30 @@ MONTHS_ES = ["", "Ene", "Feb", "Mar", "Abr", "May", "Jun",
 
 
 @router.get("/summary", response_model=DashboardSummary)
-def get_dashboard_summary(db: Session = Depends(get_db)):
+def get_dashboard_summary(
+    db: Session = Depends(get_db),
+    year: Optional[int] = Query(None),
+    month: Optional[int] = Query(None),
+):
     today = date.today()
     now = datetime.now()
-    month_start = datetime(now.year, now.month, 1)
 
-    if now.month == 1:
-        last_month_start = datetime(now.year - 1, 12, 1)
-        last_month_end = datetime(now.year, 1, 1)
+    # Use provided year/month or default to current
+    target_year = year if year else now.year
+    target_month = month if month else now.month
+
+    month_start = datetime(target_year, target_month, 1)
+    if target_month == 12:
+        month_end = datetime(target_year + 1, 1, 1)
     else:
-        last_month_start = datetime(now.year, now.month - 1, 1)
-        last_month_end = datetime(now.year, now.month, 1)
+        month_end = datetime(target_year, target_month + 1, 1)
+
+    if target_month == 1:
+        last_month_start = datetime(target_year - 1, 12, 1)
+        last_month_end = datetime(target_year, 1, 1)
+    else:
+        last_month_start = datetime(target_year, target_month - 1, 1)
+        last_month_end = month_start
 
     total_products_in_stock = db.query(Product).filter(Product.status == "in_stock").count()
     total_stock_value_usd = db.query(func.coalesce(func.sum(Product.purchase_price_usd), 0)).filter(Product.status == "in_stock").scalar()
@@ -36,10 +50,10 @@ def get_dashboard_summary(db: Session = Depends(get_db)):
     total_gross_profit_usd = db.query(func.coalesce(func.sum(Sale.gross_profit_usd), 0)).scalar()
     sales_today_count = db.query(Sale).filter(func.date(Sale.sale_date) == today).count()
     sales_today_value_usd = db.query(func.coalesce(func.sum(Sale.sale_price_usd), 0)).filter(func.date(Sale.sale_date) == today).scalar()
-    sales_this_month_count = db.query(Sale).filter(Sale.sale_date >= month_start).count()
-    sales_this_month_value_usd = db.query(func.coalesce(func.sum(Sale.sale_price_usd), 0)).filter(Sale.sale_date >= month_start).scalar()
-    profit_this_month_usd = db.query(func.coalesce(func.sum(Sale.gross_profit_usd), 0)).filter(Sale.sale_date >= month_start).scalar()
-    cost_this_month_usd = db.query(func.coalesce(func.sum(Sale.purchase_price_usd_snapshot), 0)).filter(Sale.sale_date >= month_start).scalar()
+    sales_this_month_count = db.query(Sale).filter(Sale.sale_date >= month_start, Sale.sale_date < month_end).count()
+    sales_this_month_value_usd = db.query(func.coalesce(func.sum(Sale.sale_price_usd), 0)).filter(Sale.sale_date >= month_start, Sale.sale_date < month_end).scalar()
+    profit_this_month_usd = db.query(func.coalesce(func.sum(Sale.gross_profit_usd), 0)).filter(Sale.sale_date >= month_start, Sale.sale_date < month_end).scalar()
+    cost_this_month_usd = db.query(func.coalesce(func.sum(Sale.purchase_price_usd_snapshot), 0)).filter(Sale.sale_date >= month_start, Sale.sale_date < month_end).scalar()
     sales_last_month_count = db.query(Sale).filter(Sale.sale_date >= last_month_start, Sale.sale_date < last_month_end).count()
     sales_last_month_value_usd = db.query(func.coalesce(func.sum(Sale.sale_price_usd), 0)).filter(Sale.sale_date >= last_month_start, Sale.sale_date < last_month_end).scalar()
     profit_last_month_usd = db.query(func.coalesce(func.sum(Sale.gross_profit_usd), 0)).filter(Sale.sale_date >= last_month_start, Sale.sale_date < last_month_end).scalar()

@@ -2,9 +2,14 @@ import { useEffect, useState } from "react";
 import api from "../services/api";
 import Header from "../components/Header";
 import UsdtCard from "../components/UsdtCard";
-import { Package, TrendingUp, TrendingDown, DollarSign, ShoppingBag, BarChart2, CreditCard, Minus, Clock } from "lucide-react";
+import { Package, TrendingUp, TrendingDown, DollarSign, ShoppingBag, BarChart2, CreditCard, Minus, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+
+const MONTHS_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
 export default function DashboardPage() {
+  const now = new Date();
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [summary, setSummary] = useState(null);
   const [exchange, setExchange] = useState(null);
   const [topModels, setTopModels] = useState([]);
@@ -12,13 +17,26 @@ export default function DashboardPage() {
   const [monthlyStats, setMonthlyStats] = useState([]);
   const [recentSales, setRecentSales] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [chartView, setChartView] = useState("profit"); // "profit" | "revenue"
+  const [chartView, setChartView] = useState("profit");
+
+  const isCurrentMonth = selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1;
+
+  function prevMonth() {
+    if (selectedMonth === 1) { setSelectedMonth(12); setSelectedYear(y => y - 1); }
+    else setSelectedMonth(m => m - 1);
+  }
+  function nextMonth() {
+    if (isCurrentMonth) return;
+    if (selectedMonth === 12) { setSelectedMonth(1); setSelectedYear(y => y + 1); }
+    else setSelectedMonth(m => m + 1);
+  }
 
   useEffect(() => {
     async function loadDashboard() {
+      setLoading(true);
       try {
         const [summaryRes, exchangeRes, topModelsRes, paymentRes, monthlyRes, recentRes] = await Promise.all([
-          api.get("/dashboard/summary"),
+          api.get(`/dashboard/summary?year=${selectedYear}&month=${selectedMonth}`),
           api.get("/exchange-rates/active"),
           api.get("/dashboard/top-models"),
           api.get("/dashboard/payment-methods"),
@@ -38,7 +56,7 @@ export default function DashboardPage() {
       }
     }
     loadDashboard();
-  }, []);
+  }, [selectedYear, selectedMonth]);
 
   if (loading) return <p className="text-base-muted">Cargando dashboard...</p>;
   if (!summary) return <p className="text-base-muted">No se pudo cargar el dashboard.</p>;
@@ -58,12 +76,25 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <Header title="Dashboard" subtitle="Resumen general del negocio" />
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <Header title="Dashboard" subtitle="Resumen general del negocio" />
+        <div className="flex items-center gap-2 bg-base-card border border-base-border rounded-xl px-3 py-2 shadow-card">
+          <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-base-subtle transition text-base-muted hover:text-base-text">
+            <ChevronLeft size={15} />
+          </button>
+          <span className="text-sm font-semibold text-base-text min-w-[120px] text-center">
+            {MONTHS_ES[selectedMonth - 1]} {selectedYear}
+          </span>
+          <button onClick={nextMonth} disabled={isCurrentMonth} className={`p-1 rounded-lg transition ${isCurrentMonth ? "text-base-border cursor-default" : "hover:bg-base-subtle text-base-muted hover:text-base-text"}`}>
+            <ChevronRight size={15} />
+          </button>
+        </div>
+      </div>
 
       {/* ── KPI cards principales ── */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiCard
-          label="Ventas este mes"
+          label={`Ventas — ${MONTHS_ES[selectedMonth - 1]}`}
           value={`USD ${fmt(summary.sales_this_month_value_usd)}`}
           sub={`${summary.sales_this_month_count} operaciones`}
           delta={deltaRevenue}
@@ -72,7 +103,7 @@ export default function DashboardPage() {
           accent="xylo"
         />
         <KpiCard
-          label="Ganancia este mes"
+          label={`Ganancia — ${MONTHS_ES[selectedMonth - 1]}`}
           value={`USD ${fmt(summary.profit_this_month_usd)}`}
           sub={`Margen ${margin}%`}
           delta={deltaProfit}
