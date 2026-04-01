@@ -93,7 +93,6 @@ export default function NewProductPage() {
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
-  const [listeningField, setListeningField] = useState(null);
   const [pendingVoice, setPendingVoice] = useState(null); // { name, value }
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -248,29 +247,6 @@ export default function NewProductPage() {
     setVoiceDone(false);
   }
 
-  // ── Dictado campo individual ──────────────────────
-  function handleVoice(fieldName) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) { alert("Tu navegador no soporta dictado por voz. Usá Chrome."); return; }
-    if (listeningField === fieldName) { recognitionRef.current?.stop(); setListeningField(null); return; }
-    recognitionRef.current?.stop();
-    setPendingVoice(null);
-    const recognition = new SpeechRecognition();
-    recognition.lang = "es-AR";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognitionRef.current = recognition;
-    setListeningField(fieldName);
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setListeningField(null);
-      setPendingVoice({ name: fieldName, value: transcript });
-    };
-    recognition.onerror = () => setListeningField(null);
-    recognition.onend = () => setListeningField(null);
-    recognition.start();
-  }
-
   function confirmPendingVoice() {
     if (!pendingVoice) return;
     setForm((prev) => ({ ...prev, [pendingVoice.name]: pendingVoice.value }));
@@ -278,10 +254,7 @@ export default function NewProductPage() {
   }
 
   function rejectPendingVoice() {
-    if (!pendingVoice) return;
-    const fieldName = pendingVoice.name;
     setPendingVoice(null);
-    handleVoice(fieldName);
   }
 
   async function handlePhotoUpload(e) {
@@ -500,14 +473,14 @@ export default function NewProductPage() {
           <SelectField label="Categoría" name="category" value={form.category} onChange={handleChange} options={CATEGORY_OPTIONS} />
 
           {!isCombo && (
-            <Field label="Marca" name="brand" value={form.brand} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "brand"} />
+            <Field label="Marca" name="brand" value={form.brand} onChange={handleChange} />
           )}
 
           {/* Modelo / Nombre */}
           {isCombo ? (
             <Field label="Nombre del combo" name="model" value={form.model} onChange={handleChange} required placeholder="Ej: Combo Carga Rápida 20W..." />
           ) : isAccessory ? (
-            <Field label="Nombre del accesorio" name="model" value={form.model} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "model"} required placeholder="Ej: AirPods Pro 2, Funda iPhone 16..." />
+            <Field label="Nombre del accesorio" name="model" value={form.model} onChange={handleChange} required placeholder="Ej: AirPods Pro 2, Funda iPhone 16..." />
           ) : (
             <SelectField label="Modelo" name="model" value={form.model} onChange={handleChange} options={MODEL_OPTIONS} required placeholder="Seleccionar modelo" />
           )}
@@ -586,13 +559,13 @@ export default function NewProductPage() {
 
           {/* Campos exclusivos de iPhone */}
           {!isAccessory && !isCombo && (
-            <Field label="IMEI" name="imei" value={form.imei} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "imei"} required />
+            <Field label="IMEI" name="imei" value={form.imei} onChange={handleChange} required />
           )}
           {!isAccessory && !isCombo && (
-            <Field label="Número de serie" name="serial_number" value={form.serial_number} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "serial_number"} />
+            <Field label="Número de serie" name="serial_number" value={form.serial_number} onChange={handleChange} />
           )}
           {!isAccessory && !isCombo && (
-            <Field label="Batería (%)" name="battery_health" value={form.battery_health} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "battery_health"} type="number" />
+            <Field label="Batería (%)" name="battery_health" value={form.battery_health} onChange={handleChange} type="number" />
           )}
 
           {!isCombo && (
@@ -608,8 +581,8 @@ export default function NewProductPage() {
 
           <SelectField label="Condición" name="condition_type" value={form.condition_type} onChange={handleChange} options={CONDITION_OPTIONS} placeholder="Seleccionar condición" />
           <Field label="Fecha de compra" name="purchase_date" value={form.purchase_date} onChange={handleChange} type="date" />
-          <Field label="Costo USD" name="purchase_price_usd" value={form.purchase_price_usd} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "purchase_price_usd"} type="number" step="0.01" required />
-          <Field label="Precio sugerido USD" name="suggested_sale_price_usd" value={form.suggested_sale_price_usd} onChange={handleChange} onVoice={handleVoice} listening={listeningField === "suggested_sale_price_usd"} type="number" step="0.01" required />
+          <Field label="Costo USD" name="purchase_price_usd" value={form.purchase_price_usd} onChange={handleChange} type="number" step="0.01" required />
+          <Field label="Precio sugerido USD" name="suggested_sale_price_usd" value={form.suggested_sale_price_usd} onChange={handleChange} type="number" step="0.01" required />
           <SelectField label="Proveedor" name="supplier" value={form.supplier} onChange={handleChange} options={SUPPLIER_OPTIONS} placeholder="Seleccionar proveedor" />
 
           {/* Foto */}
@@ -689,7 +662,6 @@ export default function NewProductPage() {
               placeholder="Detalle del equipo, caja, accesorios, estado, etc."
               className="w-full min-h-[130px] bg-base-subtle border border-base-border rounded-xl px-4 py-3 pr-12 text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
             />
-            <MicButton listening={listeningField === "notes"} onClick={() => handleVoice("notes")} className="absolute top-3 right-3" />
           </div>
         </div>
 
