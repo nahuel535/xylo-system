@@ -72,7 +72,7 @@ function Navbar({ scrolled }) {
 // ─────────────────────────────────────────────────────────────────────────────
 //  Hero
 // ─────────────────────────────────────────────────────────────────────────────
-function Hero({ stockCount }) {
+function Hero() {
   return (
     <section style={{
       minHeight: "100vh",
@@ -211,14 +211,24 @@ function Hero({ stockCount }) {
         }}
       >
         {[
-          { value: stockCount ? `${stockCount}` : "—", label: "Equipos en stock" },
-          { value: "100%", label: "Revisados y certificados" },
-          { value: "0", label: "Sorpresas en el precio" },
-        ].map(({ value, label }) => (
-          <div key={label} style={{ textAlign: "center" }}>
-            <p style={{ fontSize: "22px", fontWeight: 800, color: T.text, letterSpacing: "-0.04em", lineHeight: 1 }}>{value}</p>
+          { value: "100+", label: "Equipos entregados", animate: true },
+          { value: "100%", label: "Revisados y certificados", animate: false },
+          { value: "0", label: "Sorpresas en el precio", animate: false },
+        ].map(({ value, label, animate }, i) => (
+          <motion.div key={label} style={{ textAlign: "center" }}
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.75 + i * 0.12 }}
+          >
+            <motion.p
+              style={{ fontSize: "22px", fontWeight: 800, color: animate ? ACCENT : T.text, letterSpacing: "-0.04em", lineHeight: 1 }}
+              initial={animate ? { scale: 0.6, opacity: 0 } : {}}
+              animate={animate ? { scale: 1, opacity: 1 } : {}}
+              transition={animate ? { duration: 0.6, delay: 0.9, type: "spring", stiffness: 260, damping: 18 } : {}}
+            >
+              {value}
+            </motion.p>
             <p style={{ fontSize: "12px", color: T.textMuted, marginTop: "4px" }}>{label}</p>
-          </div>
+          </motion.div>
         ))}
       </motion.div>
 
@@ -1962,7 +1972,6 @@ function PaymentMethods() {
 const FAQ_ITEMS = [
   { q: "¿Los equipos tienen garantía?", a: "Sí. Todos los equipos cuentan con garantía de funcionamiento. Si en los primeros días detectás algún problema, lo resolvemos sin vueltas. Te atendemos directo por WhatsApp." },
   { q: "¿Qué significa que están certificados?", a: "Cada equipo pasa por una revisión técnica completa antes de la venta: se verifica el estado de la pantalla, batería, cámaras, botones, altavoces y conectividad. Solo publicamos lo que está en condiciones reales de uso." },
-  { q: "¿Hacen envíos?", a: "Sí, enviamos a todo el país por correo o mensajería. También podés coordinar retiro en mano si estás en Córdoba. Los costos y tiempos dependen del método elegido." },
   { q: "¿Cómo sé el estado real de la batería?", a: "El porcentaje de batería está visible en cada publicación. No publicamos equipos sin ese dato. Es uno de los puntos que más nos importa que sea transparente." },
   { q: "¿Puedo dar mi equipo como parte de pago?", a: "Sí, aceptamos permuta. Consultanos por WhatsApp con el modelo y estado de tu equipo y te damos una valuación." },
   { q: "¿Los equipos están desbloqueados?", a: "Sí, todos los equipos están desbloqueados de fábrica y funcionan con cualquier operador en Argentina y el exterior." },
@@ -2365,7 +2374,7 @@ export default function StorePage() {
         )}
       </AnimatePresence>
       <Navbar scrolled={scrolled} />
-      <Hero stockCount={products.length} />
+      <Hero />
       <HowToBuy />
 
       {/* ── Oportunidades ─────────────────────────────────────────────── */}
