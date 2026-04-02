@@ -1924,43 +1924,111 @@ function Testimonials() {
 //  Métodos de pago
 // ─────────────────────────────────────────────────────────────────────────────
 const PAYMENT_METHODS_DATA = [
-  { label: "Efectivo", sub: "ARS o USD", icon: "💵" },
-  { label: "Transferencia", sub: "Alias / CVU", icon: "🏦" },
-  { label: "Tarjeta", sub: "Débito y crédito", icon: "💳" },
-  { label: "Cripto", sub: "USDT / BTC", icon: "₿" },
-  { label: "Permuta", sub: "Tu equipo como parte de pago", icon: "🔄" },
+  {
+    label: "Efectivo",
+    sub: "ARS o USD",
+    accent: "#22c55e",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/>
+      </svg>
+    ),
+  },
+  {
+    label: "Transferencia",
+    sub: "Alias / CVU",
+    accent: "#3b82f6",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 12h18M3 6h18M3 18h18"/><path d="M17 8l4 4-4 4"/>
+      </svg>
+    ),
+  },
+  {
+    label: "Tarjeta",
+    sub: "Débito y crédito",
+    accent: "#a855f7",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+      </svg>
+    ),
+  },
+  {
+    label: "Cripto",
+    sub: "USDT · BTC",
+    accent: "#f59e0b",
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M9 8h4.5a2 2 0 0 1 0 4H9m0 0h5a2 2 0 0 1 0 4H9m0-8v8m3-10v2m0 8v2"/>
+      </svg>
+    ),
+  },
+  {
+    label: "Permuta",
+    sub: "Tu equipo como parte de pago",
+    accent: ACCENT,
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/>
+      </svg>
+    ),
+  },
 ];
 
 function PaymentMethods() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
   return (
-    <section style={{ background: T.bg, padding: "80px clamp(20px, 6vw, 80px)", fontFamily: T.body }}>
-      <div style={{ maxWidth: "1100px", margin: "0 auto" }} ref={ref}>
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} style={{ textAlign: "center", marginBottom: "40px" }}>
-          <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: ACCENT, marginBottom: "12px" }}>Sin complicaciones</p>
-          <h2 style={{ fontFamily: T.heading, fontSize: "clamp(24px, 3vw, 34px)", fontWeight: 700, letterSpacing: "-0.04em", color: T.text }}>
-            Formas de pago
+    <section style={{ background: "#0a0a0a", padding: "96px clamp(20px, 6vw, 80px)", fontFamily: T.body, position: "relative", overflow: "hidden" }}>
+      {/* Glow */}
+      <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "700px", height: "400px", background: `radial-gradient(ellipse, ${ACCENT}12 0%, transparent 65%)`, pointerEvents: "none" }} />
+
+      <div style={{ maxWidth: "1000px", margin: "0 auto", position: "relative" }} ref={ref}>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} style={{ textAlign: "center", marginBottom: "56px" }}>
+          <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: ACCENT, marginBottom: "14px" }}>Sin complicaciones</p>
+          <h2 style={{ fontFamily: T.heading, fontSize: "clamp(28px, 3.5vw, 42px)", fontWeight: 700, letterSpacing: "-0.04em", color: "#ffffff", lineHeight: 1.1 }}>
+            Pagá como quieras
           </h2>
+          <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.4)", marginTop: "12px" }}>Todas las opciones disponibles, sin restricciones.</p>
         </motion.div>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: 0.15 }}
-          style={{ display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center" }}
-        >
-          {PAYMENT_METHODS_DATA.map((m) => (
-            <div key={m.label} style={{
-              background: T.surface, border: `1px solid ${T.border}`,
-              borderRadius: "16px", padding: "20px 28px",
-              display: "flex", alignItems: "center", gap: "14px",
-              minWidth: "160px",
-            }}>
-              <span style={{ fontSize: "26px", lineHeight: 1 }}>{m.icon}</span>
-              <div>
-                <p style={{ fontSize: "14px", fontWeight: 600, color: T.text }}>{m.label}</p>
-                <p style={{ fontSize: "12px", color: T.textMuted, marginTop: "2px" }}>{m.sub}</p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "14px" }}>
+          {PAYMENT_METHODS_DATA.map((m, i) => (
+            <motion.div key={m.label}
+              initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.45, delay: 0.1 + i * 0.07 }}
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "20px", padding: "28px 24px",
+                display: "flex", flexDirection: "column", gap: "16px",
+                transition: "background 0.25s, border-color 0.25s",
+                cursor: "default",
+              }}
+              whileHover={{ background: "rgba(255,255,255,0.07)", borderColor: `${m.accent}40` }}
+            >
+              <div style={{
+                width: "44px", height: "44px", borderRadius: "12px",
+                background: `${m.accent}18`,
+                border: `1px solid ${m.accent}30`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: m.accent,
+              }}>
+                {m.icon}
               </div>
-            </div>
+              <div>
+                <p style={{ fontSize: "15px", fontWeight: 600, color: "#ffffff", letterSpacing: "-0.02em" }}>{m.label}</p>
+                <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.38)", marginTop: "4px", lineHeight: 1.4 }}>{m.sub}</p>
+              </div>
+            </motion.div>
           ))}
-        </motion.div>
+        </div>
+
+        <motion.p initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ duration: 0.5, delay: 0.55 }}
+          style={{ textAlign: "center", fontSize: "13px", color: "rgba(255,255,255,0.25)", marginTop: "36px" }}
+        >
+          ¿Dudas sobre cómo pagar? <a href={waLink("Hola, tengo una consulta sobre los métodos de pago")} target="_blank" rel="noreferrer" style={{ color: ACCENT, textDecoration: "none" }}>Consultanos por WhatsApp</a>
+        </motion.p>
       </div>
     </section>
   );
