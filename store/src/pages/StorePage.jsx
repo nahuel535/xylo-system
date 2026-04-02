@@ -72,7 +72,7 @@ function Navbar({ scrolled }) {
 // ─────────────────────────────────────────────────────────────────────────────
 //  Hero
 // ─────────────────────────────────────────────────────────────────────────────
-function Hero() {
+function Hero({ stockCount }) {
   return (
     <section style={{
       minHeight: "100vh",
@@ -211,7 +211,7 @@ function Hero() {
         }}
       >
         {[
-          { value: "100+", label: "Equipos vendidos" },
+          { value: stockCount ? `${stockCount}` : "—", label: "Equipos en stock" },
           { value: "100%", label: "Revisados y certificados" },
           { value: "0", label: "Sorpresas en el precio" },
         ].map(({ value, label }) => (
@@ -1856,6 +1856,179 @@ function SkeletonCard() {
 // ─────────────────────────────────────────────────────────────────────────────
 //  CTA Banner
 // ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  Testimonios
+// ─────────────────────────────────────────────────────────────────────────────
+const TESTIMONIALS = [
+  { name: "Matías R.", model: "iPhone 15 Pro", stars: 5, text: "Compré el 15 Pro y llegó impecable. Batería al 94%, caja original y todo. La atención por WhatsApp fue rápida y sin vueltas. Totalmente recomendable." },
+  { name: "Valentina G.", model: "iPhone 14", stars: 5, text: "Me daba miedo comprar usado pero todo fue transparente desde el principio. Me mostraron el porcentaje de batería antes de cerrar el trato. Muy buena experiencia." },
+  { name: "Lucas F.", model: "iPhone 13 Pro Max", stars: 5, text: "Excelente. El equipo llegó tal cual lo describieron, desbloqueado y listo para usar. Precio justo y atención de primera. Ya le recomendé a dos amigos." },
+  { name: "Camila S.", model: "iPhone 16", stars: 5, text: "Me asesoraron super bien para elegir el modelo que se ajustaba a mi presupuesto. El iPhone llegó en perfectas condiciones y funciona como nuevo. Diez puntos." },
+];
+
+function StarRating({ count }) {
+  return (
+    <div style={{ display: "flex", gap: "3px" }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill="#f59e0b">
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      ))}
+    </div>
+  );
+}
+
+function Testimonials() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <section style={{ background: "#f9f9f7", padding: "96px clamp(20px, 6vw, 80px)", fontFamily: T.body }}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }} ref={ref}>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} style={{ textAlign: "center", marginBottom: "52px" }}>
+          <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: ACCENT, marginBottom: "12px" }}>Clientes reales</p>
+          <h2 style={{ fontFamily: T.heading, fontSize: "clamp(26px, 3.5vw, 38px)", fontWeight: 700, letterSpacing: "-0.04em", color: T.text, lineHeight: 1.1 }}>
+            Lo que dicen quienes ya compraron
+          </h2>
+        </motion.div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "20px" }}>
+          {TESTIMONIALS.map((t, i) => (
+            <motion.div key={t.name}
+              initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: i * 0.08 }}
+              style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: "20px", padding: "24px", display: "flex", flexDirection: "column", gap: "14px", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
+            >
+              <StarRating count={t.stars} />
+              <p style={{ fontSize: "14px", color: T.textSec, lineHeight: 1.65, flex: 1 }}>"{t.text}"</p>
+              <div>
+                <p style={{ fontSize: "13px", fontWeight: 600, color: T.text }}>{t.name}</p>
+                <p style={{ fontSize: "12px", color: ACCENT, marginTop: "2px" }}>{t.model}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Métodos de pago
+// ─────────────────────────────────────────────────────────────────────────────
+const PAYMENT_METHODS_DATA = [
+  { label: "Efectivo", sub: "ARS o USD", icon: "💵" },
+  { label: "Transferencia", sub: "Alias / CVU", icon: "🏦" },
+  { label: "Tarjeta", sub: "Débito y crédito", icon: "💳" },
+  { label: "Cripto", sub: "USDT / BTC", icon: "₿" },
+  { label: "Permuta", sub: "Tu equipo como parte de pago", icon: "🔄" },
+];
+
+function PaymentMethods() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <section style={{ background: T.bg, padding: "80px clamp(20px, 6vw, 80px)", fontFamily: T.body }}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }} ref={ref}>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} style={{ textAlign: "center", marginBottom: "40px" }}>
+          <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: ACCENT, marginBottom: "12px" }}>Sin complicaciones</p>
+          <h2 style={{ fontFamily: T.heading, fontSize: "clamp(24px, 3vw, 34px)", fontWeight: 700, letterSpacing: "-0.04em", color: T.text }}>
+            Formas de pago
+          </h2>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: 0.15 }}
+          style={{ display: "flex", gap: "16px", flexWrap: "wrap", justifyContent: "center" }}
+        >
+          {PAYMENT_METHODS_DATA.map((m) => (
+            <div key={m.label} style={{
+              background: T.surface, border: `1px solid ${T.border}`,
+              borderRadius: "16px", padding: "20px 28px",
+              display: "flex", alignItems: "center", gap: "14px",
+              minWidth: "160px",
+            }}>
+              <span style={{ fontSize: "26px", lineHeight: 1 }}>{m.icon}</span>
+              <div>
+                <p style={{ fontSize: "14px", fontWeight: 600, color: T.text }}>{m.label}</p>
+                <p style={{ fontSize: "12px", color: T.textMuted, marginTop: "2px" }}>{m.sub}</p>
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  FAQ
+// ─────────────────────────────────────────────────────────────────────────────
+const FAQ_ITEMS = [
+  { q: "¿Los equipos tienen garantía?", a: "Sí. Todos los equipos cuentan con garantía de funcionamiento. Si en los primeros días detectás algún problema, lo resolvemos sin vueltas. Te atendemos directo por WhatsApp." },
+  { q: "¿Qué significa que están certificados?", a: "Cada equipo pasa por una revisión técnica completa antes de la venta: se verifica el estado de la pantalla, batería, cámaras, botones, altavoces y conectividad. Solo publicamos lo que está en condiciones reales de uso." },
+  { q: "¿Hacen envíos?", a: "Sí, enviamos a todo el país por correo o mensajería. También podés coordinar retiro en mano si estás en Córdoba. Los costos y tiempos dependen del método elegido." },
+  { q: "¿Cómo sé el estado real de la batería?", a: "El porcentaje de batería está visible en cada publicación. No publicamos equipos sin ese dato. Es uno de los puntos que más nos importa que sea transparente." },
+  { q: "¿Puedo dar mi equipo como parte de pago?", a: "Sí, aceptamos permuta. Consultanos por WhatsApp con el modelo y estado de tu equipo y te damos una valuación." },
+  { q: "¿Los equipos están desbloqueados?", a: "Sí, todos los equipos están desbloqueados de fábrica y funcionan con cualquier operador en Argentina y el exterior." },
+];
+
+function FAQItem({ item, isOpen, onToggle }) {
+  return (
+    <div style={{ borderBottom: `1px solid ${T.border}` }}>
+      <button
+        onClick={onToggle}
+        style={{
+          width: "100%", textAlign: "left", background: "none", border: "none",
+          padding: "20px 0", cursor: "pointer", display: "flex", alignItems: "center",
+          justifyContent: "space-between", gap: "16px", fontFamily: T.body,
+        }}
+      >
+        <span style={{ fontSize: "15px", fontWeight: 600, color: T.text, lineHeight: 1.4 }}>{item.q}</span>
+        <span style={{ flexShrink: 0, width: "22px", height: "22px", borderRadius: "50%", background: isOpen ? T.text : T.surface, border: `1px solid ${T.border}`, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s" }}>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d={isOpen ? "M2 7L5 4L8 7" : "M2 3L5 6L8 3"} stroke={isOpen ? "#fff" : T.textMuted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </span>
+      </button>
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25 }} style={{ overflow: "hidden" }}>
+            <p style={{ fontSize: "14px", color: T.textSec, lineHeight: 1.7, paddingBottom: "20px" }}>{item.a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function FAQ() {
+  const [openIdx, setOpenIdx] = useState(null);
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <section style={{ background: "#f9f9f7", padding: "96px clamp(20px, 6vw, 80px)", fontFamily: T.body }}>
+      <div style={{ maxWidth: "720px", margin: "0 auto" }} ref={ref}>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.6 }} style={{ textAlign: "center", marginBottom: "52px" }}>
+          <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: ACCENT, marginBottom: "12px" }}>Preguntas frecuentes</p>
+          <h2 style={{ fontFamily: T.heading, fontSize: "clamp(26px, 3.5vw, 38px)", fontWeight: 700, letterSpacing: "-0.04em", color: T.text, lineHeight: 1.1 }}>
+            Todo lo que necesitás saber
+          </h2>
+        </motion.div>
+        <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ duration: 0.5, delay: 0.2 }}>
+          {FAQ_ITEMS.map((item, i) => (
+            <FAQItem key={i} item={item} isOpen={openIdx === i} onToggle={() => setOpenIdx(openIdx === i ? null : i)} />
+          ))}
+        </motion.div>
+        <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ duration: 0.5, delay: 0.4 }}
+          style={{ marginTop: "40px", textAlign: "center", padding: "24px", background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: "16px" }}
+        >
+          <p style={{ fontSize: "14px", color: T.textSec, marginBottom: "14px" }}>¿Tenés otra pregunta? Te respondemos al instante.</p>
+          <WhatsAppButton message="Hola, tengo una consulta sobre los equipos">Consultar por WhatsApp</WhatsAppButton>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  CTA Banner
+// ─────────────────────────────────────────────────────────────────────────────
 function CTABanner() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-60px" });
@@ -2044,7 +2217,7 @@ export default function StorePage() {
   return (
     <div style={{ background: T.bg, minHeight: "100vh", color: T.text, overflowX: "hidden" }}>
       <Navbar scrolled={scrolled} />
-      <Hero />
+      <Hero stockCount={products.length} />
       <HowToBuy />
 
       {/* ── Oportunidades ─────────────────────────────────────────────── */}
@@ -2195,6 +2368,9 @@ export default function StorePage() {
 
       <ModelsCatalog />
       <FeatureGrid />
+      <Testimonials />
+      <PaymentMethods />
+      <FAQ />
 
       <CTABanner />
       <Footer />
