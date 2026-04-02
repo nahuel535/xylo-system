@@ -2162,6 +2162,135 @@ function Footer() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  Popup Oferta del día
+// ─────────────────────────────────────────────────────────────────────────────
+function OfferPopup({ product, exchange, onClose }) {
+  const price = Number(product.suggested_sale_price_usd);
+  const originalPrice = Math.round(price * 1.2);
+  const ars = exchange ? Math.round(price * Number(exchange.sell_rate_ars)).toLocaleString("es-AR") : null;
+  const discount = 17; // ~1/1.2 = 17% off
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, zIndex: 900,
+        background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "20px", fontFamily: T.body,
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 24 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 16 }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: T.card, borderRadius: "24px",
+          boxShadow: "0 32px 80px rgba(0,0,0,0.22)",
+          maxWidth: "420px", width: "100%",
+          overflow: "hidden", position: "relative",
+        }}
+      >
+        {/* Close */}
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute", top: "14px", right: "14px", zIndex: 10,
+            width: "32px", height: "32px", borderRadius: "50%",
+            background: "rgba(0,0,0,0.07)", border: "none", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+        >
+          <X size={15} color={T.textMuted} />
+        </button>
+
+        {/* Badge */}
+        <div style={{
+          position: "absolute", top: "14px", left: "14px", zIndex: 10,
+          background: "linear-gradient(135deg, #f97316, #ef4444)",
+          borderRadius: "980px", padding: "4px 12px",
+          fontSize: "11px", fontWeight: 700, color: "#fff", letterSpacing: "0.06em",
+        }}>
+          🔥 OFERTA DEL DÍA
+        </div>
+
+        {/* Foto */}
+        <div style={{
+          width: "100%", aspectRatio: "4/3",
+          background: T.surface,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          overflow: "hidden",
+        }}>
+          {product.photo_url
+            ? <img src={product.photo_url} alt={product.model} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+            : <div style={{ fontSize: "48px" }}>📱</div>
+          }
+        </div>
+
+        {/* Info */}
+        <div style={{ padding: "24px" }}>
+          <p style={{ fontSize: "20px", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", marginBottom: "4px" }}>{product.model}</p>
+          <p style={{ fontSize: "14px", color: T.textSec, marginBottom: "16px" }}>
+            {[product.storage, product.color].filter(Boolean).join(" · ")}
+            {product.battery_health ? ` · Batería ${product.battery_health}%` : ""}
+          </p>
+
+          <div style={{ display: "flex", alignItems: "flex-end", gap: "12px", marginBottom: "20px" }}>
+            <div>
+              <p style={{ fontSize: "13px", color: T.textMuted, textDecoration: "line-through", lineHeight: 1 }}>USD {originalPrice.toLocaleString("es-AR")}</p>
+              <p style={{ fontSize: "28px", fontWeight: 800, color: "#ef4444", letterSpacing: "-0.04em", lineHeight: 1.1 }}>
+                USD {price.toLocaleString("es-AR")}
+              </p>
+              {ars && <p style={{ fontSize: "13px", color: T.textMuted, marginTop: "3px" }}>ARS {ars}</p>}
+            </div>
+            <div style={{
+              background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)",
+              borderRadius: "980px", padding: "4px 10px",
+              fontSize: "12px", fontWeight: 700, color: "#ef4444",
+            }}>
+              -{discount}%
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "10px" }}>
+            <Link
+              to={`/producto/${product.id}`}
+              onClick={onClose}
+              style={{
+                flex: 1, textAlign: "center",
+                background: T.text, color: "#fff",
+                padding: "13px", borderRadius: "14px",
+                fontSize: "14px", fontWeight: 600, textDecoration: "none",
+              }}
+            >
+              Ver equipo
+            </Link>
+            <a
+              href={waLink(`Hola, me interesa la oferta del día: ${product.model} ${product.storage || ""} a USD ${price}`)}
+              target="_blank" rel="noreferrer"
+              onClick={onClose}
+              style={{
+                flex: 1, textAlign: "center",
+                background: "#25d366", color: "#fff",
+                padding: "13px", borderRadius: "14px",
+                fontSize: "14px", fontWeight: 600, textDecoration: "none",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+              }}
+            >
+              <WhatsAppIcon size={15} /> Consultar
+            </a>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  StorePage
 // ─────────────────────────────────────────────────────────────────────────────
 export default function StorePage() {
@@ -2174,6 +2303,7 @@ export default function StorePage() {
   const [sortBy, setSortBy] = useState("");
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
   const [scrolled, setScrolled] = useState(false);
+  const [offerPopup, setOfferPopup] = useState(null);
   const stockHeaderRef = useRef(null);
   const stockHeaderInView = useInView(stockHeaderRef, { once: true, margin: "-60px" });
 
@@ -2184,8 +2314,17 @@ export default function StorePage() {
           api.get("/products/"),
           api.get("/exchange-rates/active").catch(() => ({ data: null })),
         ]);
-        setProducts(prodRes.data.filter((p) => p.status === "in_stock"));
+        const inStock = prodRes.data.filter((p) => p.status === "in_stock");
+        setProducts(inStock);
         setExchange(exRes.data);
+        // Popup oferta del día — solo 1 vez por sesión
+        if (!sessionStorage.getItem("xylo_offer_seen")) {
+          const offers = inStock.filter((p) => p.is_offer && p.photo_url);
+          if (offers.length > 0) {
+            const pick = offers[Math.floor(Math.random() * offers.length)];
+            setTimeout(() => setOfferPopup(pick), 1800);
+          }
+        }
       } finally {
         setLoading(false);
       }
@@ -2216,6 +2355,15 @@ export default function StorePage() {
 
   return (
     <div style={{ background: T.bg, minHeight: "100vh", color: T.text, overflowX: "hidden" }}>
+      <AnimatePresence>
+        {offerPopup && (
+          <OfferPopup
+            product={offerPopup}
+            exchange={exchange}
+            onClose={() => { setOfferPopup(null); sessionStorage.setItem("xylo_offer_seen", "1"); }}
+          />
+        )}
+      </AnimatePresence>
       <Navbar scrolled={scrolled} />
       <Hero stockCount={products.length} />
       <HowToBuy />
