@@ -2245,121 +2245,160 @@ function OfferPopup({ product, exchange, onClose }) {
   const price = Number(product.suggested_sale_price_usd);
   const originalPrice = Math.round(price * 1.2);
   const ars = exchange ? Math.round(price * Number(exchange.sell_rate_ars)).toLocaleString("es-AR") : null;
-  const discount = 17; // ~1/1.2 = 17% off
+  const discount = 17;
 
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
+      transition={{ duration: 0.3 }}
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 900,
-        background: "rgba(0,0,0,0.52)", backdropFilter: "blur(6px)",
+        background: "rgba(0,0,0,0.72)", backdropFilter: "blur(12px)",
         display: "flex", alignItems: "center", justifyContent: "center",
         padding: "20px", fontFamily: T.body,
       }}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.92, y: 24 }}
+        initial={{ opacity: 0, scale: 0.88, y: 32 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.94, y: 16 }}
-        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        exit={{ opacity: 0, scale: 0.92, y: 20 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         onClick={(e) => e.stopPropagation()}
         style={{
-          background: T.card, borderRadius: "24px",
-          boxShadow: "0 32px 80px rgba(0,0,0,0.22)",
-          maxWidth: "420px", width: "100%",
+          background: "#0d0d0d",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: "28px",
+          boxShadow: "0 0 0 1px rgba(0,200,150,0.12), 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(0,200,150,0.06)",
+          maxWidth: "440px", width: "100%",
           overflow: "hidden", position: "relative",
         }}
       >
+        {/* Glow background */}
+        <div style={{
+          position: "absolute", inset: 0, pointerEvents: "none",
+          background: "radial-gradient(ellipse at 50% 0%, rgba(0,200,150,0.10) 0%, transparent 60%)",
+        }} />
+
         {/* Close */}
         <button
           onClick={onClose}
           style={{
-            position: "absolute", top: "14px", right: "14px", zIndex: 10,
-            width: "32px", height: "32px", borderRadius: "50%",
-            background: "rgba(0,0,0,0.07)", border: "none", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
+            position: "absolute", top: "16px", right: "16px", zIndex: 10,
+            width: "34px", height: "34px", borderRadius: "50%",
+            background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)",
+            cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "background 0.2s",
           }}
+          onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.13)"}
+          onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.07)"}
         >
-          <X size={15} color={T.textMuted} />
+          <X size={14} color="rgba(255,255,255,0.6)" />
         </button>
 
-        {/* Badge */}
+        {/* Header badge */}
         <div style={{
-          position: "absolute", top: "14px", left: "14px", zIndex: 10,
-          background: "linear-gradient(135deg, #f97316, #ef4444)",
-          borderRadius: "980px", padding: "4px 12px",
-          fontSize: "11px", fontWeight: 700, color: "#fff", letterSpacing: "0.06em",
+          position: "absolute", top: "16px", left: "16px", zIndex: 10,
+          background: "linear-gradient(135deg, rgba(0,200,150,0.2), rgba(0,200,150,0.08))",
+          border: "1px solid rgba(0,200,150,0.35)",
+          borderRadius: "980px", padding: "5px 13px",
+          fontSize: "10px", fontWeight: 700, color: ACCENT,
+          letterSpacing: "0.10em", textTransform: "uppercase",
         }}>
-          🔥 OFERTA DEL DÍA
+          Oferta del día
         </div>
 
         {/* Foto */}
         <div style={{
-          width: "100%", aspectRatio: "4/3",
-          background: T.surface,
+          width: "100%", aspectRatio: "16/9",
+          background: "linear-gradient(180deg, #161616 0%, #111 100%)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          overflow: "hidden",
+          overflow: "hidden", position: "relative",
         }}>
+          {/* subtle bottom fade */}
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, right: 0, height: "48px",
+            background: "linear-gradient(to top, #0d0d0d, transparent)",
+            zIndex: 2, pointerEvents: "none",
+          }} />
           {product.photo_url
-            ? <img src={product.photo_url} alt={product.model} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-            : <div style={{ fontSize: "48px" }}>📱</div>
+            ? <img src={product.photo_url} alt={product.model}
+                style={{ height: "100%", width: "100%", objectFit: "contain", position: "relative", zIndex: 1 }} />
+            : <div style={{ fontSize: "52px" }}>📱</div>
           }
         </div>
 
         {/* Info */}
-        <div style={{ padding: "24px" }}>
-          <p style={{ fontSize: "20px", fontWeight: 700, color: T.text, letterSpacing: "-0.03em", marginBottom: "4px" }}>{product.model}</p>
-          <p style={{ fontSize: "14px", color: T.textSec, marginBottom: "16px" }}>
+        <div style={{ padding: "20px 24px 24px" }}>
+          {/* Model + specs */}
+          <p style={{
+            fontSize: "21px", fontWeight: 700, color: "#fff",
+            letterSpacing: "-0.04em", lineHeight: 1.1, marginBottom: "6px",
+            fontFamily: T.heading,
+          }}>
+            {product.model}
+          </p>
+          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", marginBottom: "18px" }}>
             {[product.storage, product.color].filter(Boolean).join(" · ")}
             {product.battery_health ? ` · Batería ${product.battery_health}%` : ""}
           </p>
 
-          <div style={{ display: "flex", alignItems: "flex-end", gap: "12px", marginBottom: "20px" }}>
+          {/* Price row */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
             <div>
-              <p style={{ fontSize: "13px", color: T.textMuted, textDecoration: "line-through", lineHeight: 1 }}>USD {originalPrice.toLocaleString("es-AR")}</p>
-              <p style={{ fontSize: "28px", fontWeight: 800, color: "#ef4444", letterSpacing: "-0.04em", lineHeight: 1.1 }}>
+              <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", textDecoration: "line-through", lineHeight: 1, marginBottom: "3px" }}>
+                USD {originalPrice.toLocaleString("es-AR")}
+              </p>
+              <p style={{ fontSize: "32px", fontWeight: 800, color: ACCENT, letterSpacing: "-0.04em", lineHeight: 1, fontFamily: T.heading }}>
                 USD {price.toLocaleString("es-AR")}
               </p>
-              {ars && <p style={{ fontSize: "13px", color: T.textMuted, marginTop: "3px" }}>ARS {ars}</p>}
+              {ars && (
+                <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>
+                  ARS {ars}
+                </p>
+              )}
             </div>
             <div style={{
-              background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)",
-              borderRadius: "980px", padding: "4px 10px",
-              fontSize: "12px", fontWeight: 700, color: "#ef4444",
+              background: "rgba(0,200,150,0.12)", border: "1px solid rgba(0,200,150,0.25)",
+              borderRadius: "12px", padding: "8px 14px", textAlign: "center",
             }}>
-              -{discount}%
+              <p style={{ fontSize: "18px", fontWeight: 800, color: ACCENT, lineHeight: 1 }}>-{discount}%</p>
+              <p style={{ fontSize: "10px", color: "rgba(0,200,150,0.6)", marginTop: "2px", letterSpacing: "0.05em" }}>DESC.</p>
             </div>
           </div>
 
+          {/* CTAs */}
           <div style={{ display: "flex", gap: "10px" }}>
-            <Link
-              to={`/producto/${product.id}`}
-              onClick={onClose}
-              style={{
-                flex: 1, textAlign: "center",
-                background: T.text, color: "#fff",
-                padding: "13px", borderRadius: "14px",
-                fontSize: "14px", fontWeight: 600, textDecoration: "none",
-              }}
-            >
-              Ver equipo
-            </Link>
             <a
               href={waLink(`Hola, me interesa la oferta del día: ${product.model} ${product.storage || ""} a USD ${price}`)}
               target="_blank" rel="noreferrer"
               onClick={onClose}
               style={{
                 flex: 1, textAlign: "center",
-                background: "#25d366", color: "#fff",
-                padding: "13px", borderRadius: "14px",
+                background: "linear-gradient(135deg, #25d366, #1db954)",
+                color: "#fff", padding: "14px", borderRadius: "14px",
                 fontSize: "14px", fontWeight: 600, textDecoration: "none",
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: "7px",
+                boxShadow: "0 4px 20px rgba(37,211,102,0.25)",
               }}
             >
-              <WhatsAppIcon size={15} /> Consultar
+              <WhatsAppIcon size={15} /> Consultar ahora
             </a>
+            <Link
+              to={`/producto/${product.id}`}
+              onClick={onClose}
+              style={{
+                flex: "0 0 auto",
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "rgba(255,255,255,0.75)",
+                padding: "14px 18px", borderRadius: "14px",
+                fontSize: "14px", fontWeight: 500, textDecoration: "none",
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
+            >
+              Ver
+            </Link>
           </div>
         </div>
       </motion.div>
