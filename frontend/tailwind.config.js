@@ -4,6 +4,7 @@ export default {
     "./index.html",
     "./src/**/*.{js,jsx}",
   ],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -20,12 +21,12 @@ export default {
           900: "#112820",
         },
         base: {
-          bg: "#f5f5f7",
-          card: "#ffffff",
-          border: "#d2d2d7",
-          text: "#1d1d1f",
-          muted: "#6e6e73",
-          subtle: "#e8e8ed",
+          bg:     "var(--color-bg)",
+          card:   "var(--color-card)",
+          border: "var(--color-border)",
+          text:   "var(--color-text)",
+          muted:  "var(--color-muted)",
+          subtle: "var(--color-subtle)",
         },
       },
       fontFamily: {

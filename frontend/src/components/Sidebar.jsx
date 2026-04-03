@@ -1,10 +1,11 @@
 import {
   LayoutDashboard, Package, PlusSquare, BadgeDollarSign,
-  ReceiptText, Landmark, ScanLine, X, Menu, LogOut,
+  ReceiptText, Landmark, ScanLine, X, Menu, LogOut, Sun, Moon,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import logo from "../assets/logo.png";
 import { Users } from "lucide-react";
 
@@ -25,6 +26,7 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { dark, toggleTheme } = useTheme();
 
   useEffect(() => {
     setMobileOpen(false);
@@ -57,6 +59,13 @@ export default function Sidebar() {
           <p className="text-xs text-base-muted capitalize">{user?.role}</p>
         </div>
         <button
+          onClick={toggleTheme}
+          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-base-muted hover:bg-base-subtle hover:text-base-text w-full transition-all"
+        >
+          {dark ? <Sun size={17} /> : <Moon size={17} />}
+          <span>{dark ? "Modo claro" : "Modo oscuro"}</span>
+        </button>
+        <button
           onClick={logout}
           className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-base-muted hover:bg-red-50 hover:text-red-500 w-full transition-all"
         >
@@ -83,16 +92,19 @@ export default function Sidebar() {
 
       {/* ── MOBILE top bar ── */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-base-card/90 backdrop-blur-xl border-b border-base-border px-4 py-3 flex items-center justify-between">
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-xl text-base-muted hover:bg-base-subtle transition"
+          aria-label="Cambiar tema"
+        >
+          {dark ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
         <div className="flex items-center gap-2">
           <img src={logo} alt="Xylo" className="w-6 h-6 rounded-lg" />
           <h1 className="text-sm font-semibold text-base-text">Xylo</h1>
         </div>
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="p-2 rounded-xl text-base-muted hover:bg-base-subtle transition"
-        >
-          <Menu size={20} />
-        </button>
+        {/* spacer para mantener logo centrado */}
+        <div className="w-9" />
       </div>
 
       {/* ── MOBILE drawer ── */}
