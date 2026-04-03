@@ -20,7 +20,12 @@ const links = [
   { to: "/users", label: "Usuarios", icon: Users },
 ];
 
-const bottomLinks = links.slice(0, 5);
+const bottomLinks = [
+  { to: "/", label: "Inicio", icon: LayoutDashboard },
+  { to: "/scanner", label: "Escanear", icon: ScanLine },
+  { to: "/products", label: "Stock", icon: Package },
+  { to: "/sales", label: "Ventas", icon: ReceiptText },
+];
 
 export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -130,28 +135,47 @@ export default function Sidebar() {
       )}
 
       {/* ── MOBILE bottom navbar ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-base-card/90 backdrop-blur-xl border-t border-base-border flex items-center justify-around px-2 py-2">
-        {bottomLinks.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              `flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition text-xs ${
-                isActive ? "text-xylo-500 font-medium" : "text-base-muted hover:text-base-text"
-              }`
-            }
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-base-card/95 backdrop-blur-2xl border-t border-base-border"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <div className="flex items-center justify-around px-3 pt-2 pb-2">
+          {bottomLinks.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                `flex flex-col items-center gap-0.5 min-w-[56px] py-1 transition-all ${
+                  isActive ? "text-xylo-500" : "text-base-muted"
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <span className={`flex items-center justify-center w-10 h-7 rounded-full transition-all duration-200 ${
+                    isActive ? "bg-xylo-500/12" : ""
+                  }`}>
+                    <Icon size={isActive ? 21 : 20} strokeWidth={isActive ? 2.2 : 1.8} />
+                  </span>
+                  <span className={`text-[10px] leading-none font-medium transition-all duration-200 ${
+                    isActive ? "opacity-100" : "opacity-0 h-0 overflow-hidden"
+                  }`}>
+                    {label}
+                  </span>
+                </>
+              )}
+            </NavLink>
+          ))}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex flex-col items-center gap-0.5 min-w-[56px] py-1 text-base-muted transition-all"
           >
-            <Icon size={20} />
-            <span>{label}</span>
-          </NavLink>
-        ))}
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-base-muted hover:text-base-text transition text-xs"
-        >
-          <Menu size={20} />
-          <span>Más</span>
-        </button>
+            <span className="flex items-center justify-center w-10 h-7 rounded-full">
+              <Menu size={20} strokeWidth={1.8} />
+            </span>
+            <span className="text-[10px] leading-none font-medium opacity-0 h-0 overflow-hidden">Más</span>
+          </button>
+        </div>
       </nav>
     </>
   );
