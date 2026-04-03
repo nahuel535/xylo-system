@@ -16,11 +16,12 @@ export default function SellProductPage() {
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [exchange, setExchange] = useState(null);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
   const [form, setForm] = useState({
-    seller_id: 1,
+    seller_id: "",
     sale_price_usd: "",
     client_name: "",
     notes: "",
@@ -41,25 +42,31 @@ export default function SellProductPage() {
   });
 
   useEffect(() => {
-    async function loadProduct() {
+    async function loadData() {
       try {
-        const [productRes, exchangeRes] = await Promise.all([
+        const [productRes, exchangeRes, usersRes] = await Promise.all([
           api.get(`/products/${id}`),
           api.get("/exchange-rates/active"),
+          api.get("/users/"),
         ]);
         const productData = productRes.data;
         setProduct(productData);
         setExchange(exchangeRes.data);
+        setUsers(usersRes.data);
         const suggestedPrice = productData.suggested_sale_price_usd || "";
-        setForm((prev) => ({ ...prev, sale_price_usd: suggestedPrice }));
+        setForm((prev) => ({
+          ...prev,
+          sale_price_usd: suggestedPrice,
+          seller_id: usersRes.data.length > 0 ? usersRes.data[0].id : "",
+        }));
         setPay1((prev) => ({ ...prev, amount_usd: suggestedPrice }));
       } catch (error) {
-        console.error("Error cargando producto:", error);
+        console.error("Error cargando datos:", error);
       } finally {
         setLoading(false);
       }
     }
-    loadProduct();
+    loadData();
   }, [id]);
 
   function handleChange(event) {
@@ -155,6 +162,21 @@ export default function SellProductPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-base-card border border-base-border rounded-2xl p-6 space-y-5 shadow-card">
+
+        {/* Vendedor */}
+        <div>
+          <p className="text-sm text-base-muted mb-2">Vendedor</p>
+          <select
+            name="seller_id"
+            value={form.seller_id}
+            onChange={handleChange}
+            className={selectClass}
+          >
+            {users.map((u) => (
+              <option key={u.id} value={u.id}>{u.name}</option>
+            ))}
+          </select>
+        </div>
 
         {/* Precio de venta + cliente */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
