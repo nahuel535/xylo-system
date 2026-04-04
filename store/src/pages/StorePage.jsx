@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { motion, useInView, AnimatePresence, useScroll, useSpring, useMotionValue, useTransform } from "framer-motion";
 import { Search, X, ChevronRight, ArrowRight, LayoutGrid, List } from "lucide-react";
 import api from "../services/api";
 import { XyloLogo, WhatsAppIcon } from "../components/Icons";
@@ -114,31 +114,45 @@ function Hero() {
         <XyloLogo size={120} />
       </motion.div>
 
-      {/* Headline */}
-      <motion.h1
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 0.2 }}
-        style={{
-          fontFamily: T.heading,
-          fontSize: "clamp(26px, 3.5vw, 44px)",
-          fontWeight: 700,
-          letterSpacing: "-0.03em",
-          lineHeight: 1,
-          color: T.text,
-          marginBottom: "28px",
-          whiteSpace: "nowrap",
-        }}
-      >
-        iPhones{" "}
-        <em style={{
-          fontStyle: "italic",
-          background: `linear-gradient(135deg, ${ACCENT} 0%, #00e0aa 60%, ${ACCENT} 100%)`,
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-        }}>
+      {/* Headline — stagger por palabra */}
+      <h1 style={{
+        fontFamily: T.heading,
+        fontSize: "clamp(26px, 3.5vw, 44px)",
+        fontWeight: 700,
+        letterSpacing: "-0.03em",
+        lineHeight: 1,
+        color: T.text,
+        marginBottom: "28px",
+        whiteSpace: "nowrap",
+        display: "flex", alignItems: "baseline", gap: "0.28em",
+        overflow: "hidden",
+      }}>
+        {["iPhones"].map((word, i) => (
+          <motion.span
+            key={i}
+            initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{ duration: 0.75, delay: 0.25 + i * 0.12, ease: [0.22, 1, 0.36, 1] }}
+            style={{ display: "inline-block" }}
+          >
+            {word}
+          </motion.span>
+        ))}
+        <motion.em
+          initial={{ opacity: 0, y: 40, filter: "blur(10px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ duration: 0.75, delay: 0.37, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            display: "inline-block", fontStyle: "italic",
+            background: `linear-gradient(100deg, ${ACCENT} 0%, #00e6b0 40%, #00c8c8 60%, ${ACCENT} 100%)`,
+            backgroundSize: "200% auto",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
+            animation: "shimmer-text 4s linear infinite",
+          }}
+        >
           certificados.
-        </em>
-      </motion.h1>
+        </motion.em>
+      </h1>
 
       {/* Subtitle */}
       <motion.p
@@ -555,8 +569,31 @@ const cardVariants = { hidden: { opacity: 0, y: 32 }, visible: { opacity: 1, y: 
 const lineVariants = { hidden: { scaleX: 0 }, visible: { scaleX: 1, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: 0.18 } } };
 const iconVariants = { hidden: { opacity: 0, scale: 0.6 }, visible: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 260, damping: 18, delay: 0.14 } } };
 const textVariants = { hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut", delay: 0.22 } } };
-const stockGridVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } } };
-const stockCardVariants = { hidden: { opacity: 0, y: 28 }, visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } } };
+const stockGridVariants = { hidden: {}, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.0 } } };
+const stockCardVariants = {
+  hidden: { opacity: 0, y: 36, filter: "blur(4px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Scroll progress bar
+// ─────────────────────────────────────────────────────────────────────────────
+function ScrollProgressBar() {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 180, damping: 36, restDelta: 0.001 });
+  return (
+    <motion.div
+      style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 9999,
+        height: "2px",
+        background: `linear-gradient(90deg, ${ACCENT} 0%, #00e6b0 100%)`,
+        scaleX, transformOrigin: "0%",
+        pointerEvents: "none",
+        boxShadow: `0 0 8px ${ACCENT}80`,
+      }}
+    />
+  );
+}
 
 function FeatureCard({ feature }) {
   const [hovered, setHovered] = useState(false);
@@ -1670,17 +1707,44 @@ function ProductCard({ product, exchange }) {
   const batteryColor = !product.battery_health ? T.textMuted : product.battery_health >= 85 ? "#16a34a" : product.battery_health >= 70 ? "#d97706" : "#dc2626";
   const isNewProduct = product.created_at ? isNew(product.created_at) : false;
 
+  // 3D tilt — solo desktop (pointer: fine = mouse)
+  const isDesktop = typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const rotateX = useTransform(my, [-60, 60], [5, -5]);
+  const rotateY = useTransform(mx, [-60, 60], [-5, 5]);
+
+  function onMouseMove(e) {
+    if (!isDesktop) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    mx.set(e.clientX - (rect.left + rect.width / 2));
+    my.set(e.clientY - (rect.top + rect.height / 2));
+  }
+  function onMouseLeave() {
+    mx.set(0);
+    my.set(0);
+  }
+
   return (
     <Link to={`/producto/${product.id}`} style={{ textDecoration: "none", color: "inherit", height: "100%", display: "block" }}>
       <motion.div
-        whileHover={{ y: -5, boxShadow: "0 16px 48px rgba(0,0,0,0.10)", borderColor: "rgba(0,0,0,0.14)" }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        whileHover={isDesktop
+          ? { y: -5, borderColor: "rgba(0,0,0,0.14)", boxShadow: "0 20px 56px rgba(0,0,0,0.12)" }
+          : { scale: 0.985 }
+        }
+        whileTap={{ scale: 0.97 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
         style={{
           display: "flex", flexDirection: "column",
           background: T.card, border: `1px solid ${T.border}`,
           borderRadius: "20px", overflow: "hidden",
           height: "100%", cursor: "pointer",
           boxShadow: "0 1px 4px rgba(0,0,0,0.05)", fontFamily: T.body,
+          rotateX: isDesktop ? rotateX : 0,
+          rotateY: isDesktop ? rotateY : 0,
+          transformPerspective: 900,
         }}
       >
         {/* Image */}
@@ -2480,6 +2544,7 @@ export default function StorePage() {
           />
         )}
       </AnimatePresence>
+      <ScrollProgressBar />
       <Navbar scrolled={scrolled} />
       <Hero />
       <HowToBuy />
