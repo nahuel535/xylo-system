@@ -576,6 +576,132 @@ const stockCardVariants = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  Marquee trust bar
+// ─────────────────────────────────────────────────────────────────────────────
+const MARQUEE_ITEMS = [
+  "✦ Revisados técnicamente",
+  "✦ Garantía incluida",
+  "✦ Precio justo y transparente",
+  "✦ Atención directa por WhatsApp",
+  "✦ Sin costos ocultos",
+  "✦ Entrega coordinada",
+  "✦ Batería verificada",
+  "✦ Stock real y actualizado",
+];
+
+function Marquee() {
+  const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS]; // duplicar para loop continuo
+  return (
+    <div style={{
+      overflow: "hidden", borderTop: `1px solid ${T.border}`, borderBottom: `1px solid ${T.border}`,
+      background: T.surface, padding: "14px 0", userSelect: "none",
+    }}>
+      <div style={{
+        display: "flex", gap: "48px", width: "max-content",
+        animation: "marquee-scroll 28s linear infinite",
+      }}>
+        {items.map((item, i) => (
+          <span key={i} style={{
+            fontSize: "12px", fontWeight: 600, color: T.textSec,
+            letterSpacing: "0.06em", whiteSpace: "nowrap", fontFamily: T.body,
+          }}>
+            {item}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Floating WhatsApp button
+// ─────────────────────────────────────────────────────────────────────────────
+function FloatingWhatsApp() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 320);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.a
+          href={waLink("Hola, quiero consultar sobre un iPhone")}
+          target="_blank" rel="noreferrer"
+          initial={{ opacity: 0, scale: 0.6, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.6, y: 20 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.94 }}
+          style={{
+            position: "fixed", bottom: "28px", right: "20px", zIndex: 800,
+            width: "56px", height: "56px", borderRadius: "50%",
+            background: "linear-gradient(135deg, #25d366, #1db954)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 24px rgba(37,211,102,0.45), 0 2px 8px rgba(0,0,0,0.15)",
+            textDecoration: "none",
+          }}
+          aria-label="Consultar por WhatsApp"
+        >
+          {/* Pulso */}
+          <span style={{
+            position: "absolute", inset: 0, borderRadius: "50%",
+            background: "rgba(37,211,102,0.4)",
+            animation: "wa-pulse 2.2s ease-out infinite",
+            pointerEvents: "none",
+          }} />
+          <WhatsAppIcon size={26} color="#fff" />
+        </motion.a>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  Back to top button
+// ─────────────────────────────────────────────────────────────────────────────
+function BackToTop() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 600);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          initial={{ opacity: 0, scale: 0.6, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.6, y: 20 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          whileHover={{ scale: 1.08, background: T.text }}
+          whileTap={{ scale: 0.94 }}
+          style={{
+            position: "fixed", bottom: "96px", right: "20px", zIndex: 800,
+            width: "44px", height: "44px", borderRadius: "50%",
+            background: "rgba(10,10,10,0.75)",
+            backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", boxShadow: "0 4px 16px rgba(0,0,0,0.18)",
+          }}
+          aria-label="Volver arriba"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="18 15 12 9 6 15" />
+          </svg>
+        </motion.button>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  Scroll progress bar
 // ─────────────────────────────────────────────────────────────────────────────
 function ScrollProgressBar() {
@@ -1750,7 +1876,13 @@ function ProductCard({ product, exchange }) {
         {/* Image */}
         <div style={{ width: "100%", aspectRatio: product.is_offer ? "3/4" : "4/3", background: T.surface, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderBottom: `1px solid ${T.border}`, position: "relative" }}>
           {product.photo_url ? (
-            <img src={product.photo_url} alt={product.model} style={{ width: "100%", height: "100%", objectFit: product.is_offer ? "contain" : "cover" }} loading="lazy" />
+            <motion.img
+              src={product.photo_url} alt={product.model}
+              loading="lazy"
+              style={{ width: "100%", height: "100%", objectFit: product.is_offer ? "contain" : "cover" }}
+              whileHover={{ scale: 1.07 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            />
           ) : (
             <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "10px", background: "linear-gradient(145deg, #f5f5f3 0%, #ebebea 100%)" }}>
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
@@ -2211,74 +2343,6 @@ function WhatsAppButton({ children, size = "md", message = "" }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Floating WhatsApp
-// ─────────────────────────────────────────────────────────────────────────────
-function FloatingWhatsApp() {
-  const [expanded, setExpanded] = useState(false);
-  return (
-    <motion.div
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ delay: 1.5, duration: 0.4, type: "spring", stiffness: 260, damping: 20 }}
-      style={{ position: "fixed", bottom: "28px", right: "28px", zIndex: 500, fontFamily: T.body }}
-    >
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            style={{
-              position: "absolute", bottom: "60px", right: 0,
-              background: "#fff", border: `1px solid ${T.border}`,
-              borderRadius: "16px", padding: "16px 20px",
-              boxShadow: "0 8px 40px rgba(0,0,0,0.14)",
-              width: "220px",
-            }}
-          >
-            <p style={{ fontSize: "13px", fontWeight: 600, color: T.text, marginBottom: "4px" }}>¿Necesitás ayuda?</p>
-            <p style={{ fontSize: "12px", color: T.textSec, marginBottom: "14px", lineHeight: 1.5 }}>Escribinos y te respondemos al instante.</p>
-            <a
-              href={waLink("Hola, quiero consultar sobre un equipo")}
-              target="_blank" rel="noreferrer"
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                background: "#25d366", color: "#fff",
-                padding: "10px 16px", borderRadius: "10px",
-                fontSize: "13px", fontWeight: 600, textDecoration: "none",
-              }}
-            >
-              <WhatsAppIcon size={14} />
-              Abrir WhatsApp
-            </a>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <motion.button
-        onClick={() => setExpanded((v) => !v)}
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.94 }}
-        style={{
-          width: "52px", height: "52px",
-          background: "#25d366", border: "none",
-          borderRadius: "50%", cursor: "pointer",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          boxShadow: "0 4px 20px rgba(37,211,102,0.40)",
-          color: "#fff",
-        }}
-      >
-        {expanded
-          ? <X size={20} strokeWidth={2.5} />
-          : <WhatsAppIcon size={24} />
-        }
-      </motion.button>
-    </motion.div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 //  Footer
 // ─────────────────────────────────────────────────────────────────────────────
 function Footer() {
@@ -2545,8 +2609,11 @@ export default function StorePage() {
         )}
       </AnimatePresence>
       <ScrollProgressBar />
+      <FloatingWhatsApp />
+      <BackToTop />
       <Navbar scrolled={scrolled} />
       <Hero />
+      <Marquee />
       <HowToBuy />
 
       {/* ── Oportunidades ─────────────────────────────────────────────── */}
