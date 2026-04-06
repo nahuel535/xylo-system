@@ -246,13 +246,7 @@ export default function ProductsPage() {
                   <p className="text-xs text-base-muted">{product.storage} · {product.color}</p>
                 </div>
                 {product.battery_health && (
-                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                    product.battery_health >= 85 ? "bg-green-50 text-green-600" :
-                    product.battery_health >= 70 ? "bg-yellow-50 text-yellow-600" :
-                    "bg-red-50 text-red-600"
-                  }`}>
-                    🔋 {product.battery_health}%
-                  </span>
+                  <BatteryRing value={product.battery_health} />
                 )}
               </div>
               <p className="text-xs text-base-muted font-mono mb-3">{product.imei}</p>
@@ -274,4 +268,48 @@ export default function ProductsPage() {
 
 function toArs(usd, rate) {
   return (Number(usd) * Number(rate)).toLocaleString("es-AR");
+}
+
+function BatteryRing({ value }) {
+  const size = 48;
+  const stroke = 3.5;
+  const r = (size - stroke) / 2;
+  const cx = size / 2;
+  const cy = size / 2;
+  const startAngle = 135;
+  const totalAngle = 270;
+  const angle = (value / 100) * totalAngle;
+
+  const color = value >= 85 ? "#16a34a" : value >= 70 ? "#d97706" : "#dc2626";
+
+  function polar(deg) {
+    const rad = ((deg - 90) * Math.PI) / 180;
+    return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+  }
+  function arc(startDeg, endDeg) {
+    const s = polar(startDeg);
+    const e = polar(endDeg);
+    const large = endDeg - startDeg > 180 ? 1 : 0;
+    return `M ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y}`;
+  }
+
+  return (
+    <svg width={size} height={size} style={{ flexShrink: 0, overflow: "visible" }}>
+      <path
+        d={arc(startAngle, startAngle + totalAngle)}
+        fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round"
+        className="text-base-border"
+      />
+      {value > 0 && (
+        <path
+          d={arc(startAngle, startAngle + angle)}
+          fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
+        />
+      )}
+      <text x={cx} y={cy + 1} textAnchor="middle" dominantBaseline="middle"
+        fill={color} style={{ fontSize: "10px", fontWeight: 700, fontFamily: "inherit" }}>
+        {value}%
+      </text>
+    </svg>
+  );
 }
