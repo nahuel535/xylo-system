@@ -241,6 +241,12 @@ export default function StoreProductPage() {
         ]);
         setProduct(prodRes.data);
         setExchange(exRes.data);
+        // Guardar en vistos recientemente
+        try {
+          const prev = JSON.parse(localStorage.getItem("xylo_recent") || "[]");
+          const next = [String(prodRes.data.id), ...prev.filter((x) => x !== String(prodRes.data.id))].slice(0, 6);
+          localStorage.setItem("xylo_recent", JSON.stringify(next));
+        } catch {}
       } finally {
         setLoading(false);
       }

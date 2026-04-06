@@ -2535,6 +2535,107 @@ function OfferPopup({ product, exchange, onClose }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  Recently Viewed carousel
+// ─────────────────────────────────────────────────────────────────────────────
+function RecentlyViewed({ products, exchange }) {
+  const items = useMemo(() => {
+    try {
+      const ids = JSON.parse(localStorage.getItem("xylo_recent") || "[]");
+      const map = Object.fromEntries(products.map((p) => [String(p.id), p]));
+      return ids.map((id) => map[id]).filter(Boolean);
+    } catch { return []; }
+  }, [products]);
+
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-40px" });
+
+  if (items.length === 0) return null;
+
+  return (
+    <section ref={ref} style={{
+      maxWidth: "1280px", margin: "0 auto",
+      padding: "0 clamp(20px, 6vw, 80px) 80px",
+      fontFamily: T.body,
+    }}>
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={isInView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        style={{ marginBottom: "24px" }}
+      >
+        <p style={{ fontSize: "11.5px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: T.textMuted, marginBottom: "8px" }}>
+          Vistos recientemente
+        </p>
+      </motion.div>
+
+      <div className="xylo-recent" style={{ display: "flex", gap: "14px", overflowX: "auto", paddingBottom: "8px", scrollbarWidth: "none", msOverflowStyle: "none" }}>
+        <style>{`.xylo-recent::-webkit-scrollbar { display: none; }`}</style>
+        {items.map((product, i) => {
+          const ars = exchange
+            ? (Number(product.suggested_sale_price_usd) * Number(exchange.sell_rate_ars)).toLocaleString("es-AR", { maximumFractionDigits: 0 })
+            : null;
+          return (
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, x: 20 }}
+              animate={isInView ? { opacity: 1, x: 0 } : {}}
+              transition={{ duration: 0.45, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
+              style={{ flexShrink: 0 }}
+            >
+              <Link to={`/producto/${product.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+                <motion.div
+                  whileHover={{ y: -4, boxShadow: "0 12px 32px rgba(0,0,0,0.10)" }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ duration: 0.2 }}
+                  style={{
+                    width: "160px",
+                    background: T.card, border: `1px solid ${T.border}`,
+                    borderRadius: "16px", overflow: "hidden",
+                    cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <div style={{ width: "100%", aspectRatio: "1/1", background: T.surface, overflow: "hidden", borderBottom: `1px solid ${T.border}` }}>
+                    {product.photo_url ? (
+                      <motion.img
+                        src={product.photo_url} alt={product.model}
+                        loading="lazy"
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        whileHover={{ scale: 1.07 }}
+                        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                      />
+                    ) : (
+                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(145deg, #f5f5f3, #ebebea)" }}>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
+                          <rect x="5" y="2" width="14" height="20" rx="2" /><line x1="12" y1="18" x2="12.01" y2="18" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ padding: "12px" }}>
+                    <p style={{ fontSize: "13px", fontWeight: 600, color: T.text, letterSpacing: "-0.015em", marginBottom: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {product.model}
+                    </p>
+                    {product.storage && (
+                      <p style={{ fontSize: "11.5px", color: T.textMuted, marginBottom: "6px" }}>{product.storage}</p>
+                    )}
+                    <p style={{ fontSize: "12px", fontWeight: 700, color: ACCENT }}>
+                      USD {Number(product.suggested_sale_price_usd).toLocaleString("es-AR")}
+                    </p>
+                    {ars && (
+                      <p style={{ fontSize: "10.5px", color: T.textMuted, marginTop: "2px" }}>ARS {ars}</p>
+                    )}
+                  </div>
+                </motion.div>
+              </Link>
+            </motion.div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  StorePage
 // ─────────────────────────────────────────────────────────────────────────────
 export default function StorePage() {
@@ -2615,6 +2716,7 @@ export default function StorePage() {
       <Hero />
       <Marquee />
       <HowToBuy />
+      <RecentlyViewed products={products} exchange={exchange} />
 
       {/* ── Oportunidades ─────────────────────────────────────────────── */}
       <section id="stock" style={{ maxWidth: "1280px", margin: "0 auto", padding: "100px clamp(20px, 6vw, 80px) 120px", fontFamily: T.body }}>
