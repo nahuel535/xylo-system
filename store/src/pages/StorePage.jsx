@@ -1772,10 +1772,9 @@ function ModelsCatalog({ products = [], exchange }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
-  // Orden: 16 → 11 (iPhone 17 se excluye del catálogo principal)
-  const iphoneGens = IPHONE_CATALOG.filter((g) => g.id !== "iphone17").reverse();
-  const featuredGen = iphoneGens[0]; // iPhone 16
-  const regularGens = iphoneGens.slice(1); // 15, 14, 13, 12, 11
+  // Featured: iPhone 17 — grid: 16 → 11
+  const featuredGen = IPHONE_CATALOG.find((g) => g.id === "iphone17");
+  const regularGens = IPHONE_CATALOG.filter((g) => g.id !== "iphone17").reverse(); // 16, 15, 14, 13, 12, 11
 
   // Hasta 2 productos en oferta de la base de datos
   const offerProducts = products.filter((p) => p.is_offer).slice(0, 2);
