@@ -1701,13 +1701,84 @@ function FeaturedGenCard({ gen, i, inView, onClick }) {
   );
 }
 
-function ModelsCatalog() {
+function OfferMiniCard({ product, exchange }) {
+  const ars = exchange
+    ? (Number(product.suggested_sale_price_usd) * Number(exchange.sell_rate_ars)).toLocaleString("es-AR", { maximumFractionDigits: 0 })
+    : null;
+  return (
+    <Link to={`/producto/${product.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
+      <motion.div
+        whileHover={{ y: -3, boxShadow: "0 16px 48px rgba(0,0,0,0.11)" }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.2 }}
+        style={{
+          background: "#fff", border: `1px solid ${T.border}`,
+          borderRadius: "18px", overflow: "hidden",
+          display: "flex", flexDirection: "row",
+          cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
+          position: "relative",
+        }}
+      >
+        {/* Fire badge */}
+        <div style={{
+          position: "absolute", top: "10px", left: "10px", zIndex: 2,
+          background: "linear-gradient(135deg, #f97316, #ef4444)",
+          borderRadius: "980px", padding: "2px 9px",
+          fontSize: "9.5px", fontWeight: 700, color: "#fff", letterSpacing: "0.04em",
+        }}>
+          🔥 Oportunidad
+        </div>
+        {/* Image */}
+        <div style={{ width: "120px", flexShrink: 0, background: T.surface, overflow: "hidden", borderRight: `1px solid ${T.border}` }}>
+          {product.photo_url ? (
+            <motion.img
+              src={product.photo_url} alt={product.model}
+              loading="lazy"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              whileHover={{ scale: 1.06 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            />
+          ) : (
+            <div style={{ width: "100%", height: "100%", minHeight: "110px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
+                <rect x="5" y="2" width="14" height="20" rx="2" /><line x1="12" y1="18" x2="12.01" y2="18" />
+              </svg>
+            </div>
+          )}
+        </div>
+        {/* Info */}
+        <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: "4px" }}>
+          <p style={{ fontSize: "14px", fontWeight: 700, color: T.text, letterSpacing: "-0.02em" }}>{product.model}</p>
+          <p style={{ fontSize: "12px", color: T.textSec }}>{[product.storage, product.color].filter(Boolean).join(" · ")}</p>
+          {product.battery_health && (
+            <p style={{ fontSize: "11px", color: product.battery_health >= 85 ? "#16a34a" : "#d97706" }}>
+              ⚡ Batería {product.battery_health}%
+            </p>
+          )}
+          <div style={{ marginTop: "6px" }}>
+            <p style={{ fontSize: "15px", fontWeight: 800, color: ACCENT, letterSpacing: "-0.02em" }}>
+              USD {Number(product.suggested_sale_price_usd).toLocaleString("es-AR")}
+            </p>
+            {ars && <p style={{ fontSize: "11px", color: T.textMuted }}>ARS {ars}</p>}
+          </div>
+        </div>
+      </motion.div>
+    </Link>
+  );
+}
+
+function ModelsCatalog({ products = [], exchange }) {
   const [activeGen, setActiveGen] = useState(null);
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
-  const regularGens = IPHONE_CATALOG.slice(0, -1);
-  const featuredGen = IPHONE_CATALOG[IPHONE_CATALOG.length - 1];
+  // Orden: 16 → 11 (iPhone 17 se excluye del catálogo principal)
+  const iphoneGens = IPHONE_CATALOG.filter((g) => g.id !== "iphone17").reverse();
+  const featuredGen = iphoneGens[0]; // iPhone 16
+  const regularGens = iphoneGens.slice(1); // 15, 14, 13, 12, 11
+
+  // Hasta 2 productos en oferta de la base de datos
+  const offerProducts = products.filter((p) => p.is_offer).slice(0, 2);
 
   return (
     <section style={{
@@ -1770,11 +1841,37 @@ function ModelsCatalog() {
           ))}
         </div>
 
+        {/* ── Oportunidades del momento (de la base de datos) ── */}
+        {offerProducts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.55, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            style={{ marginTop: "40px" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
+              <p style={{
+                fontSize: "11px", fontWeight: 700, letterSpacing: "0.14em",
+                textTransform: "uppercase", color: "#ef4444",
+              }}>
+                🔥 Oportunidades del momento
+              </p>
+              <div style={{ flex: 1, height: "1px", background: "rgba(239,68,68,0.15)" }} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px" }} className="offer-mini-grid">
+              {offerProducts.map((p) => (
+                <OfferMiniCard key={p.id} product={p} exchange={exchange} />
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         <style>{`
           @media (max-width: 640px) {
             .gen-grid-apple { grid-template-columns: 1fr !important; }
             .featured-gen-card { grid-template-columns: 1fr !important; }
             .featured-gen-card > div:last-child { min-height: 220px; }
+            .offer-mini-grid { grid-template-columns: 1fr !important; }
           }
           .gen-card:hover {
             box-shadow: 0 24px 64px rgba(0,0,0,0.11) !important;
@@ -2636,6 +2733,197 @@ function RecentlyViewed({ products, exchange }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+//  Apple Novedades — Mac & iPad
+// ─────────────────────────────────────────────────────────────────────────────
+const APPLE_NOVEDADES = [
+  {
+    category: "Mac",
+    badge: "Novedad 2025",
+    badgeColor: "#6366f1",
+    name: "MacBook Air M4",
+    tagline: "Más delgado. Más potente. Sin ventilador.",
+    specs: ["Chip M4", "Hasta 32GB RAM", "Hasta 2TB SSD", "Batería 18h"],
+    img: `${CDN}/macbook-air-skyblue-select-202503?hei=480&fmt=png-alpha`,
+  },
+  {
+    category: "Mac",
+    badge: "Novedad 2024",
+    badgeColor: "#6366f1",
+    name: "MacBook Pro M4",
+    tagline: "Profesional. Sin compromiso.",
+    specs: ["Chip M4 / M4 Pro / M4 Max", "Hasta 128GB RAM", "Liquid Retina XDR", "Hasta 24h batería"],
+    img: `${CDN}/macbook-pro-14-m4-spaceblack-select-202411?hei=480&fmt=png-alpha`,
+  },
+  {
+    category: "iPad",
+    badge: "Novedad 2025",
+    badgeColor: "#ff9500",
+    name: "iPad Air M3",
+    tagline: "Potencia para todo lo que hacés.",
+    specs: ["Chip M3", "Pantalla Liquid Retina", "Cámara 12MP", "Wi-Fi 6E + 5G opcional"],
+    img: `${CDN}/ipad-air-blue-select-202503?hei=480&fmt=png-alpha`,
+  },
+  {
+    category: "iPad",
+    badge: "Novedad 2024",
+    badgeColor: "#ff9500",
+    name: "iPad Pro M4",
+    tagline: "La pantalla Tandem OLED más brillante de iPad.",
+    specs: ["Chip M4", "Tandem OLED Ultra Retina XDR", "El iPad más delgado", "Apple Pencil Pro"],
+    img: `${CDN}/ipad-pro-m4-wifi-select-202405?hei=480&fmt=png-alpha`,
+  },
+];
+
+function AppleNovedades() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+
+  return (
+    <section style={{
+      background: "#fff",
+      padding: "96px clamp(20px, 6vw, 80px) 104px",
+      borderTop: `1px solid ${T.border}`,
+      fontFamily: T.body,
+    }}>
+      <div style={{ maxWidth: "1100px", margin: "0 auto" }} ref={ref}>
+
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          style={{ marginBottom: "52px" }}
+        >
+          <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: ACCENT, marginBottom: "12px" }}>
+            Novedades Apple
+          </p>
+          <h2 style={{
+            fontFamily: T.heading,
+            fontSize: "clamp(28px, 4vw, 44px)",
+            fontWeight: 700, letterSpacing: "-0.04em",
+            color: T.text, lineHeight: 1.05, marginBottom: "12px",
+          }}>
+            Mac y iPad — lo último
+          </h2>
+          <p style={{ fontSize: "15px", color: T.textSec, lineHeight: 1.6, maxWidth: "400px" }}>
+            Consultá disponibilidad. Conseguimos los modelos más nuevos de Apple.
+          </p>
+        </motion.div>
+
+        {/* Grid 2×2 */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(2, 1fr)",
+          gap: "16px",
+        }} className="novedades-grid">
+          {APPLE_NOVEDADES.map((item, i) => (
+            <motion.a
+              key={item.name}
+              href={waLink(`Hola! Me interesa consultar sobre la ${item.name}. ¿Tienen disponibilidad?`)}
+              target="_blank" rel="noreferrer"
+              initial={{ opacity: 0, y: 28 }}
+              animate={inView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.55, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={{ y: -5, boxShadow: "0 24px 64px rgba(0,0,0,0.11)", borderColor: "rgba(0,0,0,0.11)" }}
+              whileTap={{ scale: 0.99 }}
+              style={{
+                background: T.card, border: `1px solid ${T.border}`,
+                borderRadius: "22px", overflow: "hidden",
+                display: "flex", flexDirection: "column",
+                cursor: "pointer", textDecoration: "none", color: "inherit",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                transition: "border-color 0.2s",
+              }}
+            >
+              {/* Image zone */}
+              <div style={{
+                background: "linear-gradient(145deg, #f7f7f5, #ebebea)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                padding: "32px 24px 0",
+                minHeight: "200px", overflow: "hidden",
+                position: "relative",
+              }}>
+                {/* Badge */}
+                <div style={{
+                  position: "absolute", top: "14px", left: "14px",
+                  background: item.badgeColor,
+                  borderRadius: "980px", padding: "3px 11px",
+                  fontSize: "10px", fontWeight: 700, color: "#fff", letterSpacing: "0.05em",
+                }}>
+                  ✦ {item.badge}
+                </div>
+                {/* Category pill */}
+                <div style={{
+                  position: "absolute", top: "14px", right: "14px",
+                  background: "rgba(0,0,0,0.06)", borderRadius: "980px",
+                  padding: "3px 10px", fontSize: "10px", fontWeight: 600,
+                  color: T.textMuted, letterSpacing: "0.06em",
+                }}>
+                  {item.category}
+                </div>
+                <motion.img
+                  src={item.img}
+                  alt={item.name}
+                  loading="lazy"
+                  style={{ height: "160px", width: "auto", objectFit: "contain", display: "block" }}
+                  whileHover={{ scale: 1.06, y: -6 }}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                  onError={(e) => { e.currentTarget.style.display = "none"; }}
+                />
+              </div>
+
+              {/* Info */}
+              <div style={{ padding: "22px 24px 24px", flex: 1, display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div>
+                  <h3 style={{
+                    fontFamily: T.heading,
+                    fontSize: "clamp(16px, 1.6vw, 20px)", fontWeight: 700,
+                    letterSpacing: "-0.03em", color: T.text,
+                    margin: 0, lineHeight: 1.15, marginBottom: "5px",
+                  }}>
+                    {item.name}
+                  </h3>
+                  <p style={{ fontSize: "13px", color: T.textSec, lineHeight: 1.5 }}>{item.tagline}</p>
+                </div>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "5px" }}>
+                  {item.specs.map((spec) => (
+                    <span key={spec} style={{
+                      fontSize: "10.5px", fontWeight: 500, color: T.textMuted,
+                      background: "rgba(0,0,0,0.04)", borderRadius: "7px",
+                      padding: "3px 9px",
+                    }}>
+                      {spec}
+                    </span>
+                  ))}
+                </div>
+
+                <div style={{
+                  display: "inline-flex", alignItems: "center", gap: "7px",
+                  background: "#25d366", color: "#fff",
+                  borderRadius: "980px", padding: "9px 18px",
+                  width: "fit-content", fontSize: "13px", fontWeight: 600,
+                  marginTop: "4px",
+                }}>
+                  <WhatsAppIcon size={13} />
+                  Consultar disponibilidad
+                </div>
+              </div>
+            </motion.a>
+          ))}
+        </div>
+
+        <style>{`
+          @media (max-width: 640px) {
+            .novedades-grid { grid-template-columns: 1fr !important; }
+          }
+        `}</style>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 //  StorePage
 // ─────────────────────────────────────────────────────────────────────────────
 export default function StorePage() {
@@ -2864,7 +3152,8 @@ export default function StorePage() {
         }
       `}</style>
 
-      <ModelsCatalog />
+      <ModelsCatalog products={products} exchange={exchange} />
+      <AppleNovedades />
       <FeatureGrid />
       <Testimonials />
       <PaymentMethods />
