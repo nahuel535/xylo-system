@@ -1853,7 +1853,7 @@ function ModelsCatalog({ products = [], exchange }) {
                 fontSize: "11px", fontWeight: 700, letterSpacing: "0.14em",
                 textTransform: "uppercase", color: "#ef4444",
               }}>
-                🔥 Oportunidades del momento
+                🔥 Ofertas
               </p>
               <div style={{ flex: 1, height: "1px", background: "rgba(239,68,68,0.15)" }} />
             </div>
@@ -3019,7 +3019,7 @@ export default function StorePage() {
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
             <div>
               <h2 style={{ fontFamily: T.heading, fontSize: "clamp(34px, 5vw, 52px)", fontWeight: 700, letterSpacing: "-0.04em", color: T.text, lineHeight: 1, marginBottom: "10px" }}>
-                Oportunidades
+                Ofertas
               </h2>
             </div>
 
