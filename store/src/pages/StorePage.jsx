@@ -794,8 +794,8 @@ function FeatureGrid() {
 //  iPhone Catalog Data
 // ─────────────────────────────────────────────────────────────────────────────
 const CDN = "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is";
-const IP = "?hei=556&fmt=png-alpha";
-const IPJ = "?hei=556&fmt=jpeg";
+const IP = "?hei=400&fmt=jpeg&qlt=90";
+const IPJ = "?hei=400&fmt=jpeg&qlt=90";
 
 const IPHONE_CATALOG = [
   {
@@ -1455,6 +1455,8 @@ function GenCard({ gen, i, inView, onClick }) {
             src={gen.familyImg}
             alt={gen.generation}
             className="gen-card-img"
+            loading="lazy"
+            onError={(e) => { e.currentTarget.style.opacity = "0"; }}
             style={{
               position: "absolute",
               bottom: "-2px", left: "50%",
@@ -1489,6 +1491,7 @@ function GenCard({ gen, i, inView, onClick }) {
                     src={m.img}
                     alt={m.name}
                     className="gen-card-img"
+                    onError={(e) => { e.currentTarget.style.opacity = "0"; }}
                     style={{
                       position: "absolute", height: "100%", width: "auto",
                       bottom: 0, left: "50%", transform: "translateX(-50%)",
@@ -1521,6 +1524,8 @@ function GenCard({ gen, i, inView, onClick }) {
                   key={m.name}
                   src={m.img}
                   alt={m.name}
+                  loading="lazy"
+                  onError={(e) => { e.currentTarget.style.opacity = "0"; }}
                   className="gen-card-img gen-card-model-img"
                   style={{
                     width: widths[idx] ?? "27%",
@@ -1685,6 +1690,8 @@ function FeaturedGenCard({ gen, i, inView, onClick }) {
             key={idx}
             src={src}
             alt={`${gen.generation} ${idx + 1}`}
+            loading="lazy"
+            onError={(e) => { e.currentTarget.style.opacity = "0"; }}
             className="featured-gen-img"
             style={{
               height: idx === 1
@@ -1813,6 +1820,31 @@ function ModelsCatalog({ products = [], exchange }) {
           </p>
         </motion.div>
 
+        {/* ── Ofertas del momento (de la base de datos) ── */}
+        {offerProducts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+            style={{ marginBottom: "40px" }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
+              <p style={{
+                fontSize: "11px", fontWeight: 700, letterSpacing: "0.14em",
+                textTransform: "uppercase", color: "#ef4444",
+              }}>
+                🔥 Ofertas
+              </p>
+              <div style={{ flex: 1, height: "1px", background: "rgba(239,68,68,0.15)" }} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px" }} className="offer-mini-grid">
+              {offerProducts.map((p) => (
+                <OfferMiniCard key={p.id} product={p} exchange={exchange} />
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {/* Featured card — newest generation (full width) */}
         <div style={{ marginBottom: "16px" }}>
           <FeaturedGenCard
@@ -1839,31 +1871,6 @@ function ModelsCatalog({ products = [], exchange }) {
             />
           ))}
         </div>
-
-        {/* ── Oportunidades del momento (de la base de datos) ── */}
-        {offerProducts.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.55, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            style={{ marginTop: "40px" }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
-              <p style={{
-                fontSize: "11px", fontWeight: 700, letterSpacing: "0.14em",
-                textTransform: "uppercase", color: "#ef4444",
-              }}>
-                🔥 Ofertas
-              </p>
-              <div style={{ flex: 1, height: "1px", background: "rgba(239,68,68,0.15)" }} />
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px" }} className="offer-mini-grid">
-              {offerProducts.map((p) => (
-                <OfferMiniCard key={p.id} product={p} exchange={exchange} />
-              ))}
-            </div>
-          </motion.div>
-        )}
 
         <style>{`
           @media (max-width: 640px) {
