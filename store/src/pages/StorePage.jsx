@@ -794,8 +794,8 @@ function FeatureGrid() {
 //  iPhone Catalog Data
 // ─────────────────────────────────────────────────────────────────────────────
 const CDN = "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is";
-const IP = "?hei=400&fmt=jpeg&qlt=90";
-const IPJ = "?hei=400&fmt=jpeg&qlt=90";
+const IP = "?hei=400&fmt=png-alpha";
+const IPJ = "?hei=400&fmt=png-alpha";
 
 const IPHONE_CATALOG = [
   {
@@ -2744,39 +2744,21 @@ function RecentlyViewed({ products, exchange }) {
 const APPLE_NOVEDADES = [
   {
     category: "Mac",
-    badge: "Novedad 2025",
+    badge: "Lo más nuevo",
     badgeColor: "#6366f1",
     name: "MacBook Air M4",
     tagline: "Más delgado. Más potente. Sin ventilador.",
     specs: ["Chip M4", "Hasta 32GB RAM", "Hasta 2TB SSD", "Batería 18h"],
-    img: `${CDN}/macbook-air-skyblue-select-202503?hei=480&fmt=png-alpha`,
-  },
-  {
-    category: "Mac",
-    badge: "Novedad 2024",
-    badgeColor: "#6366f1",
-    name: "MacBook Pro M4",
-    tagline: "Profesional. Sin compromiso.",
-    specs: ["Chip M4 / M4 Pro / M4 Max", "Hasta 128GB RAM", "Liquid Retina XDR", "Hasta 24h batería"],
-    img: `${CDN}/macbook-pro-14-m4-spaceblack-select-202411?hei=480&fmt=png-alpha`,
+    img: `${CDN}/macbook-air-skyblue-select-202503?hei=500&fmt=png-alpha`,
   },
   {
     category: "iPad",
-    badge: "Novedad 2025",
+    badge: "Lo más nuevo",
     badgeColor: "#ff9500",
     name: "iPad Air M3",
     tagline: "Potencia para todo lo que hacés.",
     specs: ["Chip M3", "Pantalla Liquid Retina", "Cámara 12MP", "Wi-Fi 6E + 5G opcional"],
-    img: `${CDN}/ipad-air-blue-select-202503?hei=480&fmt=png-alpha`,
-  },
-  {
-    category: "iPad",
-    badge: "Novedad 2024",
-    badgeColor: "#ff9500",
-    name: "iPad Pro M4",
-    tagline: "La pantalla Tandem OLED más brillante de iPad.",
-    specs: ["Chip M4", "Tandem OLED Ultra Retina XDR", "El iPad más delgado", "Apple Pencil Pro"],
-    img: `${CDN}/ipad-pro-m4-wifi-select-202405?hei=480&fmt=png-alpha`,
+    img: `${CDN}/ipad-air-blue-select-202503?hei=500&fmt=png-alpha`,
   },
 ];
 
@@ -2843,15 +2825,15 @@ function AppleNovedades() {
             >
               {/* Image zone */}
               <div style={{
-                background: "linear-gradient(145deg, #f7f7f5, #ebebea)",
+                background: T.card,
                 display: "flex", alignItems: "center", justifyContent: "center",
-                padding: "32px 24px 0",
-                minHeight: "200px", overflow: "hidden",
+                padding: "28px 20px",
+                minHeight: "210px", overflow: "hidden",
                 position: "relative",
               }}>
                 {/* Badge */}
                 <div style={{
-                  position: "absolute", top: "14px", left: "14px",
+                  position: "absolute", top: "12px", left: "12px",
                   background: item.badgeColor,
                   borderRadius: "980px", padding: "3px 11px",
                   fontSize: "10px", fontWeight: 700, color: "#fff", letterSpacing: "0.05em",
@@ -2860,7 +2842,7 @@ function AppleNovedades() {
                 </div>
                 {/* Category pill */}
                 <div style={{
-                  position: "absolute", top: "14px", right: "14px",
+                  position: "absolute", top: "12px", right: "12px",
                   background: "rgba(0,0,0,0.06)", borderRadius: "980px",
                   padding: "3px 10px", fontSize: "10px", fontWeight: 600,
                   color: T.textMuted, letterSpacing: "0.06em",
@@ -2871,7 +2853,7 @@ function AppleNovedades() {
                   src={item.img}
                   alt={item.name}
                   loading="lazy"
-                  style={{ height: "160px", width: "auto", objectFit: "contain", display: "block" }}
+                  style={{ height: "180px", width: "auto", objectFit: "contain", display: "block" }}
                   whileHover={{ scale: 1.06, y: -6 }}
                   transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                   onError={(e) => { e.currentTarget.style.display = "none"; }}
@@ -2918,6 +2900,32 @@ function AppleNovedades() {
             </motion.a>
           ))}
         </div>
+
+        {/* Consultar otros modelos */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          style={{ marginTop: "24px", display: "flex", justifyContent: "center" }}
+        >
+          <a
+            href={waLink("Hola! Me gustaría consultar disponibilidad de modelos de Mac y iPad. ¿Qué modelos tienen disponibles?")}
+            target="_blank" rel="noreferrer"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "8px",
+              background: "transparent",
+              border: `1.5px solid ${T.border}`,
+              borderRadius: "980px", padding: "11px 24px",
+              fontSize: "13px", fontWeight: 600, color: T.textSec,
+              textDecoration: "none", transition: "border-color 0.2s, color 0.2s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#25d366"; e.currentTarget.style.color = "#25d366"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.color = T.textSec; }}
+          >
+            <WhatsAppIcon size={14} />
+            Consultar disponibilidad por otros modelos
+          </a>
+        </motion.div>
 
         <style>{`
           @media (max-width: 640px) {
