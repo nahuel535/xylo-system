@@ -794,8 +794,8 @@ function FeatureGrid() {
 //  iPhone Catalog Data
 // ─────────────────────────────────────────────────────────────────────────────
 const CDN = "https://store.storeimages.cdn-apple.com/4982/as-images.apple.com/is";
-const IP = "?hei=400&fmt=png-alpha";
-const IPJ = "?hei=400&fmt=png-alpha";
+const IP = "?hei=400&fmt=jpeg&qlt=95";
+const IPJ = "?hei=400&fmt=jpeg&qlt=95";
 
 const IPHONE_CATALOG = [
   {
@@ -1419,7 +1419,7 @@ function GenCard({ gen, i, inView, onClick }) {
         position: "relative",
         height: "clamp(210px, 26vw, 310px)",
         overflow: "hidden",
-        background: `radial-gradient(ellipse 100% 90% at 50% 75%, ${gen.accent}1e 0%, #f5f5f3 52%, #eeecea 100%)`,
+        background: "#ffffff",
       }}>
         {/* Year pill */}
         <div style={{
@@ -1679,7 +1679,7 @@ function FeaturedGenCard({ gen, i, inView, onClick }) {
 
       {/* Image side — 3 back views composed */}
       <div style={{
-        background: "linear-gradient(155deg, #f7f7f5 0%, #ebebea 100%)",
+        background: "#ffffff",
         display: "flex", alignItems: "flex-end", justifyContent: "center",
         position: "relative", overflow: "hidden",
         gap: "clamp(-16px, -2vw, -8px)",
@@ -1824,7 +1824,8 @@ function ModelsCatalog({ products = [], exchange }) {
         {offerProducts.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             style={{ marginBottom: "40px" }}
           >
@@ -2744,12 +2745,21 @@ function RecentlyViewed({ products, exchange }) {
 const APPLE_NOVEDADES = [
   {
     category: "Mac",
+    badge: "Novedad 2025",
+    badgeColor: "#6366f1",
+    name: "Mac Neo",
+    tagline: "La nueva Mac de Apple. Diseño reinventado.",
+    specs: ["Chip Apple Silicon", "Pantalla OLED", "Diseño compacto", "Rendimiento extremo"],
+    img: `${CDN}/mac-neo-silver-select-202509?hei=500&fmt=jpeg&qlt=95`,
+  },
+  {
+    category: "Mac",
     badge: "Lo más nuevo",
     badgeColor: "#6366f1",
     name: "MacBook Air M4",
     tagline: "Más delgado. Más potente. Sin ventilador.",
     specs: ["Chip M4", "Hasta 32GB RAM", "Hasta 2TB SSD", "Batería 18h"],
-    img: `${CDN}/macbook-air-skyblue-select-202503?hei=500&fmt=png-alpha`,
+    img: `${CDN}/macbook-air-skyblue-select-202503?hei=500&fmt=jpeg&qlt=95`,
   },
   {
     category: "iPad",
@@ -2758,7 +2768,7 @@ const APPLE_NOVEDADES = [
     name: "iPad Air M3",
     tagline: "Potencia para todo lo que hacés.",
     specs: ["Chip M3", "Pantalla Liquid Retina", "Cámara 12MP", "Wi-Fi 6E + 5G opcional"],
-    img: `${CDN}/ipad-air-blue-select-202503?hei=500&fmt=png-alpha`,
+    img: `${CDN}/ipad-air-blue-select-202503?hei=500&fmt=jpeg&qlt=95`,
   },
 ];
 
@@ -2798,10 +2808,10 @@ function AppleNovedades() {
           </p>
         </motion.div>
 
-        {/* Grid 2×2 */}
+        {/* Grid novedades */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
+          gridTemplateColumns: "repeat(3, 1fr)",
           gap: "16px",
         }} className="novedades-grid">
           {APPLE_NOVEDADES.map((item, i) => (
@@ -2825,7 +2835,7 @@ function AppleNovedades() {
             >
               {/* Image zone */}
               <div style={{
-                background: T.card,
+                background: "#ffffff",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 padding: "28px 20px",
                 minHeight: "210px", overflow: "hidden",
@@ -2928,7 +2938,10 @@ function AppleNovedades() {
         </motion.div>
 
         <style>{`
-          @media (max-width: 640px) {
+          @media (max-width: 900px) {
+            .novedades-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          }
+          @media (max-width: 580px) {
             .novedades-grid { grid-template-columns: 1fr !important; }
           }
         `}</style>

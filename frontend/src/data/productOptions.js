@@ -153,19 +153,19 @@ export const IPHONE_OPTIONS = {
   },
   "iPhone 17": {
     storages: ["128GB", "256GB", "512GB"],
-    colors: ["Black", "White", "Blue", "Pink", "Teal"],
+    colors: ["Black", "White", "Pink", "Teal", "Ultramarine", "Desert", "Red", "Blue"],
   },
   "iPhone 17 Air": {
     storages: ["128GB", "256GB", "512GB"],
-    colors: ["Black", "White", "Blue", "Pink", "Teal"],
+    colors: ["Black", "White", "Pink", "Teal", "Ultramarine", "Desert", "Red", "Blue"],
   },
   "iPhone 17 Pro": {
     storages: ["256GB", "512GB", "1TB"],
-    colors: ["Black Titanium", "White Titanium", "Natural Titanium", "Desert Titanium"],
+    colors: ["Black Titanium", "White Titanium", "Natural Titanium", "Desert Titanium", "Gold Titanium"],
   },
   "iPhone 17 Pro Max": {
     storages: ["256GB", "512GB", "1TB"],
-    colors: ["Black Titanium", "White Titanium", "Natural Titanium", "Desert Titanium"],
+    colors: ["Black Titanium", "White Titanium", "Natural Titanium", "Desert Titanium", "Gold Titanium"],
   },
 };
 
