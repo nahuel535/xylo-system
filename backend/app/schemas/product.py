@@ -27,6 +27,7 @@ class ProductCreate(BaseModel):
     photo_url: Optional[str] = None
     created_by: Optional[int] = None
     is_offer: bool = False
+    warranty_days: Optional[int] = None
 
 class ProductUpdate(BaseModel):
     category: str
@@ -50,6 +51,7 @@ class ProductUpdate(BaseModel):
     photo_url: Optional[str] = None
     created_by: Optional[int] = None
     is_offer: bool = False
+    warranty_days: Optional[int] = None
 
 class ProductResponse(BaseModel):
     id: int
@@ -77,6 +79,7 @@ class ProductResponse(BaseModel):
     updated_at: datetime
     qr_code_url: Optional[str]
     is_offer: bool
+    warranty_days: Optional[int]
 
     class Config:
         from_attributes = True

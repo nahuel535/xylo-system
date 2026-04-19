@@ -59,6 +59,10 @@ export default function EditProductPage() {
           photo_url: product.photo_url || "",
           created_by: product.created_by ? String(product.created_by) : "",
           is_offer: product.is_offer || false,
+          warranty_value: product.warranty_days
+            ? (product.warranty_days % 30 === 0 ? String(product.warranty_days / 30) : String(product.warranty_days))
+            : "",
+          warranty_unit: product.warranty_days && product.warranty_days % 30 === 0 ? "months" : "days",
         });
       } catch (error) {
         console.error("Error cargando producto:", error);
@@ -119,6 +123,11 @@ export default function EditProductPage() {
     setSaving(true);
 
     try {
+      const warrantyDays = form.warranty_value
+        ? form.warranty_unit === "months"
+          ? Number(form.warranty_value) * 30
+          : Number(form.warranty_value)
+        : null;
       await api.put(`/products/${id}`, {
         ...form,
         battery_health: form.battery_health ? Number(form.battery_health) : null,
@@ -126,6 +135,9 @@ export default function EditProductPage() {
         suggested_sale_price_usd: Number(form.suggested_sale_price_usd || 0),
         photo_url: form.photo_url || null,
         created_by: form.created_by ? Number(form.created_by) : null,
+        warranty_days: warrantyDays,
+        warranty_value: undefined,
+        warranty_unit: undefined,
       });
 
       navigate(`/products/${id}`);
@@ -371,6 +383,38 @@ export default function EditProductPage() {
             placeholder="Detalle del equipo, caja, accesorios, estado, etc."
             className="w-full min-h-[130px] bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
           />
+        </div>
+
+        {/* Garantía */}
+        <div>
+          <p className="text-sm text-base-muted mb-2">Garantía <span className="text-xs text-base-muted/60">(opcional)</span></p>
+          <div className="flex gap-2 flex-wrap">
+            <input
+              type="number"
+              min="0"
+              name="warranty_value"
+              value={form.warranty_value || ""}
+              onChange={handleChange}
+              placeholder="Ej: 3"
+              className="w-28 bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
+            />
+            <select
+              name="warranty_unit"
+              value={form.warranty_unit || "months"}
+              onChange={handleChange}
+              className="bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
+            >
+              <option value="months">Meses</option>
+              <option value="days">Días</option>
+            </select>
+            {form.warranty_value && (
+              <span className="flex items-center text-xs text-base-muted px-2">
+                = {form.warranty_unit === "months"
+                  ? `${Number(form.warranty_value) * 30} días`
+                  : `${form.warranty_value} días`}
+              </span>
+            )}
+          </div>
         </div>
 
         <label className="flex items-center gap-3 cursor-pointer select-none">

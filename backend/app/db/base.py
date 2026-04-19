@@ -6,3 +6,4 @@ from app.models.sale import Sale
 from app.models.sale_payment import SalePayment
 from app.models.exchange_rate_model import ExchangeRate
 from app.models.audit_log import AuditLog
+from app.models.debtor import Debtor

@@ -22,6 +22,7 @@ import ScanRedirectPage from "./pages/ScanRedirectPage";
 import StorePage from "./pages/public/StorePage";
 import StoreProductPage from "./pages/public/StoreProductPage";
 import UsersPage from "./pages/UsersPage";
+import DebtorsPage from "./pages/DebtorsPage";
 
 function Layout() {
   return (
@@ -44,6 +45,7 @@ function Layout() {
           <Route path="/products/:id/label" element={<ProtectedRoute><ProductLabelPage /></ProtectedRoute>} />
           <Route path="/scan/:id" element={<ScanRedirectPage />} />
           <Route path="/users" element={<ProtectedRoute requireAdmin><UsersPage /></ProtectedRoute>} />
+          <Route path="/debtors" element={<ProtectedRoute><DebtorsPage /></ProtectedRoute>} />
 
         </Routes>
       </main>

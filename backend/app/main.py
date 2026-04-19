@@ -11,6 +11,7 @@ from app.api.dashboard import router as dashboard_router
 from app.api.exchange_rate import router as exchange_rates_router
 from app.api.auth import router as auth_router
 from app.api.photos import router as photos_router
+from app.api.debtors import router as debtors_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -20,6 +21,10 @@ with engine.connect() as conn:
     conn.execute(text("""
         ALTER TABLE products
         ADD COLUMN IF NOT EXISTS is_offer BOOLEAN NOT NULL DEFAULT FALSE
+    """))
+    conn.execute(text("""
+        ALTER TABLE products
+        ADD COLUMN IF NOT EXISTS warranty_days INTEGER
     """))
     conn.commit()
 
@@ -49,6 +54,7 @@ app.include_router(dashboard_router)
 app.include_router(exchange_rates_router)
 app.include_router(auth_router)
 app.include_router(photos_router)
+app.include_router(debtors_router)
 
 
 @app.get("/")

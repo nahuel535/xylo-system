@@ -16,6 +16,7 @@ const initialState = {
   functional_condition: "", sim_type: "", condition_type: "", purchase_date: "",
   purchase_price_usd: "", suggested_sale_price_usd: "", supplier: "",
   notes: "", status: "in_stock", photo_url: "", created_by: "", is_offer: false,
+  warranty_value: "", warranty_unit: "months",
 };
 
 // Campos que se dictan en el modo guiado
@@ -315,6 +316,11 @@ export default function NewProductPage() {
     setMessage("");
     setSaving(true);
     try {
+      const warrantyDays = form.warranty_value
+        ? form.warranty_unit === "months"
+          ? Number(form.warranty_value) * 30
+          : Number(form.warranty_value)
+        : null;
       await api.post("/products/", {
         ...form,
         battery_health: form.battery_health ? Number(form.battery_health) : null,
@@ -322,6 +328,9 @@ export default function NewProductPage() {
         suggested_sale_price_usd: Number(form.suggested_sale_price_usd || 0),
         photo_url: form.photo_url || null,
         created_by: form.created_by ? Number(form.created_by) : null,
+        warranty_days: warrantyDays,
+        warranty_value: undefined,
+        warranty_unit: undefined,
       });
       navigate("/products");
     } catch (error) {
@@ -662,6 +671,38 @@ export default function NewProductPage() {
               placeholder="Detalle del equipo, caja, accesorios, estado, etc."
               className="w-full min-h-[130px] bg-base-subtle border border-base-border rounded-xl px-4 py-3 pr-12 text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
             />
+          </div>
+        </div>
+
+        {/* Garantía */}
+        <div>
+          <p className="text-sm text-base-muted mb-2">Garantía <span className="text-xs text-base-muted/60">(opcional)</span></p>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              min="0"
+              name="warranty_value"
+              value={form.warranty_value}
+              onChange={handleChange}
+              placeholder="Ej: 3"
+              className="w-28 bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
+            />
+            <select
+              name="warranty_unit"
+              value={form.warranty_unit}
+              onChange={handleChange}
+              className="bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
+            >
+              <option value="months">Meses</option>
+              <option value="days">Días</option>
+            </select>
+            {form.warranty_value && (
+              <span className="flex items-center text-xs text-base-muted px-2">
+                = {form.warranty_unit === "months"
+                  ? `${Number(form.warranty_value) * 30} días`
+                  : `${form.warranty_value} días`}
+              </span>
+            )}
           </div>
         </div>
 
