@@ -1829,14 +1829,22 @@ function ModelsCatalog({ products = [], exchange }) {
             transition={{ duration: 0.55, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
             style={{ marginBottom: "40px" }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
+            <div style={{ textAlign: "center", marginBottom: "28px" }}>
               <p style={{
-                fontSize: "11px", fontWeight: 700, letterSpacing: "0.14em",
-                textTransform: "uppercase", color: "#ef4444",
+                fontSize: "clamp(36px, 5vw, 56px)",
+                fontFamily: T.heading,
+                fontWeight: 800,
+                letterSpacing: "-0.04em",
+                lineHeight: 1,
+                background: "linear-gradient(135deg, #f97316 0%, #ef4444 50%, #dc2626 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                marginBottom: "6px",
               }}>
                 🔥 Ofertas
               </p>
-              <div style={{ flex: 1, height: "1px", background: "rgba(239,68,68,0.15)" }} />
+              <p style={{ fontSize: "14px", color: T.textSec }}>Precios especiales por tiempo limitado</p>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "14px" }} className="offer-mini-grid">
               {offerProducts.map((p) => (
