@@ -1,3 +1,6 @@
+import asyncio
+from datetime import datetime, timezone, timedelta
+
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -55,6 +58,32 @@ app.include_router(exchange_rates_router)
 app.include_router(auth_router)
 app.include_router(photos_router)
 app.include_router(debtors_router)
+
+
+ARG_TZ = timezone(timedelta(hours=-3))
+
+
+async def _blue_sync_loop():
+    await asyncio.sleep(30)  # espera inicial para que la app arranque
+    while True:
+        now = datetime.now(ARG_TZ)
+        if 9 <= now.hour < 21:
+            from app.db.session import SessionLocal
+            from app.services.exchange_sync import fetch_and_sync
+            db = SessionLocal()
+            try:
+                await fetch_and_sync(db)
+                print(f"✓ Dólar blue sincronizado a las {now.strftime('%H:%M')}")
+            except Exception as e:
+                print(f"✗ Error sync dólar: {e}")
+            finally:
+                db.close()
+        await asyncio.sleep(3600)  # cada hora
+
+
+@app.on_event("startup")
+async def start_sync_scheduler():
+    asyncio.create_task(_blue_sync_loop())
 
 
 @app.get("/")

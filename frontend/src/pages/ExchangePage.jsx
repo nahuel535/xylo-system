@@ -12,6 +12,7 @@ export default function ExchangePage() {
   const [active, setActive] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [message, setMessage] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -31,6 +32,20 @@ export default function ExchangePage() {
   useEffect(() => {
     loadRates();
   }, []);
+
+  async function handleSync() {
+    setSyncing(true);
+    setMessage("");
+    try {
+      await api.post("/exchange-rates/sync");
+      await loadRates();
+      setMessage("Cotización sincronizada con dólar blue Córdoba.");
+    } catch (e) {
+      setMessage(e?.response?.data?.detail || "Error al sincronizar.");
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   async function loadRates() {
     try {
@@ -122,12 +137,20 @@ export default function ExchangePage() {
       {/* Cotización activa */}
       {active && (
         <div className="bg-gradient-to-r from-xylo-500/20 to-xylo-600/10 border border-xylo-500/30 rounded-xl p-6 mb-6">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 mb-4 flex-wrap">
             <CheckCircle size={16} className="text-xylo-400" />
             <p className="text-sm font-medium text-xylo-300">Cotización activa — {active.source_name}</p>
-            <span className="ml-auto text-xs bg-xylo-500/20 text-xylo-300 px-2 py-0.5 rounded-full">
+            <span className="text-xs bg-xylo-500/20 text-xylo-300 px-2 py-0.5 rounded-full">
               {active.mode === "manual" ? "Override manual" : "Automático"}
             </span>
+            <button
+              onClick={handleSync}
+              disabled={syncing}
+              className="ml-auto flex items-center gap-1.5 bg-xylo-500/20 hover:bg-xylo-500/30 disabled:opacity-60 text-xylo-300 transition rounded-xl px-3 py-1.5 text-xs font-medium"
+            >
+              <RefreshCw size={12} className={syncing ? "animate-spin" : ""} />
+              {syncing ? "Sincronizando…" : "Sincronizar ahora"}
+            </button>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>

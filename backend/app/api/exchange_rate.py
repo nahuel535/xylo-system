@@ -10,6 +10,7 @@ from app.schemas.exchange_rate import (
     ExchangeRateResponse,
     ActiveExchangeRateResponse,
 )
+from app.services.exchange_sync import fetch_and_sync
 
 router = APIRouter(prefix="/exchange-rates", tags=["Exchange Rates"])
 
@@ -59,6 +60,15 @@ def get_active_exchange_rate(db: Session = Depends(get_db)):
         mode=mode,
         updated_at=rate.updated_at,
     )
+
+
+@router.post("/sync", response_model=ExchangeRateResponse)
+async def sync_blue_rate(db: Session = Depends(get_db)):
+    try:
+        rate = await fetch_and_sync(db)
+        return rate
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Error al sincronizar: {str(e)}")
 
 
 @router.put("/{rate_id}", response_model=ExchangeRateResponse)
