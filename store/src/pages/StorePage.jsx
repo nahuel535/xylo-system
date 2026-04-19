@@ -1741,7 +1741,7 @@ function OfferMiniCard({ product, exchange }) {
             <motion.img
               src={product.photo_url} alt={product.model}
               loading="lazy"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              style={{ width: "100%", height: "100%", objectFit: "contain", padding: "4px" }}
               whileHover={{ scale: 1.06 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             />
@@ -1978,12 +1978,12 @@ function ProductCard({ product, exchange }) {
         }}
       >
         {/* Image */}
-        <div style={{ width: "100%", aspectRatio: product.is_offer ? "3/4" : "4/3", background: T.surface, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderBottom: `1px solid ${T.border}`, position: "relative" }}>
+        <div style={{ width: "100%", aspectRatio: "1/1", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderBottom: `1px solid ${T.border}`, position: "relative" }}>
           {product.photo_url ? (
             <motion.img
               src={product.photo_url} alt={product.model}
               loading="lazy"
-              style={{ width: "100%", height: "100%", objectFit: product.is_offer ? "contain" : "cover" }}
+              style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8px" }}
               whileHover={{ scale: 1.07 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             />
@@ -2149,7 +2149,7 @@ function ProductRow({ product, exchange }) {
 function SkeletonCard() {
   return (
     <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: "20px", overflow: "hidden" }}>
-      <div className="skeleton" style={{ width: "100%", aspectRatio: "4/3" }} />
+      <div className="skeleton" style={{ width: "100%", aspectRatio: "1/1" }} />
       <div style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
         <div className="skeleton" style={{ height: "16px", width: "65%", borderRadius: "8px" }} />
         <div className="skeleton" style={{ height: "13px", width: "45%", borderRadius: "8px" }} />

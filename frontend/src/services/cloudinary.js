@@ -14,5 +14,6 @@ export async function uploadToCloudinary(file) {
 
   if (!res.ok) throw new Error("Error subiendo imagen");
   const data = await res.json();
-  return data.secure_url;
+  // Aplica transformaciones: calidad auto, formato auto (WebP/AVIF), max 1200px
+  return data.secure_url.replace("/upload/", "/upload/f_auto,q_auto,w_1200,h_1200,c_fit/");
 }
