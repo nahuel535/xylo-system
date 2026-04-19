@@ -125,7 +125,7 @@ export default function UsersPage() {
 
             {error && <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-4">{error}</p>}
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <button type="submit" disabled={saving} className="bg-xylo-500 hover:bg-xylo-600 disabled:opacity-60 text-white rounded-xl px-4 py-2.5 text-sm font-medium transition">
                 {saving ? "Creando..." : "Crear usuario"}
               </button>
@@ -137,8 +137,8 @@ export default function UsersPage() {
         </div>
       )}
 
-      {/* Lista de usuarios */}
-      <div className="bg-base-card border border-base-border rounded-2xl overflow-hidden shadow-card">
+      {/* Tabla — desktop */}
+      <div className="hidden md:block bg-base-card border border-base-border rounded-2xl overflow-hidden shadow-card">
         <table className="w-full text-sm">
           <thead className="bg-base-subtle border-b border-base-border">
             <tr>
@@ -169,6 +169,39 @@ export default function UsersPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Cards — mobile */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <p className="text-base-muted text-sm">Cargando usuarios...</p>
+        ) : users.length === 0 ? (
+          <p className="text-base-muted text-sm">No hay usuarios registrados.</p>
+        ) : users.map((user) => (
+          <div key={user.id} className="bg-base-card border border-base-border rounded-2xl p-4 shadow-card">
+            <div className="flex items-center gap-3 mb-3">
+              {/* Avatar con iniciales */}
+              <div className="w-10 h-10 rounded-full bg-xylo-500/10 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-semibold text-xylo-500">
+                  {user.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-base-text text-sm truncate">{user.name}</p>
+                <p className="text-xs text-base-muted truncate">{user.email}</p>
+              </div>
+              <span className={`text-xs font-medium px-2.5 py-1 rounded-full flex-shrink-0 ${user.is_active ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
+                {user.is_active ? "Activo" : "Inactivo"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between pt-3 border-t border-base-border">
+              <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${roleColors[user.role] || "bg-base-subtle text-base-muted"}`}>
+                {user.role === "admin" ? "Admin" : "Vendedor"}
+              </span>
+              <span className="text-xs text-base-muted">{formatDate(user.created_at)}</span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
