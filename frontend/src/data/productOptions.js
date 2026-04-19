@@ -161,11 +161,11 @@ export const IPHONE_OPTIONS = {
   },
   "iPhone 17 Pro": {
     storages: ["256GB", "512GB", "1TB"],
-    colors: ["Black Titanium", "White Titanium", "Natural Titanium", "Desert Titanium", "Gold Titanium"],
+    colors: ["Silver Titanium", "Orange Titanium", "Blue Titanium"],
   },
   "iPhone 17 Pro Max": {
     storages: ["256GB", "512GB", "1TB"],
-    colors: ["Black Titanium", "White Titanium", "Natural Titanium", "Desert Titanium", "Gold Titanium"],
+    colors: ["Silver Titanium", "Orange Titanium", "Blue Titanium"],
   },
 };
 

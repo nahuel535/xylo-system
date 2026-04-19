@@ -2750,33 +2750,35 @@ function RecentlyViewed({ products, exchange }) {
 // ─────────────────────────────────────────────────────────────────────────────
 //  Apple Novedades — Mac & iPad
 // ─────────────────────────────────────────────────────────────────────────────
+const NR = "https://www.apple.com/newsroom/images/2026/03";
+
 const APPLE_NOVEDADES = [
   {
     category: "Mac",
-    badge: "Novedad 2025",
+    badge: "Novedad 2026",
     badgeColor: "#6366f1",
-    name: "Mac Neo",
-    tagline: "La nueva Mac de Apple. Diseño reinventado.",
-    specs: ["Chip Apple Silicon", "Pantalla OLED", "Diseño compacto", "Rendimiento extremo"],
-    img: `${CDN}/mac-neo-silver-select-202509?hei=500&fmt=jpeg&qlt=95`,
+    name: "MacBook Air M5",
+    tagline: "El más potente. Sin ventilador. Increíblemente liviano.",
+    specs: ["Chip M5", "Desde 512GB SSD", "Wi-Fi 7", "Batería todo el día"],
+    img: `${NR}/apple-introduces-the-new-macbook-air-with-m5/article/Apple-MacBook-Air-hero-260303_big.jpg.large.jpg`,
   },
   {
     category: "Mac",
-    badge: "Lo más nuevo",
+    badge: "Potencia extrema",
     badgeColor: "#6366f1",
-    name: "MacBook Air M4",
-    tagline: "Más delgado. Más potente. Sin ventilador.",
-    specs: ["Chip M4", "Hasta 32GB RAM", "Hasta 2TB SSD", "Batería 18h"],
-    img: `${CDN}/macbook-air-skyblue-select-202503?hei=500&fmt=jpeg&qlt=95`,
+    name: "MacBook Air M5 — 15\"",
+    tagline: "Pantalla más grande. Misma eficiencia legendaria.",
+    specs: ["Chip M5", "Pantalla 15.3\"", "Hasta 32GB RAM", "Hasta 4TB SSD"],
+    img: `${NR}/apple-introduces-the-new-macbook-air-with-m5/article/Apple-MacBook-Air-13-inch-and-15-inch-260303_big.jpg.large.jpg`,
   },
   {
     category: "iPad",
-    badge: "Lo más nuevo",
+    badge: "Novedad 2026",
     badgeColor: "#ff9500",
-    name: "iPad Air M3",
-    tagline: "Potencia para todo lo que hacés.",
-    specs: ["Chip M3", "Pantalla Liquid Retina", "Cámara 12MP", "Wi-Fi 6E + 5G opcional"],
-    img: `${CDN}/ipad-air-blue-select-202503?hei=500&fmt=jpeg&qlt=95`,
+    name: "iPad Air M4",
+    tagline: "Potencia M4. Diseño ultra delgado. Para todo.",
+    specs: ["Chip M4", "Pantalla Liquid Retina", "Cámara 12MP", "Wi-Fi 7 + 5G opcional"],
+    img: `${NR}/apple-introduces-the-new-ipad-air-powered-by-m4/article/Apple-iPad-Air-M4-multitasking-260302_big.jpg.large.jpg`,
   },
 ];
 
@@ -2871,8 +2873,8 @@ function AppleNovedades() {
                   src={item.img}
                   alt={item.name}
                   loading="lazy"
-                  style={{ height: "180px", width: "auto", objectFit: "contain", display: "block" }}
-                  whileHover={{ scale: 1.06, y: -6 }}
+                  style={{ width: "100%", height: "190px", objectFit: "cover", objectPosition: "center top", display: "block", borderRadius: "4px" }}
+                  whileHover={{ scale: 1.04 }}
                   transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                   onError={(e) => { e.currentTarget.style.display = "none"; }}
                 />
