@@ -11,7 +11,8 @@ import {
   SIM_TYPE_OPTIONS,
   SUPPLIER_OPTIONS,
   MODEL_OPTIONS,
-  IPHONE_OPTIONS,
+  CONSOLE_MODEL_OPTIONS,
+  ALL_PRODUCT_OPTIONS,
 } from "../data/productOptions";
 
 export default function EditProductPage() {
@@ -76,13 +77,13 @@ export default function EditProductPage() {
   }, [id]);
 
   const availableStorages = useMemo(() => {
-    if (!form?.model || !IPHONE_OPTIONS[form.model]) return [];
-    return IPHONE_OPTIONS[form.model].storages;
+    if (!form?.model || !ALL_PRODUCT_OPTIONS[form.model]) return [];
+    return ALL_PRODUCT_OPTIONS[form.model].storages;
   }, [form?.model]);
 
   const availableColors = useMemo(() => {
-    if (!form?.model || !IPHONE_OPTIONS[form.model]) return [];
-    return IPHONE_OPTIONS[form.model].colors;
+    if (!form?.model || !ALL_PRODUCT_OPTIONS[form.model]) return [];
+    return ALL_PRODUCT_OPTIONS[form.model].colors;
   }, [form?.model]);
 
   async function handlePhotoUpload(e) {
@@ -205,7 +206,7 @@ export default function EditProductPage() {
             name="model"
             value={form.model}
             onChange={handleChange}
-            options={MODEL_OPTIONS}
+            options={form.category === "Consola" ? CONSOLE_MODEL_OPTIONS : MODEL_OPTIONS}
             required
             placeholder="Seleccionar modelo"
           />

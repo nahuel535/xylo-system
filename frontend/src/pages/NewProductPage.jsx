@@ -7,7 +7,7 @@ import { Mic, MicOff, X, CheckCircle, SkipForward, ChevronRight } from "lucide-r
 import {
   CATEGORY_OPTIONS, CONDITION_OPTIONS, COSMETIC_CONDITION_OPTIONS,
   FUNCTIONAL_CONDITION_OPTIONS, SIM_TYPE_OPTIONS, SUPPLIER_OPTIONS,
-  MODEL_OPTIONS, IPHONE_OPTIONS, ACCESSORY_TYPE_OPTIONS, COMBO_ITEMS, COMBO_TEMPLATES,
+  MODEL_OPTIONS, CONSOLE_MODEL_OPTIONS, ALL_PRODUCT_OPTIONS, ACCESSORY_TYPE_OPTIONS, COMBO_ITEMS, COMBO_TEMPLATES,
 } from "../data/productOptions";
 
 const initialState = {
@@ -100,6 +100,7 @@ export default function NewProductPage() {
 
   const isAccessory = form.category === "Accesorio";
   const isCombo = form.category === "Combo";
+  const isConsola = form.category === "Consola";
   const voiceFields = isCombo ? VOICE_FIELDS_COMBO : isAccessory ? VOICE_FIELDS_ACCESSORY : VOICE_FIELDS_IPHONE;
 
   const [comboItems, setComboItems] = useState([]);
@@ -128,13 +129,13 @@ export default function NewProductPage() {
   }, []);
 
   const availableStorages = useMemo(() => {
-    if (!form.model || !IPHONE_OPTIONS[form.model]) return [];
-    return IPHONE_OPTIONS[form.model].storages;
+    if (!form.model || !ALL_PRODUCT_OPTIONS[form.model]) return [];
+    return ALL_PRODUCT_OPTIONS[form.model].storages;
   }, [form.model]);
 
   const availableColors = useMemo(() => {
-    if (!form.model || !IPHONE_OPTIONS[form.model]) return [];
-    return IPHONE_OPTIONS[form.model].colors;
+    if (!form.model || !ALL_PRODUCT_OPTIONS[form.model]) return [];
+    return ALL_PRODUCT_OPTIONS[form.model].colors;
   }, [form.model]);
 
   function speak(text) {
@@ -490,6 +491,8 @@ export default function NewProductPage() {
             <Field label="Nombre del combo" name="model" value={form.model} onChange={handleChange} required placeholder="Ej: Combo Carga Rápida 20W..." />
           ) : isAccessory ? (
             <Field label="Nombre del accesorio" name="model" value={form.model} onChange={handleChange} required placeholder="Ej: AirPods Pro 2, Funda iPhone 16..." />
+          ) : isConsola ? (
+            <SelectField label="Modelo" name="model" value={form.model} onChange={handleChange} options={CONSOLE_MODEL_OPTIONS} required placeholder="Seleccionar consola" />
           ) : (
             <SelectField label="Modelo" name="model" value={form.model} onChange={handleChange} options={MODEL_OPTIONS} required placeholder="Seleccionar modelo" />
           )}
@@ -567,13 +570,13 @@ export default function NewProductPage() {
           )}
 
           {/* Campos exclusivos de iPhone */}
-          {!isAccessory && !isCombo && (
+          {!isAccessory && !isCombo && !isConsola && (
             <Field label="IMEI" name="imei" value={form.imei} onChange={handleChange} required />
           )}
-          {!isAccessory && !isCombo && (
+          {!isAccessory && !isCombo && !isConsola && (
             <Field label="Número de serie" name="serial_number" value={form.serial_number} onChange={handleChange} />
           )}
-          {!isAccessory && !isCombo && (
+          {!isAccessory && !isCombo && !isConsola && (
             <Field label="Batería (%)" name="battery_health" value={form.battery_health} onChange={handleChange} type="number" />
           )}
 
@@ -584,7 +587,7 @@ export default function NewProductPage() {
             <SelectField label="Estado funcional" name="functional_condition" value={form.functional_condition} onChange={handleChange} options={FUNCTIONAL_CONDITION_OPTIONS} placeholder="Seleccionar estado" />
           )}
 
-          {!isAccessory && !isCombo && (
+          {!isAccessory && !isCombo && !isConsola && (
             <SelectField label="Tipo de SIM" name="sim_type" value={form.sim_type} onChange={handleChange} options={SIM_TYPE_OPTIONS} placeholder="Seleccionar tipo" />
           )}
 

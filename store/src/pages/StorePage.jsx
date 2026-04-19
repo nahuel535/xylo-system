@@ -3052,38 +3052,55 @@ export default function StorePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={stockHeaderInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-          style={{ marginBottom: "56px" }}
+          style={{ marginBottom: "56px", textAlign: "center" }}
         >
-          <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "16px" }}>
-            <div>
-              <h2 style={{ fontFamily: T.heading, fontSize: "clamp(34px, 5vw, 52px)", fontWeight: 700, letterSpacing: "-0.04em", color: T.text, lineHeight: 1, marginBottom: "10px" }}>
-                Ofertas
-              </h2>
-            </div>
+          {/* Badge */}
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: "999px", padding: "5px 14px", marginBottom: "18px" }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", display: "inline-block", boxShadow: "0 0 6px #10b981" }} />
+            <span style={{ fontSize: "12px", fontWeight: 600, color: "#10b981", letterSpacing: "0.04em", textTransform: "uppercase" }}>Stock disponible</span>
+          </div>
 
-            {/* View toggle */}
-            <div style={{ display: "flex", gap: "4px", background: "rgba(0,0,0,0.04)", border: `1px solid ${T.border}`, borderRadius: "12px", padding: "4px" }}>
-              {[
-                { mode: "grid", icon: <LayoutGrid size={16} /> },
-                { mode: "list", icon: <List size={16} /> },
-              ].map(({ mode, icon }) => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  style={{
-                    width: "36px", height: "36px",
-                    background: viewMode === mode ? "#fff" : "transparent",
-                    border: "none", borderRadius: "8px", cursor: "pointer",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    color: viewMode === mode ? T.text : T.textMuted,
-                    boxShadow: viewMode === mode ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {icon}
-                </button>
-              ))}
-            </div>
+          <h2 style={{
+            fontFamily: T.heading,
+            fontSize: "clamp(38px, 6vw, 64px)",
+            fontWeight: 800,
+            letterSpacing: "-0.04em",
+            lineHeight: 1,
+            marginBottom: "14px",
+            background: `linear-gradient(135deg, ${T.text} 0%, ${T.textSec} 100%)`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}>
+            Ofertas
+          </h2>
+
+          <p style={{ fontSize: "15px", color: T.textSec, lineHeight: 1.6, maxWidth: "400px", margin: "0 auto 24px" }}>
+            Equipos seleccionados. Revisados y listos para usar.
+          </p>
+
+          {/* View toggle — centrado */}
+          <div style={{ display: "inline-flex", gap: "4px", background: "rgba(0,0,0,0.04)", border: `1px solid ${T.border}`, borderRadius: "12px", padding: "4px" }}>
+            {[
+              { mode: "grid", icon: <LayoutGrid size={16} /> },
+              { mode: "list", icon: <List size={16} /> },
+            ].map(({ mode, icon }) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                style={{
+                  width: "36px", height: "36px",
+                  background: viewMode === mode ? "#fff" : "transparent",
+                  border: "none", borderRadius: "8px", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: viewMode === mode ? T.text : T.textMuted,
+                  boxShadow: viewMode === mode ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+                  transition: "all 0.15s",
+                }}
+              >
+                {icon}
+              </button>
+            ))}
           </div>
         </motion.div>
 

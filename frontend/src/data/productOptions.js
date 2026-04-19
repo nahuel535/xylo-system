@@ -18,6 +18,7 @@ export const CATEGORY_OPTIONS = [
   "Mac",
   "Apple Watch",
   "AirPods",
+  "Consola",
   "Accesorio",
   "Combo",
 ];
@@ -169,4 +170,18 @@ export const IPHONE_OPTIONS = {
   },
 };
 
+export const CONSOLE_OPTIONS = {
+  "PS5 Slim": {
+    storages: ["1TB"],
+    colors: ["White", "Black"],
+  },
+  "PS5 Slim Digital": {
+    storages: ["1TB"],
+    colors: ["White", "Black"],
+  },
+};
+
+export const ALL_PRODUCT_OPTIONS = { ...IPHONE_OPTIONS, ...CONSOLE_OPTIONS };
+
 export const MODEL_OPTIONS = Object.keys(IPHONE_OPTIONS);
+export const CONSOLE_MODEL_OPTIONS = Object.keys(CONSOLE_OPTIONS);
