@@ -14,6 +14,6 @@ export async function uploadToCloudinary(file) {
 
   if (!res.ok) throw new Error("Error subiendo imagen");
   const data = await res.json();
-  // Aplica transformaciones: calidad auto, formato auto (WebP/AVIF), max 1200px
-  return data.secure_url.replace("/upload/", "/upload/f_auto,q_auto,w_1200,h_1200,c_fit/");
+  // Remueve fondo con IA, formato PNG para preservar transparencia, max 1200px
+  return data.secure_url.replace("/upload/", "/upload/e_background_removal/f_png,q_auto,w_1200,h_1200,c_fit/");
 }
