@@ -1736,12 +1736,12 @@ function OfferMiniCard({ product, exchange }) {
           🔥 Oportunidad
         </div>
         {/* Image */}
-        <div style={{ width: "120px", flexShrink: 0, background: T.surface, overflow: "hidden", borderRight: `1px solid ${T.border}` }}>
+        <div style={{ width: "120px", flexShrink: 0, background: "#ffffff", overflow: "hidden", borderRight: `1px solid ${T.border}` }}>
           {product.photo_url ? (
             <motion.img
               src={product.photo_url} alt={product.model}
               loading="lazy"
-              style={{ width: "100%", height: "100%", objectFit: "contain", padding: "4px" }}
+              style={{ width: "100%", height: "100%", objectFit: "contain", padding: "4px", mixBlendMode: "multiply" }}
               whileHover={{ scale: 1.06 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             />
@@ -1991,7 +1991,7 @@ function ProductCard({ product, exchange }) {
             <motion.img
               src={product.photo_url} alt={product.model}
               loading="lazy"
-              style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8px" }}
+              style={{ width: "100%", height: "100%", objectFit: "contain", padding: "8px", mixBlendMode: "multiply" }}
               whileHover={{ scale: 1.07 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             />
@@ -2090,9 +2090,9 @@ function ProductRow({ product, exchange }) {
         }}
       >
         {/* Thumb */}
-        <div style={{ width: "56px", height: "56px", borderRadius: "10px", background: T.surface, overflow: "hidden", flexShrink: 0 }}>
+        <div style={{ width: "56px", height: "56px", borderRadius: "10px", background: "#ffffff", overflow: "hidden", flexShrink: 0 }}>
           {product.photo_url ? (
-            <img src={product.photo_url} alt={product.model} style={{ width: "100%", height: "100%", objectFit: "cover" }} loading="lazy" />
+            <img src={product.photo_url} alt={product.model} style={{ width: "100%", height: "100%", objectFit: "contain", padding: "4px", mixBlendMode: "multiply" }} loading="lazy" />
           ) : (
             <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }}>
@@ -2551,19 +2551,14 @@ function OfferPopup({ product, exchange, onClose }) {
         {/* Foto */}
         <div style={{
           width: "100%", aspectRatio: "16/9",
-          background: "linear-gradient(180deg, #161616 0%, #111 100%)",
+          background: "#ffffff",
           display: "flex", alignItems: "center", justifyContent: "center",
           overflow: "hidden", position: "relative",
+          borderBottom: `1px solid ${T.border}`,
         }}>
-          {/* subtle bottom fade */}
-          <div style={{
-            position: "absolute", bottom: 0, left: 0, right: 0, height: "48px",
-            background: "linear-gradient(to top, #0d0d0d, transparent)",
-            zIndex: 2, pointerEvents: "none",
-          }} />
           {product.photo_url
             ? <img src={product.photo_url} alt={product.model}
-                style={{ height: "100%", width: "100%", objectFit: "contain", position: "relative", zIndex: 1 }} />
+                style={{ height: "100%", width: "100%", objectFit: "contain", padding: "16px", mixBlendMode: "multiply" }} />
             : <div style={{ fontSize: "52px" }}>📱</div>
           }
         </div>
