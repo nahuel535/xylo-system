@@ -42,8 +42,12 @@ const VOICE_FIELDS_COMBO = [
 
 // Convierte texto a número limpio
 function transcriptToNumber(text) {
+  // Direct digit extraction: "350 479" → "350479"
+  const directNumber = text.replace(/[^0-9]/g, "");
+  if (directNumber.length > 0) return directNumber;
+
   const map = {
-    "cero": 0, "uno": 1, "una": 1, "dos": 2, "tres": 3, "cuatro": 4,
+    "cero": 0, "un": 1, "uno": 1, "una": 1, "dos": 2, "tres": 3, "cuatro": 4,
     "cinco": 5, "seis": 6, "siete": 7, "ocho": 8, "nueve": 9, "diez": 10,
     "once": 11, "doce": 12, "trece": 13, "catorce": 14, "quince": 15,
     "dieciséis": 16, "diecisiete": 17, "dieciocho": 18, "diecinueve": 19,
@@ -51,38 +55,63 @@ function transcriptToNumber(text) {
     "veinticuatro": 24, "veinticinco": 25, "veintiséis": 26, "veintisiete": 27,
     "veintiocho": 28, "veintinueve": 29, "treinta": 30, "cuarenta": 40,
     "cincuenta": 50, "sesenta": 60, "setenta": 70, "ochenta": 80, "noventa": 90,
-    "cien": 100, "ciento": 100, "doscientos": 200, "trescientos": 300,
-    "cuatrocientos": 400, "quinientos": 500, "seiscientos": 600,
-    "setecientos": 700, "ochocientos": 800, "novecientos": 900,
+    "cien": 100, "ciento": 100,
+    "doscientos": 200, "doscientas": 200,
+    "trescientos": 300, "trescientas": 300,
+    "cuatrocientos": 400, "cuatrocientas": 400,
+    "quinientos": 500, "quinientas": 500,
+    "seiscientos": 600, "seiscientas": 600,
+    "setecientos": 700, "setecientas": 700,
+    "ochocientos": 800, "ochocientas": 800,
+    "novecientos": 900, "novecientas": 900,
     "mil": 1000,
   };
 
-  // Primero intentar extraer número directo
-  const directNumber = text.replace(/[^0-9]/g, "");
-  if (directNumber.length > 0) return directNumber;
-
-  // Intentar convertir palabras
+  // Parse into independent segments, then concatenate.
+  // New segment when:
+  //   - a bare digit (0-9) appears without "y"
+  //   - a tens value (10-90) appears while current segment has no hundreds
+  //   - a hundreds value appears after one was already used in this segment
   const words = text.toLowerCase().trim().split(/\s+/);
-  let total = 0;
-  let current = 0;
+  const segments = [];
+  let current = 0, currentMax = 0;
+  let started = false, hadHundreds = false, prevWasY = false;
+
+  const flush = () => {
+    if (started) segments.push(current);
+    current = 0; currentMax = 0; started = false; hadHundreds = false;
+  };
+
   for (const word of words) {
+    if (word === "y") { prevWasY = true; continue; }
     const n = map[word];
-    if (n !== undefined) {
-      if (n === 1000) {
-        current = current === 0 ? 1000 : current * 1000;
-        total += current;
-        current = 0;
-      } else if (n >= 100) {
-        current += n;
-      } else {
-        current += n;
-      }
-    } else if (word === "y") {
-      continue;
+    if (n === undefined) { prevWasY = false; continue; }
+
+    if (!started) {
+      current = n; currentMax = n; started = true;
+      hadHundreds = n >= 100 && n < 1000;
+    } else if (n === 1000) {
+      current = (current || 1) * 1000;
+      currentMax = 1000;
+      hadHundreds = false;
+    } else if (n >= 100) {
+      if (hadHundreds) { flush(); current = n; currentMax = n; started = true; hadHundreds = true; }
+      else { current += n; currentMax = Math.max(currentMax, n); hadHundreds = true; }
+    } else if (n >= 10) {
+      if (currentMax >= 100) { current += n; }   // "trescientos cincuenta" → 350
+      else { flush(); current = n; currentMax = n; started = true; } // "treinta … ochenta" → new segment
+    } else {
+      // ones (0-9): only compose with "y" ("treinta y uno"); otherwise new segment
+      if (prevWasY) { current += n; }
+      else { flush(); current = n; currentMax = n; started = true; }
     }
+    prevWasY = false;
   }
-  total += current;
-  return total > 0 ? String(total) : text;
+  flush();
+
+  if (segments.length === 0) return text;
+  if (segments.length === 1) return String(segments[0]);
+  return segments.map(String).join(""); // concatenate for IMEI / multi-group
 }
 
 export default function NewProductPage() {
