@@ -2653,27 +2653,19 @@ function RecentlyViewed({ products, exchange }) {
     } catch { return []; }
   }, [products]);
 
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-40px" });
-
   if (items.length === 0) return null;
 
   return (
-    <section ref={ref} style={{
+    <section style={{
       maxWidth: "1280px", margin: "0 auto",
       padding: "0 clamp(20px, 6vw, 80px) 80px",
       fontFamily: T.body,
     }}>
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={isInView ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        style={{ marginBottom: "24px" }}
-      >
+      <div style={{ marginBottom: "24px" }}>
         <p style={{ fontSize: "11.5px", fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase", color: T.textMuted, marginBottom: "8px" }}>
           Vistos recientemente
         </p>
-      </motion.div>
+      </div>
 
       <div className="xylo-recent" style={{ display: "flex", gap: "14px", overflowX: "auto", paddingBottom: "8px", scrollbarWidth: "none", msOverflowStyle: "none" }}>
         <style>{`.xylo-recent::-webkit-scrollbar { display: none; }`}</style>
@@ -2682,11 +2674,8 @@ function RecentlyViewed({ products, exchange }) {
             ? (Number(product.suggested_sale_price_usd) * Number(exchange.sell_rate_ars)).toLocaleString("es-AR", { maximumFractionDigits: 0 })
             : null;
           return (
-            <motion.div
+            <div
               key={product.id}
-              initial={{ opacity: 0, x: 20 }}
-              animate={isInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ duration: 0.45, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}
               style={{ flexShrink: 0 }}
             >
               <Link to={`/producto/${product.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
@@ -2734,7 +2723,7 @@ function RecentlyViewed({ products, exchange }) {
                   </div>
                 </motion.div>
               </Link>
-            </motion.div>
+            </div>
           );
         })}
       </div>
