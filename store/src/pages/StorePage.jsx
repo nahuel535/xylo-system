@@ -2735,6 +2735,7 @@ function RecentlyViewed({ products, exchange }) {
 //  Apple Novedades — Mac & iPad
 // ─────────────────────────────────────────────────────────────────────────────
 const NR = "https://www.apple.com/newsroom/images/2026/03";
+const NR24 = "https://www.apple.com/newsroom/images/2024/10/new-macbook-pro/article";
 
 const APPLE_NOVEDADES = [
   {
@@ -2764,6 +2765,24 @@ const APPLE_NOVEDADES = [
     specs: ["Chip M4", "Pantalla Liquid Retina", "Cámara 12MP", "Wi-Fi 7 + 5G opcional"],
     img: `${NR}/apple-introduces-the-new-ipad-air-powered-by-m4/article/Apple-iPad-Air-M4-multitasking-260302_big.jpg.large.jpg`,
   },
+  {
+    category: "Mac",
+    badge: "Pro",
+    badgeColor: "#1d1d1f",
+    name: "MacBook Neo",
+    tagline: "Potencia pro. Diseño delgado. El más avanzado.",
+    specs: ["Chip M4 Pro / Max", "Hasta 128GB RAM", "Pantalla Liquid Retina XDR", "Hasta 8TB SSD"],
+    img: `${NR24}/Apple-MacBook-Pro-M4-hero_big.jpg.large.jpg`,
+  },
+  {
+    category: "Consola",
+    badge: "Gaming",
+    badgeColor: "#003791",
+    name: "PS5 Slim",
+    tagline: "La nueva generación. Más delgada. Misma potencia.",
+    specs: ["30% más liviana", "1TB SSD NVMe", "DualSense", "Gaming 4K / 120fps"],
+    img: "https://us-playstation.com/wp-content/uploads/2023/12/The-new-PS5-has-been-reduced-in-volume-1024x683.jpg",
+  },
 ];
 
 function AppleNovedades() {
@@ -2787,7 +2806,7 @@ function AppleNovedades() {
           style={{ marginBottom: "52px" }}
         >
           <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: ACCENT, marginBottom: "12px" }}>
-            Novedades Apple
+            Novedades
           </p>
           <h2 style={{
             fontFamily: T.heading,
@@ -2795,17 +2814,17 @@ function AppleNovedades() {
             fontWeight: 700, letterSpacing: "-0.04em",
             color: T.text, lineHeight: 1.05, marginBottom: "12px",
           }}>
-            Mac y iPad — lo último
+            Lo último disponible
           </h2>
           <p style={{ fontSize: "15px", color: T.textSec, lineHeight: 1.6, maxWidth: "400px" }}>
-            Consultá disponibilidad. Conseguimos los modelos más nuevos de Apple.
+            Consultá disponibilidad. Mac, iPad, consolas y más.
           </p>
         </motion.div>
 
         {/* Grid novedades */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
           gap: "16px",
         }} className="novedades-grid">
           {APPLE_NOVEDADES.map((item, i) => (
