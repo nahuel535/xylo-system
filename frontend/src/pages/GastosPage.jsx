@@ -31,6 +31,7 @@ export default function GastosPage() {
   const [saving, setSaving]         = useState(false);
   const [saved, setSaved]           = useState(false);
   const [error, setError]           = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(null); // id to confirm
   const [filterCat, setFilterCat]   = useState("");
   const [filterMonth, setFilterMonth] = useState(() => {
     const d = new Date();
@@ -38,6 +39,13 @@ export default function GastosPage() {
   });
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (!confirmDelete) return;
+    const close = () => setConfirmDelete(null);
+    document.addEventListener("click", close, { capture: true, once: true });
+    return () => document.removeEventListener("click", close, { capture: true });
+  }, [confirmDelete]);
 
   async function load() {
     try {
@@ -86,12 +94,13 @@ export default function GastosPage() {
   }
 
   async function handleDelete(id) {
-    if (!window.confirm("¿Eliminar este gasto?")) return;
+    if (confirmDelete !== id) { setConfirmDelete(id); return; }
     try {
       await api.delete(`/expenses/${id}`);
       setExpenses((p) => p.filter((e) => e.id !== id));
       if (editing === id) cancelEdit();
     } catch {}
+    finally { setConfirmDelete(null); }
   }
 
   const filtered = useMemo(() => expenses.filter((e) => {
@@ -337,9 +346,20 @@ export default function GastosPage() {
                               <button onClick={() => isEditing ? cancelEdit() : startEdit(e)} className={`p-1.5 rounded-lg transition ${isEditing ? "bg-xylo-500/20 text-xylo-500" : "hover:bg-base-subtle text-base-muted hover:text-base-text"}`}>
                                 <Pencil size={13} />
                               </button>
-                              <button onClick={() => handleDelete(e.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-base-muted hover:text-red-500 transition">
-                                <Trash2 size={13} />
-                              </button>
+                              {confirmDelete === e.id ? (
+                                <div className="flex items-center gap-1" onClick={(ev) => ev.stopPropagation()}>
+                                  <button onClick={() => handleDelete(e.id)} className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-red-500 text-white hover:bg-red-600 transition">
+                                    Eliminar
+                                  </button>
+                                  <button onClick={() => setConfirmDelete(null)} className="text-[11px] px-2 py-1 rounded-lg border border-base-border text-base-muted hover:bg-base-subtle transition">
+                                    No
+                                  </button>
+                                </div>
+                              ) : (
+                                <button onClick={() => handleDelete(e.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-base-muted hover:text-red-500 transition">
+                                  <Trash2 size={13} />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -376,9 +396,20 @@ export default function GastosPage() {
                         <button onClick={() => editing === e.id ? cancelEdit() : startEdit(e)} className={`p-1.5 rounded-lg transition ${editing === e.id ? "bg-xylo-500/20 text-xylo-500" : "hover:bg-base-subtle text-base-muted"}`}>
                           <Pencil size={13} />
                         </button>
-                        <button onClick={() => handleDelete(e.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-base-muted hover:text-red-500 transition">
-                          <Trash2 size={13} />
-                        </button>
+                        {confirmDelete === e.id ? (
+                          <div className="flex flex-col gap-1">
+                            <button onClick={() => handleDelete(e.id)} className="text-[10px] font-semibold px-2 py-1 rounded-lg bg-red-500 text-white">
+                              Sí
+                            </button>
+                            <button onClick={() => setConfirmDelete(null)} className="text-[10px] px-2 py-1 rounded-lg border border-base-border text-base-muted">
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button onClick={() => handleDelete(e.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-base-muted hover:text-red-500 transition">
+                            <Trash2 size={13} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
