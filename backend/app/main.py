@@ -15,6 +15,8 @@ from app.api.exchange_rate import router as exchange_rates_router
 from app.api.auth import router as auth_router
 from app.api.photos import router as photos_router
 from app.api.debtors import router as debtors_router
+from app.api.expenses import router as expenses_router
+from app.models.expense import Expense  # noqa: ensure table is registered
 
 Base.metadata.create_all(bind=engine)
 
@@ -58,6 +60,7 @@ app.include_router(exchange_rates_router)
 app.include_router(auth_router)
 app.include_router(photos_router)
 app.include_router(debtors_router)
+app.include_router(expenses_router)
 
 
 ARG_TZ = timezone(timedelta(hours=-3))
