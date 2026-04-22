@@ -14,7 +14,7 @@ const CAT_META = {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-const blankForm = { category: CATEGORIES[0], description: "", amount_ars: "", amount_usd: "", date: today() };
+const blankForm = { category: CATEGORIES[0], description: "", amount_ars: "", amount_usd: "", date: today(), currency: "ARS" };
 
 const inputClass = "w-full bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition";
 
@@ -57,7 +57,8 @@ export default function GastosPage() {
 
   function startEdit(e) {
     setEditing(e.id);
-    setForm({ category: e.category, description: e.description || "", amount_ars: e.amount_ars || "", amount_usd: e.amount_usd || "", date: e.date });
+    const primaryUsd = (!e.amount_ars || Number(e.amount_ars) === 0) && e.amount_usd;
+    setForm({ category: e.category, description: e.description || "", amount_ars: e.amount_ars || "", amount_usd: e.amount_usd || "", date: e.date, currency: primaryUsd ? "USD" : "ARS" });
     setError("");
   }
 
@@ -73,7 +74,8 @@ export default function GastosPage() {
 
   async function handleSubmit(ev) {
     ev.preventDefault();
-    if (!form.amount_ars || Number(form.amount_ars) <= 0) { setError("Ingresá el monto en ARS."); return; }
+    if (form.currency === "ARS" && (!form.amount_ars || Number(form.amount_ars) <= 0)) { setError("Ingresá el monto en ARS."); return; }
+    if (form.currency === "USD" && (!form.amount_usd || Number(form.amount_usd) <= 0)) { setError("Ingresá el monto en USD."); return; }
     setSaving(true); setError("");
     try {
       const payload = {
@@ -116,6 +118,14 @@ export default function GastosPage() {
   }, [filtered]);
 
   const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
+
+  const totalsUsd = useMemo(() => {
+    const t = Object.fromEntries(CATEGORIES.map((c) => [c, 0]));
+    filtered.forEach((e) => { if (e.amount_usd) t[e.category] = (t[e.category] || 0) + Number(e.amount_usd); });
+    return t;
+  }, [filtered]);
+
+  const grandTotalUsd = Object.values(totalsUsd).reduce((a, b) => a + b, 0);
 
   if (loading) return <p className="text-base-muted">Cargando...</p>;
 
@@ -174,31 +184,51 @@ export default function GastosPage() {
                 />
               </div>
 
+              {/* Currency toggle */}
+              <div>
+                <label className="block text-xs font-medium text-base-muted mb-1.5">Moneda principal</label>
+                <div className="flex gap-1 bg-base-subtle rounded-xl p-1 border border-base-border">
+                  {["ARS", "USD"].map((cur) => (
+                    <button
+                      key={cur}
+                      type="button"
+                      onClick={() => setForm((p) => ({ ...p, currency: cur }))}
+                      className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition ${
+                        form.currency === cur
+                          ? "bg-base-card text-base-text shadow-sm"
+                          : "text-base-muted hover:text-base-text"
+                      }`}
+                    >
+                      {cur === "ARS" ? "$ ARS" : "USD $"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Amounts */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-base-muted mb-1.5">
-                    Monto ARS <span className="text-red-400">*</span>
+                    {form.currency === "ARS" ? "Monto ARS" : "Monto USD"} <span className="text-red-400">*</span>
                   </label>
                   <input
-                    name="amount_ars"
-                    value={form.amount_ars}
+                    name={form.currency === "ARS" ? "amount_ars" : "amount_usd"}
+                    value={form.currency === "ARS" ? form.amount_ars : form.amount_usd}
                     onChange={handleChange}
-                    type="number" min="0" step="1"
+                    type="number" min="0" step={form.currency === "ARS" ? "1" : "0.01"}
                     placeholder="0"
                     className={inputClass}
-                    required
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-base-muted mb-1.5">
-                    USD <span className="opacity-40">opcional</span>
+                    {form.currency === "ARS" ? "USD" : "ARS"} <span className="opacity-40">opcional</span>
                   </label>
                   <input
-                    name="amount_usd"
-                    value={form.amount_usd}
+                    name={form.currency === "ARS" ? "amount_usd" : "amount_ars"}
+                    value={form.currency === "ARS" ? form.amount_usd : form.amount_ars}
                     onChange={handleChange}
-                    type="number" min="0" step="0.01"
+                    type="number" min="0" step={form.currency === "ARS" ? "0.01" : "1"}
                     placeholder="0"
                     className={inputClass}
                   />
@@ -265,6 +295,7 @@ export default function GastosPage() {
                   </div>
                   <p className="text-[11px] text-base-muted font-medium truncate leading-tight">{cat}</p>
                   <p className="text-base font-bold text-base-text mt-0.5">$ {fmt(totals[cat])}</p>
+                  {totalsUsd[cat] > 0 && <p className="text-[10px] text-base-muted">USD {fmt(totalsUsd[cat])}</p>}
                 </button>
               );
             })}
@@ -274,8 +305,11 @@ export default function GastosPage() {
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <div className="flex items-center gap-2 bg-base-card border border-base-border rounded-xl px-3 py-2">
               <TrendingDown size={13} className="text-red-400" />
-              <span className="text-xs text-base-muted">Total período:</span>
+              <span className="text-xs text-base-muted">Total:</span>
               <span className="text-xs font-bold text-base-text">$ {fmt(grandTotal)}</span>
+              {grandTotalUsd > 0 && (
+                <span className="text-xs font-bold text-base-muted border-l border-base-border pl-2">USD {fmt(grandTotalUsd)}</span>
+              )}
             </div>
 
             <select
