@@ -801,6 +801,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone11", generation: "iPhone 11", year: "2019", tag: "El inicio de una era",
     accent: "#4a9b6f",
+    localPhoto: "/fotos/iphone11-1.PNG",
     familyImg: null,
     models: [
       {
@@ -851,6 +852,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone12", generation: "iPhone 12", year: "2020", tag: "5G. Un salto enorme.",
     accent: "#0a84ff",
+    localPhoto: "/fotos/iphone12-1.PNG",
     familyImg: null,
     models: [
       {
@@ -901,6 +903,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone13", generation: "iPhone 13", year: "2021", tag: "Tu película favorita. Por ti.",
     accent: "#ff375f",
+    localPhoto: "/fotos/iphone13-1.PNG",
     familyImg: null,
     models: [
       {
@@ -953,6 +956,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone14", generation: "iPhone 14", year: "2022", tag: "Seguridad. Siempre.",
     accent: "#5e5ce6",
+    localPhoto: "/fotos/iphone14-1.PNG",
     familyImg: null,
     models: [
       {
@@ -1003,6 +1007,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone15", generation: "iPhone 15", year: "2023", tag: "USB-C. Un estándar, por fin.",
     accent: "#ff9f0a",
+    localPhoto: "/fotos/iphone15-1.PNG",
     familyImg: null,
     models: [
       {
@@ -1053,6 +1058,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone16", generation: "iPhone 16", year: "2024", tag: "Diseñado para Apple Intelligence.",
     accent: "#30d158",
+    localPhoto: "/fotos/iphone16-1.PNG",
     familyImg: null,
     models: [
       {
@@ -1103,6 +1109,7 @@ const IPHONE_CATALOG = [
   {
     id: "iphone17", generation: "iPhone 17", year: "2025", tag: "La próxima generación.",
     accent: "#ff453a",
+    localPhoto: "/fotos/iphone17-1.PNG",
     familyImg: null, useClip: false, mixBlend: true, overlap: "-38%",
     models: [
       {
@@ -1419,7 +1426,8 @@ function GenCard({ gen, i, inView, onClick }) {
         position: "relative",
         height: "clamp(210px, 26vw, 310px)",
         overflow: "hidden",
-        background: "#ffffff",
+        background: "#f5f5f7",
+        display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         {/* Year pill */}
         <div style={{
@@ -1449,112 +1457,19 @@ function GenCard({ gen, i, inView, onClick }) {
           </span>
         </div>
 
-        {/* Phone image(s) */}
-        {gen.familyImg ? (
-          <img
-            src={gen.familyImg}
-            alt={gen.generation}
-            className="gen-card-img"
-            loading="lazy"
-            onError={(e) => { e.currentTarget.style.opacity = "0"; }}
-            style={{
-              position: "absolute",
-              bottom: "-2px", left: "50%",
-              transform: "translateX(-50%)",
-              height: "93%", width: "auto",
-              maxWidth: "none",
-              objectFit: "contain",
-              transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
-            }}
-          />
-        ) : gen.useClip ? (
-          /* iPhone 17: absolute positioning para controlar posición exacta del contenido visible */
-          <div style={{ position: "absolute", inset: 0 }}>
-            {([gen.models[1], gen.models[0], gen.models[2]]).map((m, idx) => {
-              const isCenter = idx === 1;
-              const pos = [
-                { left: "5%",  width: "38%", height: "71%", zIndex: 2 },
-                { left: "31%", width: "40%", height: "90%", zIndex: 3 },
-                { left: "57%", width: "38%", height: "75%", zIndex: 1 },
-              ][idx];
-              return (
-                <div
-                  key={m.name}
-                  className="gen-card-model-img"
-                  style={{
-                    position: "absolute", bottom: 0, overflow: "hidden",
-                    ...pos,
-                    transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
-                  }}
-                >
-                  <img
-                    src={m.img}
-                    alt={m.name}
-                    className="gen-card-img"
-                    onError={(e) => { e.currentTarget.style.opacity = "0"; }}
-                    style={{
-                      position: "absolute", height: "100%", width: "auto",
-                      bottom: 0, left: "50%", transform: "translateX(-50%)",
-                    }}
-                  />
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div style={{
-            position: "absolute", inset: 0,
-            display: "flex", alignItems: "flex-end", justifyContent: "center",
-          }}>
-            {/* Display order: Pro (left) | base (center) | Pro Max (right) */}
-            {(gen.models.length === 3
-              ? [gen.models[1], gen.models[0], gen.models[2]]
-              : gen.models
-            ).map((m, idx) => {
-              const isCenter = idx === 1;
-              const widths = gen.mixBlend
-                ? ["30%", "40%", "30%"]
-                : ["27%", "36%", "29%"];
-              const maxHeights = gen.mixBlend
-                ? ["86%", "100%", "90%"]
-                : ["78%", "93%", "82%"];
-              const overlap = gen.mixBlend ? "-17%" : "-9%";
-              return (
-                <img
-                  key={m.name}
-                  src={m.img}
-                  alt={m.name}
-                  loading="lazy"
-                  onError={(e) => { e.currentTarget.style.opacity = "0"; }}
-                  className="gen-card-img gen-card-model-img"
-                  style={{
-                    width: widths[idx] ?? "27%",
-                    height: "auto",
-                    maxHeight: maxHeights[idx] ?? "78%",
-                    objectFit: "contain",
-                    objectPosition: "bottom",
-                    flexShrink: 0,
-                    alignSelf: "flex-end",
-                    position: "relative",
-                    zIndex: isCenter ? 3 : idx === 0 ? 2 : 1,
-                    marginLeft: idx > 0 ? overlap : "0",
-                    filter: gen.mixBlend ? undefined : (isCenter
-                      ? "drop-shadow(0 16px 32px rgba(0,0,0,0.22))"
-                      : "drop-shadow(0 8px 18px rgba(0,0,0,0.11))"),
-                    transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
-                  }}
-                />
-              );
-            })}
-          </div>
-        )}
-
-        {/* Bottom fade */}
-        <div style={{
-          position: "absolute", bottom: 0, left: 0, right: 0, height: "48px",
-          background: "linear-gradient(to bottom, transparent, rgba(238,236,234,0.6))",
-          pointerEvents: "none", zIndex: 5,
-        }} />
+        {/* Foto real — mix-blend-mode:multiply elimina el fondo blanco */}
+        <img
+          src={gen.localPhoto}
+          alt={gen.generation}
+          loading="lazy"
+          className="gen-card-model-img"
+          style={{
+            width: "85%", height: "90%",
+            objectFit: "contain", objectPosition: "center",
+            mixBlendMode: "multiply",
+            transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
+          }}
+        />
       </div>
 
       {/* ── Text zone ── */}
@@ -1677,32 +1592,25 @@ function FeaturedGenCard({ gen, i, inView, onClick }) {
         </div>
       </div>
 
-      {/* Image side — 3 back views composed */}
+      {/* Image side — foto real, mix-blend-mode elimina el fondo blanco */}
       <div style={{
-        background: "#ffffff",
-        display: "flex", alignItems: "flex-end", justifyContent: "center",
-        position: "relative", overflow: "hidden",
-        gap: "clamp(-16px, -2vw, -8px)",
-        padding: "28px 12px 0",
+        background: "#f5f5f7",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        overflow: "hidden",
+        padding: "24px",
       }}>
-        {(gen.backImgs || gen.models.map((m) => m.img)).map((src, idx) => (
-          <img
-            key={idx}
-            src={src}
-            alt={`${gen.generation} ${idx + 1}`}
-            loading="lazy"
-            onError={(e) => { e.currentTarget.style.opacity = "0"; }}
-            className="featured-gen-img"
-            style={{
-              height: idx === 1
-                ? "clamp(190px, 21vw, 280px)"
-                : "clamp(165px, 18vw, 245px)",
-              width: "auto", objectFit: "contain",
-              position: "relative", zIndex: idx === 1 ? 2 : 1,
-              transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
-            }}
-          />
-        ))}
+        <img
+          src={gen.localPhoto}
+          alt={gen.generation}
+          loading="lazy"
+          className="featured-gen-img"
+          style={{
+            width: "100%", height: "100%",
+            objectFit: "contain", objectPosition: "center",
+            mixBlendMode: "multiply",
+            transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
+          }}
+        />
       </div>
     </motion.button>
   );
@@ -1818,7 +1726,7 @@ function ModelsCatalog({ products = [], exchange }) {
         ))}
       </div>
       {/* Overlay para mantener legibilidad */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 1, background: "rgba(245,245,247,0.82)" }} />
+      <div style={{ position: "absolute", inset: 0, zIndex: 1, background: "rgba(245,245,247,0.88)" }} />
 
       <div style={{ maxWidth: "1100px", margin: "0 auto", position: "relative", zIndex: 2 }} ref={ref}>
 
