@@ -1059,6 +1059,7 @@ const IPHONE_CATALOG = [
     id: "iphone16", generation: "iPhone 16", year: "2024", tag: "Diseñado para Apple Intelligence.",
     accent: "#30d158",
     localPhoto: "/fotos/iphone16-1.PNG",
+    localPhotos: ["/fotos/iphone16-1.PNG", "/fotos/iphone16-2.PNG", "/fotos/iphone16-3.PNG"],
     familyImg: null,
     models: [
       {
@@ -1457,19 +1458,45 @@ function GenCard({ gen, i, inView, onClick }) {
           </span>
         </div>
 
-        {/* Foto real — mix-blend-mode:multiply elimina el fondo blanco */}
-        <img
-          src={gen.localPhoto}
-          alt={gen.generation}
-          loading="lazy"
-          className="gen-card-model-img"
-          style={{
-            width: "85%", height: "90%",
-            objectFit: "contain", objectPosition: "center",
-            mixBlendMode: "multiply",
-            transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
-          }}
-        />
+        {/* Foto(s) — mix-blend-mode:multiply elimina el fondo blanco */}
+        {gen.localPhotos ? (
+          <div style={{
+            position: "absolute", inset: 0,
+            display: "flex", alignItems: "flex-end", justifyContent: "center",
+          }}>
+            {gen.localPhotos.map((photo, idx) => {
+              const isCenter = idx === 1;
+              return (
+                <img
+                  key={idx}
+                  src={photo}
+                  alt={gen.generation}
+                  loading="lazy"
+                  style={{
+                    width: isCenter ? "36%" : "30%",
+                    height: isCenter ? "90%" : "75%",
+                    objectFit: "contain", objectPosition: "bottom center",
+                    mixBlendMode: "multiply", flexShrink: 0,
+                    transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
+                  }}
+                />
+              );
+            })}
+          </div>
+        ) : (
+          <img
+            src={gen.localPhoto}
+            alt={gen.generation}
+            loading="lazy"
+            className="gen-card-model-img"
+            style={{
+              width: "85%", height: "90%",
+              objectFit: "contain", objectPosition: "center",
+              mixBlendMode: "multiply",
+              transition: "transform 0.55s cubic-bezier(0.22,1,0.36,1)",
+            }}
+          />
+        )}
       </div>
 
       {/* ── Text zone ── */}
