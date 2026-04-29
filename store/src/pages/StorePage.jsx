@@ -1064,6 +1064,7 @@ const IPHONE_CATALOG = [
     models: [
       {
         name: "iPhone 16",
+        localPhoto: "/fotos/iphone16-1.PNG",
         img: `${CDN}/iphone-16-teal-select-202409${IP}`,
         display: '6.1" Super Retina XDR OLED (2556×1179)',
         chip: "A18",
@@ -1079,6 +1080,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 16 Pro",
+        localPhoto: "/fotos/iphone16-2.PNG",
         img: `${CDN}/iphone-16-pro-blacktitanium-select${IP}`,
         display: '6.3" Super Retina XDR ProMotion 120Hz (2622×1206)',
         chip: "A18 Pro",
@@ -1093,6 +1095,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 16 Pro Max",
+        localPhoto: "/fotos/iphone16-3.PNG",
         img: `${CDN}/iphone-16-pro-max-blacktitanium-select${IP}`,
         display: '6.9" Super Retina XDR ProMotion 120Hz (2868×1320)',
         chip: "A18 Pro",
@@ -1182,14 +1185,23 @@ function ModelDetailCard({ model }) {
     }}>
       {/* Image */}
       <div style={{
-        background: "linear-gradient(145deg, #f5f5f3 0%, #ebebea 100%)",
+        background: "#f5f5f7",
         height: "220px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         overflow: "hidden",
       }}>
-        {(model.imgDetail || model.img) && !imgErr ? (
+        {model.localPhoto ? (
+          <img
+            src={model.localPhoto}
+            alt={model.name}
+            style={{
+              height: "200px", width: "auto", objectFit: "contain",
+              mixBlendMode: "multiply",
+            }}
+          />
+        ) : (model.imgDetail || model.img) && !imgErr ? (
           <img
             src={model.imgDetail || model.img}
             alt={model.name}
