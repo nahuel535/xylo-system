@@ -802,10 +802,12 @@ const IPHONE_CATALOG = [
     id: "iphone11", generation: "iPhone 11", year: "2019", tag: "El inicio de una era",
     accent: "#4a9b6f",
     localPhoto: "/fotos/iphone11-1.PNG",
+    localPhotos: ["/fotos/iphone11-1.PNG", "/fotos/iphone11-2.PNG", "/fotos/iphone11-3.PNG"],
     familyImg: null,
     models: [
       {
         name: "iPhone 11",
+        localPhoto: "/fotos/iphone11-1.PNG",
         img: `${CDN}/iphone11-yellow-select-2019${IP}`,
         display: '6.1" Liquid Retina HD (1792×828)',
         chip: "A13 Bionic",
@@ -821,6 +823,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 11 Pro",
+        localPhoto: "/fotos/iphone11-2.PNG",
         img: `${CDN}/iphone-11-pro-silver-select-2019${IP}`,
         display: '5.8" Super Retina XDR OLED (2436×1125)',
         chip: "A13 Bionic",
@@ -835,6 +838,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 11 Pro Max",
+        localPhoto: "/fotos/iphone11-3.PNG",
         img: `${CDN}/iphone-11-pro-max-silver-select-2019${IP}`,
         display: '6.5" Super Retina XDR OLED (2688×1242)',
         chip: "A13 Bionic",
@@ -853,10 +857,12 @@ const IPHONE_CATALOG = [
     id: "iphone12", generation: "iPhone 12", year: "2020", tag: "5G. Un salto enorme.",
     accent: "#0a84ff",
     localPhoto: "/fotos/iphone12-1.PNG",
+    localPhotos: ["/fotos/iphone12-1.PNG", "/fotos/iphone12-2.PNG", "/fotos/iphone12-3.PNG"],
     familyImg: null,
     models: [
       {
         name: "iPhone 12",
+        localPhoto: "/fotos/iphone12-1.PNG",
         img: `${CDN}/iphone-12-blue-select-2020${IP}`,
         display: '6.1" Super Retina XDR OLED (2532×1170)',
         chip: "A14 Bionic",
@@ -872,6 +878,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 12 Pro",
+        localPhoto: "/fotos/iphone12-2.PNG",
         img: `${CDN}/refurb-iphone-12-pro-graphite-2020${IP}`,
         display: '6.1" Super Retina XDR OLED (2532×1170)',
         chip: "A14 Bionic",
@@ -886,6 +893,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 12 Pro Max",
+        localPhoto: "/fotos/iphone12-3.PNG",
         img: `${CDN}/refurb-iphone-12-pro-max-graphite-2020${IP}`,
         display: '6.7" Super Retina XDR OLED (2778×1284)',
         chip: "A14 Bionic",
@@ -904,10 +912,12 @@ const IPHONE_CATALOG = [
     id: "iphone13", generation: "iPhone 13", year: "2021", tag: "Tu película favorita. Por ti.",
     accent: "#ff375f",
     localPhoto: "/fotos/iphone13-1.PNG",
+    localPhotos: ["/fotos/iphone13-1.PNG", "/fotos/iphone13-2.PNG", "/fotos/iphone13-3.PNG"],
     familyImg: null,
     models: [
       {
         name: "iPhone 13",
+        localPhoto: "/fotos/iphone13-1.PNG",
         img: `${CDN}/iphone-13-pink-select-2021${IP}`,
         display: '6.1" Super Retina XDR OLED (2532×1170)',
         chip: "A15 Bionic",
@@ -923,6 +933,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 13 Pro",
+        localPhoto: "/fotos/iphone13-2.PNG",
         img: `${CDN}/iphone-13-pro-graphite-select${IP}`,
         display: '6.1" Super Retina XDR ProMotion 120Hz (2532×1170)',
         chip: "A15 Bionic",
@@ -938,6 +949,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 13 Pro Max",
+        localPhoto: "/fotos/iphone13-3.PNG",
         img: `${CDN}/iphone-13-pro-max-graphite-select${IP}`,
         display: '6.7" Super Retina XDR ProMotion 120Hz (2778×1284)',
         chip: "A15 Bionic",
@@ -957,10 +969,12 @@ const IPHONE_CATALOG = [
     id: "iphone14", generation: "iPhone 14", year: "2022", tag: "Seguridad. Siempre.",
     accent: "#5e5ce6",
     localPhoto: "/fotos/iphone14-1.PNG",
+    localPhotos: ["/fotos/iphone14-1.PNG", "/fotos/iphone14-2.PNG", "/fotos/iphone14-3.PNG"],
     familyImg: null,
     models: [
       {
         name: "iPhone 14",
+        localPhoto: "/fotos/iphone14-1.PNG",
         img: `${CDN}/iphone-14-purple-select-202209${IP}`,
         display: '6.1" Super Retina XDR OLED (2532×1170)',
         chip: "A15 Bionic",
@@ -976,6 +990,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 14 Pro",
+        localPhoto: "/fotos/iphone14-2.PNG",
         img: `${CDN}/iphone-14-pro-spaceblack-select${IP}`,
         display: '6.1" Super Retina XDR ProMotion 120Hz (2556×1179)',
         chip: "A16 Bionic",
@@ -990,6 +1005,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 14 Pro Max",
+        localPhoto: "/fotos/iphone14-3.PNG",
         img: `${CDN}/iphone-14-pro-max-spaceblack-select${IP}`,
         display: '6.7" Super Retina XDR ProMotion 120Hz (2796×1290)',
         chip: "A16 Bionic",
@@ -1008,10 +1024,12 @@ const IPHONE_CATALOG = [
     id: "iphone15", generation: "iPhone 15", year: "2023", tag: "USB-C. Un estándar, por fin.",
     accent: "#ff9f0a",
     localPhoto: "/fotos/iphone15-1.PNG",
+    localPhotos: ["/fotos/iphone15-1.PNG", "/fotos/iphone15-2.PNG", "/fotos/iphone15-3.PNG"],
     familyImg: null,
     models: [
       {
         name: "iPhone 15",
+        localPhoto: "/fotos/iphone15-1.PNG",
         img: `${CDN}/iphone-15-pink-select-202309${IP}`,
         display: '6.1" Super Retina XDR OLED (2556×1179)',
         chip: "A16 Bionic",
@@ -1027,6 +1045,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 15 Pro",
+        localPhoto: "/fotos/iphone15-2.PNG",
         img: `${CDN}/iphone-15-pro-blacktitanium-select${IP}`,
         display: '6.1" Super Retina XDR ProMotion 120Hz (2556×1179)',
         chip: "A17 Pro",
@@ -1041,6 +1060,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 15 Pro Max",
+        localPhoto: "/fotos/iphone15-3.PNG",
         img: `${CDN}/iphone-15-pro-max-blacktitanium-select${IP}`,
         display: '6.7" Super Retina XDR ProMotion 120Hz (2796×1290)',
         chip: "A17 Pro",
@@ -1114,10 +1134,12 @@ const IPHONE_CATALOG = [
     id: "iphone17", generation: "iPhone 17", year: "2025", tag: "La próxima generación.",
     accent: "#ff453a",
     localPhoto: "/fotos/iphone17-1.PNG",
+    localPhotos: ["/fotos/iphone17-1.PNG", "/fotos/iphone17-2.PNG", "/fotos/iphone17-3.PNG"],
     familyImg: null, useClip: false, mixBlend: true, overlap: "-38%",
     models: [
       {
         name: "iPhone 17",
+        localPhoto: "/fotos/iphone17-1.PNG",
         img: `${CDN}/iphone-17-witb-black-202509${IPJ}`,
         imgDetail: `${CDN}/iphone-17-finish-select-black-202509_AV1${IP}`,
         display: '6.1" Super Retina XDR OLED (2556×1179)',
@@ -1135,6 +1157,7 @@ const IPHONE_CATALOG = [
 
       {
         name: "iPhone 17 Pro",
+        localPhoto: "/fotos/iphone17-2.PNG",
         img: `${CDN}/iphone-17-pro-witb-deepblue-202509${IPJ}`,
         imgDetail: `${CDN}/iphone-17-pro-finish-select-deepblue-202509${IP}`,
         display: '6.3" ProMotion OLED 120Hz (2622×1206)',
@@ -1150,6 +1173,7 @@ const IPHONE_CATALOG = [
       },
       {
         name: "iPhone 17 Pro Max",
+        localPhoto: "/fotos/iphone17-3.PNG",
         img: `${CDN}/iphone-17-pro-max-witb-cosmicorange-202509${IPJ}`,
         imgDetail: `${CDN}/iphone-17-pro-max-finish-select-cosmicorange-202509${IP}`,
         display: '6.9" ProMotion OLED 120Hz (2868×1320)',
@@ -1631,25 +1655,31 @@ function FeaturedGenCard({ gen, i, inView, onClick }) {
         </div>
       </div>
 
-      {/* Image side — foto real, mix-blend-mode elimina el fondo blanco */}
+      {/* Image side — trío de fotos sin fondo */}
       <div style={{
         background: "#f5f5f7",
-        display: "flex", alignItems: "center", justifyContent: "center",
+        display: "flex", alignItems: "flex-end", justifyContent: "center",
         overflow: "hidden",
-        padding: "24px",
       }}>
-        <img
-          src={gen.localPhoto}
-          alt={gen.generation}
-          loading="lazy"
-          className="featured-gen-img"
-          style={{
-            width: "100%", height: "100%",
-            objectFit: "contain", objectPosition: "center",
-            mixBlendMode: "multiply",
-            transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
-          }}
-        />
+        {(gen.localPhotos ?? [gen.localPhoto]).map((photo, idx) => {
+          const isCenter = idx === 1;
+          return (
+            <img
+              key={idx}
+              src={photo}
+              alt={gen.generation}
+              loading="lazy"
+              className={idx === 0 ? "featured-gen-img" : ""}
+              style={{
+                width: isCenter ? "38%" : "31%",
+                height: isCenter ? "92%" : "76%",
+                objectFit: "contain", objectPosition: "bottom center",
+                mixBlendMode: "multiply", flexShrink: 0,
+                transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1)",
+              }}
+            />
+          );
+        })}
       </div>
     </motion.button>
   );
