@@ -614,89 +614,6 @@ function Marquee() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  Vidriera — fotos reales de los equipos
-// ─────────────────────────────────────────────────────────────────────────────
-const VIDRIERA_PHOTOS = [
-  { src: "/fotos/iphone17-1.PNG", label: "iPhone 17" },
-  { src: "/fotos/iphone16-2.PNG", label: "iPhone 16" },
-  { src: "/fotos/iphone15-1.PNG", label: "iPhone 15" },
-  { src: "/fotos/iphone14-2.PNG", label: "iPhone 14" },
-  { src: "/fotos/iphone13-2.PNG", label: "iPhone 13" },
-  { src: "/fotos/iphone12-1.PNG", label: "iPhone 12" },
-  { src: "/fotos/iphone11-2.PNG", label: "iPhone 11" },
-  { src: "/fotos/iphone17-3.PNG", label: "iPhone 17" },
-  { src: "/fotos/iphone16-1.PNG", label: "iPhone 16" },
-  { src: "/fotos/iphone15-3.PNG", label: "iPhone 15" },
-  { src: "/fotos/iphone14-1.PNG", label: "iPhone 14" },
-  { src: "/fotos/iphone13-1.PNG", label: "iPhone 13" },
-  { src: "/fotos/iphone12-3.PNG", label: "iPhone 12" },
-  { src: "/fotos/iphone11-1.PNG", label: "iPhone 11" },
-];
-
-function Vidriera() {
-  const items = [...VIDRIERA_PHOTOS, ...VIDRIERA_PHOTOS];
-  return (
-    <div style={{
-      background: T.bg,
-      padding: "48px 0 64px",
-      overflow: "hidden",
-      position: "relative",
-    }}>
-      <div style={{
-        position: "absolute", inset: 0, zIndex: 2, pointerEvents: "none",
-        background: `linear-gradient(to right, ${T.bg} 0%, transparent 8%, transparent 92%, ${T.bg} 100%)`,
-      }} />
-      <p style={{
-        textAlign: "center",
-        fontSize: "11px",
-        fontWeight: 600,
-        letterSpacing: "0.12em",
-        textTransform: "uppercase",
-        color: T.textMuted,
-        marginBottom: "28px",
-        fontFamily: T.body,
-      }}>Equipos disponibles</p>
-      <div style={{
-        display: "flex",
-        gap: "14px",
-        width: "max-content",
-        animation: "scroll-vidriera 40s linear infinite",
-      }}>
-        {items.map((item, i) => (
-          <div key={i} style={{
-            width: "180px",
-            height: "230px",
-            background: T.surface,
-            borderRadius: "14px",
-            border: `1px solid ${T.border}`,
-            overflow: "hidden",
-            flexShrink: 0,
-            position: "relative",
-          }}>
-            <img
-              src={item.src}
-              alt={item.label}
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            />
-            <div style={{
-              position: "absolute", bottom: 0, left: 0, right: 0,
-              background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 100%)",
-              padding: "20px 12px 10px",
-              color: "#fff",
-              fontSize: "12px",
-              fontWeight: 600,
-              fontFamily: T.body,
-            }}>
-              {item.label}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 //  Floating WhatsApp button
 // ─────────────────────────────────────────────────────────────────────────────
 function FloatingWhatsApp() {
@@ -1874,8 +1791,36 @@ function ModelsCatalog({ products = [], exchange }) {
       background: "#f5f5f7",
       padding: "96px clamp(20px, 6vw, 80px) 104px",
       fontFamily: T.body,
+      position: "relative",
+      overflow: "hidden",
     }}>
-      <div style={{ maxWidth: "1100px", margin: "0 auto" }} ref={ref}>
+      {/* ── Fondo: fotos reales de los equipos ── */}
+      <div style={{
+        position: "absolute", inset: 0, zIndex: 0,
+        display: "grid",
+        gridTemplateColumns: "repeat(7, 1fr)",
+        gridTemplateRows: "repeat(3, 1fr)",
+        opacity: 0.13,
+        filter: "blur(3px) saturate(0.8)",
+        transform: "scale(1.06)",
+        transformOrigin: "center center",
+      }}>
+        {[
+          "/fotos/iphone17-1.PNG", "/fotos/iphone16-2.PNG", "/fotos/iphone15-1.PNG",
+          "/fotos/iphone14-2.PNG", "/fotos/iphone13-2.PNG", "/fotos/iphone12-1.PNG",
+          "/fotos/iphone11-2.PNG", "/fotos/iphone17-2.PNG", "/fotos/iphone16-3.PNG",
+          "/fotos/iphone15-2.PNG", "/fotos/iphone14-1.PNG", "/fotos/iphone13-1.PNG",
+          "/fotos/iphone12-3.PNG", "/fotos/iphone11-3.PNG", "/fotos/iphone17-3.PNG",
+          "/fotos/iphone16-1.PNG", "/fotos/iphone15-3.PNG", "/fotos/iphone14-3.PNG",
+          "/fotos/iphone13-3.PNG", "/fotos/iphone12-2.PNG", "/fotos/iphone11-1.PNG",
+        ].map((src, i) => (
+          <img key={i} src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        ))}
+      </div>
+      {/* Overlay para mantener legibilidad */}
+      <div style={{ position: "absolute", inset: 0, zIndex: 1, background: "rgba(245,245,247,0.82)" }} />
+
+      <div style={{ maxWidth: "1100px", margin: "0 auto", position: "relative", zIndex: 2 }} ref={ref}>
 
         {/* Header */}
         <motion.div
@@ -3126,9 +3071,7 @@ export default function StorePage() {
       <Navbar scrolled={scrolled} />
       <Hero />
       <Marquee />
-      <Vidriera />
       <HowToBuy />
-      <RecentlyViewed products={products} exchange={exchange} />
 
       {/* ── Oportunidades ─────────────────────────────────────────────── */}
       <section id="stock" style={{ maxWidth: "1280px", margin: "0 auto", padding: "100px clamp(20px, 6vw, 80px) 120px", fontFamily: T.body }}>
