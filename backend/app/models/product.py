@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, DateTime, Numeric, Text, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, Date, DateTime, Numeric, Text, ForeignKey, Boolean, JSON
 from sqlalchemy.sql import func
 from app.db.session import Base
 
@@ -32,3 +32,4 @@ class Product(Base):
     qr_code_url = Column(String, nullable=True)
     is_offer = Column(Boolean, default=False, nullable=False, server_default="false")
     warranty_days = Column(Integer, nullable=True)
+    gallery_urls = Column(JSON, nullable=True)

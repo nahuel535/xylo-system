@@ -15,7 +15,7 @@ const initialState = {
   imei: "", serial_number: "", battery_health: "", cosmetic_condition: "",
   functional_condition: "", sim_type: "", condition_type: "", purchase_date: "",
   purchase_price_usd: "", suggested_sale_price_usd: "", supplier: "",
-  notes: "", status: "in_stock", photo_url: "", created_by: "", is_offer: false,
+  notes: "", status: "in_stock", photo_url: "", gallery_urls: [], created_by: "", is_offer: false,
   warranty_value: "", warranty_unit: "months",
 };
 
@@ -126,6 +126,8 @@ export default function NewProductPage() {
   const [pendingVoice, setPendingVoice] = useState(null); // { name, value }
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
+  const [galleryPreviews, setGalleryPreviews] = useState([]);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
 
   const isAccessory = form.category === "Accesorio";
   const isCombo = form.category === "Combo";
@@ -303,6 +305,27 @@ export default function NewProductPage() {
     }
   }
 
+  async function handleGalleryUpload(e) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    setUploadingGallery(true);
+    try {
+      const urls = await Promise.all(files.map((f) => uploadToCloudinary(f)));
+      setGalleryPreviews((prev) => [...prev, ...urls]);
+      setForm((prev) => ({ ...prev, gallery_urls: [...(prev.gallery_urls || []), ...urls] }));
+    } catch {
+      setMessage("Error subiendo fotos de galería. Intentá de nuevo.");
+    } finally {
+      setUploadingGallery(false);
+      e.target.value = "";
+    }
+  }
+
+  function removeGalleryPhoto(idx) {
+    setGalleryPreviews((prev) => prev.filter((_, i) => i !== idx));
+    setForm((prev) => ({ ...prev, gallery_urls: (prev.gallery_urls || []).filter((_, i) => i !== idx) }));
+  }
+
   function toggleComboItem(item) {
     setComboItems((prev) => {
       const next = prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item];
@@ -357,6 +380,7 @@ export default function NewProductPage() {
         purchase_price_usd: Number(form.purchase_price_usd || 0),
         suggested_sale_price_usd: Number(form.suggested_sale_price_usd || 0),
         photo_url: form.photo_url || null,
+        gallery_urls: form.gallery_urls?.length > 0 ? form.gallery_urls : null,
         created_by: form.created_by ? Number(form.created_by) : null,
         warranty_days: warrantyDays,
         warranty_value: undefined,
@@ -660,6 +684,42 @@ export default function NewProductPage() {
               )}
               <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
             </label>
+          </div>
+
+          {/* Galería de fotos */}
+          <div className="md:col-span-2 xl:col-span-3">
+            <p className="text-sm text-base-muted mb-2">Galería de fotos <span className="text-xs opacity-60">(hasta 10 imágenes para el sitio web)</span></p>
+            <div className="flex flex-wrap gap-3">
+              {galleryPreviews.map((url, idx) => (
+                <div key={idx} className="relative w-24 h-24 rounded-xl overflow-hidden border border-base-border group">
+                  <img src={url} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeGalleryPhoto(idx)}
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition"
+                  >
+                    <X size={18} className="text-white" />
+                  </button>
+                </div>
+              ))}
+              {galleryPreviews.length < 10 && (
+                <label className={`flex flex-col items-center justify-center w-24 h-24 border-2 border-dashed rounded-xl cursor-pointer transition
+                  ${uploadingGallery ? "opacity-50 pointer-events-none" : "hover:border-xylo-500/50 hover:bg-base-subtle"} border-base-border`}
+                >
+                  {uploadingGallery ? (
+                    <div className="w-5 h-5 border-2 border-xylo-500 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <svg className="w-6 h-6 text-base-muted mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span className="text-xs text-base-muted">Agregar</span>
+                    </>
+                  )}
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={handleGalleryUpload} disabled={uploadingGallery} />
+                </label>
+              )}
+            </div>
           </div>
 
           <SelectField

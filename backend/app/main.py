@@ -31,6 +31,10 @@ with engine.connect() as conn:
         ALTER TABLE products
         ADD COLUMN IF NOT EXISTS warranty_days INTEGER
     """))
+    conn.execute(text("""
+        ALTER TABLE products
+        ADD COLUMN IF NOT EXISTS gallery_urls JSONB
+    """))
     conn.commit()
 
 app = FastAPI(title="Xylo API")

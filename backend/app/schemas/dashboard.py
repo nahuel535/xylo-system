@@ -17,6 +17,10 @@ class DashboardSummary(BaseModel):
     sales_last_month_count: int
     sales_last_month_value_usd: Decimal
     profit_last_month_usd: Decimal
+    expenses_this_month_usd: Decimal
+    net_profit_this_month_usd: Decimal
+    active_debtors_count: int
+    total_active_debt_usd: Decimal
 
 
 class MonthStat(BaseModel):

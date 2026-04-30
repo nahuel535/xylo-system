@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../services/api";
 import Header from "../components/Header";
 import UsdtCard from "../components/UsdtCard";
-import { Package, TrendingUp, TrendingDown, DollarSign, ShoppingBag, BarChart2, CreditCard, Minus, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, TrendingUp, TrendingDown, DollarSign, ShoppingBag, BarChart2, CreditCard, Minus, Clock, ChevronLeft, ChevronRight, Download, Users, AlertCircle } from "lucide-react";
 
 const MONTHS_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
@@ -20,6 +20,20 @@ export default function DashboardPage() {
   const [chartView, setChartView] = useState("profit");
 
   const isCurrentMonth = selectedYear === now.getFullYear() && selectedMonth === now.getMonth() + 1;
+
+  async function downloadReport() {
+    try {
+      const res = await api.get(`/dashboard/report?year=${selectedYear}&month=${selectedMonth}`, { responseType: "blob" });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `resumen_${MONTHS_ES[selectedMonth - 1].toLowerCase()}_${selectedYear}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      console.error("Error descargando reporte");
+    }
+  }
 
   function prevMonth() {
     if (selectedMonth === 1) { setSelectedMonth(12); setSelectedYear(y => y - 1); }
@@ -78,16 +92,25 @@ export default function DashboardPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <Header title="Dashboard" subtitle="Resumen general del negocio" />
-        <div className="flex items-center gap-2 bg-base-card border border-base-border rounded-xl px-3 py-2 shadow-card">
-          <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-base-subtle transition text-base-muted hover:text-base-text">
-            <ChevronLeft size={15} />
+        <div className="flex items-center gap-2">
+          <button
+            onClick={downloadReport}
+            className="flex items-center gap-1.5 text-xs font-medium px-3 py-2 bg-base-card border border-base-border rounded-xl hover:bg-base-subtle transition text-base-muted hover:text-base-text shadow-card"
+          >
+            <Download size={13} />
+            Descargar resumen
           </button>
-          <span className="text-sm font-semibold text-base-text min-w-[120px] text-center">
-            {MONTHS_ES[selectedMonth - 1]} {selectedYear}
-          </span>
-          <button onClick={nextMonth} disabled={isCurrentMonth} className={`p-1 rounded-lg transition ${isCurrentMonth ? "text-base-border cursor-default" : "hover:bg-base-subtle text-base-muted hover:text-base-text"}`}>
-            <ChevronRight size={15} />
-          </button>
+          <div className="flex items-center gap-2 bg-base-card border border-base-border rounded-xl px-3 py-2 shadow-card">
+            <button onClick={prevMonth} className="p-1 rounded-lg hover:bg-base-subtle transition text-base-muted hover:text-base-text">
+              <ChevronLeft size={15} />
+            </button>
+            <span className="text-sm font-semibold text-base-text min-w-[120px] text-center">
+              {MONTHS_ES[selectedMonth - 1]} {selectedYear}
+            </span>
+            <button onClick={nextMonth} disabled={isCurrentMonth} className={`p-1 rounded-lg transition ${isCurrentMonth ? "text-base-border cursor-default" : "hover:bg-base-subtle text-base-muted hover:text-base-text"}`}>
+              <ChevronRight size={15} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -124,6 +147,38 @@ export default function DashboardPage() {
           sub={`${summary.total_sales_count} ventas totales`}
           icon={<DollarSign size={16} />}
           accent="purple"
+        />
+      </div>
+
+      {/* ── KPI cards secundarias ── */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <KpiCard
+          label={`Gastos — ${MONTHS_ES[selectedMonth - 1]}`}
+          value={`USD ${fmt(summary.expenses_this_month_usd)}`}
+          sub="Operativos del mes"
+          icon={<TrendingDown size={16} />}
+          accent="red"
+        />
+        <KpiCard
+          label={`Ganancia neta — ${MONTHS_ES[selectedMonth - 1]}`}
+          value={`USD ${fmt(summary.net_profit_this_month_usd)}`}
+          sub="Bruta menos gastos"
+          icon={<DollarSign size={16} />}
+          accent={Number(summary.net_profit_this_month_usd) >= 0 ? "green" : "red"}
+        />
+        <KpiCard
+          label="Deudores activos"
+          value={summary.active_debtors_count}
+          sub="Clientes con saldo pendiente"
+          icon={<Users size={16} />}
+          accent="orange"
+        />
+        <KpiCard
+          label="Deuda total"
+          value={`USD ${fmt(summary.total_active_debt_usd)}`}
+          sub="Saldo pendiente de cobro"
+          icon={<AlertCircle size={16} />}
+          accent="orange"
         />
       </div>
 
@@ -451,6 +506,8 @@ function KpiCard({ label, value, sub, delta: d, deltaLabel, icon, accent }) {
     green: { bg: "bg-green-500/10", text: "text-green-500" },
     blue: { bg: "bg-blue-500/10", text: "text-blue-500" },
     purple: { bg: "bg-purple-500/10", text: "text-purple-500" },
+    orange: { bg: "bg-orange-500/10", text: "text-orange-500" },
+    red: { bg: "bg-red-400/10", text: "text-red-400" },
   };
   const { bg, text } = accents[accent] || accents.xylo;
 

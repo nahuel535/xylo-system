@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, List
 from decimal import Decimal
 
 
@@ -25,6 +25,7 @@ class ProductCreate(BaseModel):
     notes: Optional[str] = None
     status: str = "in_stock"
     photo_url: Optional[str] = None
+    gallery_urls: Optional[List[str]] = None
     created_by: Optional[int] = None
     is_offer: bool = False
     warranty_days: Optional[int] = None
@@ -49,6 +50,7 @@ class ProductUpdate(BaseModel):
     notes: Optional[str] = None
     status: str = "in_stock"
     photo_url: Optional[str] = None
+    gallery_urls: Optional[List[str]] = None
     created_by: Optional[int] = None
     is_offer: bool = False
     warranty_days: Optional[int] = None
@@ -74,6 +76,7 @@ class ProductResponse(BaseModel):
     notes: Optional[str]
     status: str
     photo_url: Optional[str]
+    gallery_urls: Optional[List[str]]
     created_by: Optional[int]
     created_at: datetime
     updated_at: datetime
