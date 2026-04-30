@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import { Pencil, Trash2, X, Megaphone, Building2, Users, Video, TrendingDown, Check, Plus, Tag, Zap, Layers, Star, ShoppingBag } from "lucide-react";
 
 const BASE_CATEGORIES = ["Ads", "Oficina", "Vendedores y revendedores", "Edicion"];
+const CATEGORIES = BASE_CATEGORIES;
 
 const CAT_META = {
   "Ads":                       { icon: Megaphone,    color: "#f97316", bg: "bg-orange-50 dark:bg-orange-950/30",  text: "text-orange-600 dark:text-orange-400",  border: "border-orange-200 dark:border-orange-800" },
