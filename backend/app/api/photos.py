@@ -1,9 +1,43 @@
 import httpx
 import base64
+from pathlib import Path
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/photos", tags=["Photos"])
+
+FOTOS_DIR = Path(__file__).parent.parent.parent.parent / "fotos"
+IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".heic", ".webp"}
+
+
+@router.get("/local-gallery")
+def get_local_gallery():
+    if not FOTOS_DIR.exists():
+        return {"models": []}
+    models = []
+    for model_dir in sorted(FOTOS_DIR.iterdir()):
+        if not model_dir.is_dir():
+            continue
+        photos = []
+        for photo_file in sorted(model_dir.iterdir()):
+            if photo_file.suffix.lower() in IMAGE_EXTS:
+                photos.append({
+                    "filename": photo_file.name,
+                    "url": f"/photos/local-file/{model_dir.name}/{photo_file.name}",
+                    "name": photo_file.stem,
+                })
+        if photos:
+            models.append({"model": model_dir.name, "photos": photos})
+    return {"models": models}
+
+
+@router.get("/local-file/{model}/{filename}")
+def get_local_file(model: str, filename: str):
+    file_path = FOTOS_DIR / model / filename
+    if not file_path.exists() or file_path.suffix.lower() not in IMAGE_EXTS:
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+    return FileResponse(str(file_path))
 
 GEMINI_API_KEY = "AIzaSyDizOJJUOJWEymaggyD7Oxu07jkukdKoXY"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key={GEMINI_API_KEY}"
