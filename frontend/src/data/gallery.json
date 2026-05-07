@@ -1,0 +1,100 @@
+{
+  "Iphone 11": [
+    {
+      "name": "11 pro max",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181683/xylo/gallery/an3jsfarwq2eserh1am9.png"
+    },
+    {
+      "name": "11 pro",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181685/xylo/gallery/x8vgcwpzoqui0ks7jded.png"
+    },
+    {
+      "name": "11",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181686/xylo/gallery/zl4osohrvbiwymvawgxc.png"
+    }
+  ],
+  "Iphone 12": [
+    {
+      "name": "12 pro max",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181687/xylo/gallery/hg6dvbgh7a6vh5qkanq2.png"
+    },
+    {
+      "name": "12 pro",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181688/xylo/gallery/fz1wyawpcik8mlalfht3.png"
+    },
+    {
+      "name": "12",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181689/xylo/gallery/xwkb3nuow7hziggwsa9q.png"
+    }
+  ],
+  "Iphone 13": [
+    {
+      "name": "12",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181690/xylo/gallery/cg9hmdq6a09jxfzsgyva.png"
+    },
+    {
+      "name": "13 pro max",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181691/xylo/gallery/ch8vlz3c7x0hgzwgkzde.png"
+    },
+    {
+      "name": "13 pro",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181692/xylo/gallery/sja3efb5yxvvtmc7fky9.png"
+    }
+  ],
+  "iPhone 14": [
+    {
+      "name": "14 pro max",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181693/xylo/gallery/jolqynw5ikkfe7a5q1dc.png"
+    },
+    {
+      "name": "14 pro",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181695/xylo/gallery/p4grfnngnq40rbuprexu.png"
+    },
+    {
+      "name": "14",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181696/xylo/gallery/ny5srkjywzejcwkxq4kb.png"
+    }
+  ],
+  "Iphone 15": [
+    {
+      "name": "15 pro max",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181698/xylo/gallery/gxsn69ifj5bbv6dwvdgn.png"
+    },
+    {
+      "name": "15 pro",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181699/xylo/gallery/tkmhrlrh3kyum4e9wwq4.png"
+    },
+    {
+      "name": "15",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181700/xylo/gallery/nfjm2lldi2twk8mldr7b.png"
+    }
+  ],
+  "iPhone 16": [
+    {
+      "name": "16 pro max",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181702/xylo/gallery/juk5yd2ix9e5m8hcchyy.png"
+    },
+    {
+      "name": "16 pro",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181704/xylo/gallery/gnsvtph7rk3k2dbynosh.png"
+    },
+    {
+      "name": "16",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181705/xylo/gallery/cyfvmudyersmsusmfjhf.png"
+    }
+  ],
+  "Iphone 17": [
+    {
+      "name": "17 pro max",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181706/xylo/gallery/gcaesbi3ejnuh7g7jwlk.png"
+    },
+    {
+      "name": "17 pro",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181707/xylo/gallery/nrthxoui7inz3jieqwda.png"
+    },
+    {
+      "name": "17",
+      "url": "https://res.cloudinary.com/dwk9judcg/image/upload/v1778181708/xylo/gallery/mdfnshex1kqrqzbavgdb.png"
+    }
+  ]
+}
