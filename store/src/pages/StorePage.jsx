@@ -2035,10 +2035,10 @@ function ProductCard({ product, exchange }) {
         </div>
 
         {/* Body */}
-        <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div className="product-card-body" style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
           <div>
-            <p style={{ fontSize: "16px", fontWeight: 600, color: T.text, letterSpacing: "-0.02em", marginBottom: "3px" }}>{product.model}</p>
-            <p style={{ fontSize: "13px", color: T.textSec }}>{[product.storage, product.color].filter(Boolean).join(" · ")}</p>
+            <p className="product-card-name" style={{ fontSize: "16px", fontWeight: 600, color: T.text, letterSpacing: "-0.02em", marginBottom: "3px" }}>{product.model}</p>
+            <p className="product-card-specs" style={{ fontSize: "13px", color: T.textSec }}>{[product.storage, product.color].filter(Boolean).join(" · ")}</p>
           </div>
 
           {product.battery_health && (
@@ -2053,14 +2053,14 @@ function ProductCard({ product, exchange }) {
           <div style={{ marginTop: "auto", paddingTop: "14px", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               {product.is_offer && (
-                <p style={{ fontSize: "13px", color: T.textMuted, textDecoration: "line-through", lineHeight: 1, marginBottom: "3px" }}>
+                <p className="product-card-original-price" style={{ fontSize: "13px", color: T.textMuted, textDecoration: "line-through", lineHeight: 1, marginBottom: "3px" }}>
                   USD {Math.round(Number(product.suggested_sale_price_usd) * 1.2).toLocaleString("es-AR")}
                 </p>
               )}
-              <p style={{ fontSize: "20px", fontWeight: 700, color: product.is_offer ? "#ef4444" : T.text, letterSpacing: "-0.04em", lineHeight: 1 }}>
+              <p className="product-card-price" style={{ fontSize: "20px", fontWeight: 700, color: product.is_offer ? "#ef4444" : T.text, letterSpacing: "-0.04em", lineHeight: 1 }}>
                 USD {Number(product.suggested_sale_price_usd).toLocaleString("es-AR")}
               </p>
-              {ars && <p style={{ fontSize: "12px", color: T.textMuted, marginTop: "3px" }}>ARS {ars}</p>}
+              {ars && <p className="product-card-ars" style={{ fontSize: "12px", color: T.textMuted, marginTop: "3px" }}>ARS {ars}</p>}
             </div>
             <div style={{ width: "32px", height: "32px", background: T.accentLight, border: `1px solid ${T.accentBorder}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <ChevronRight size={14} color={ACCENT} strokeWidth={2.5} />
@@ -3183,6 +3183,7 @@ export default function StorePage() {
           </motion.div>
         ) : viewMode === "grid" ? (
           <motion.div layout variants={stockGridVariants} initial="hidden" animate="visible"
+            className="stock-grid"
             style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))", gap: "20px" }}
           >
             <AnimatePresence mode="popLayout">
@@ -3210,6 +3211,31 @@ export default function StorePage() {
         @media (max-width: 540px) {
           .row-battery-desktop { display: none !important; }
           .row-battery-mobile { display: flex !important; }
+        }
+        @media (max-width: 600px) {
+          .stock-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+          }
+          .product-card-body {
+            padding: 12px !important;
+            gap: 8px !important;
+          }
+          .product-card-name {
+            font-size: 13px !important;
+          }
+          .product-card-specs {
+            font-size: 11px !important;
+          }
+          .product-card-price {
+            font-size: 15px !important;
+          }
+          .product-card-original-price {
+            font-size: 11px !important;
+          }
+          .product-card-ars {
+            font-size: 10px !important;
+          }
         }
       `}</style>
 
