@@ -92,9 +92,9 @@ function Label({ product }) {
       width: "55mm",
       height: "44mm",
       boxSizing: "border-box",
-      background: "white",
+      background: "#000",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif",
-      color: "#111",
+      color: "#fff",
       padding: "2mm 2.5mm",
       display: "flex",
       flexDirection: "column",
@@ -106,11 +106,15 @@ function Label({ product }) {
       width: "8mm",
       height: "8mm",
       borderRadius: "2mm",
+      filter: "invert(1)",
     },
     qrImg: {
       width: "22mm",
       height: "22mm",
       display: "block",
+      background: "#fff",
+      padding: "1mm",
+      borderRadius: "1mm",
     },
     textBlock: {
       textAlign: "center",
@@ -125,7 +129,7 @@ function Label({ product }) {
     },
     subtitle: {
       fontSize: "7pt",
-      color: "#555",
+      color: "#aaa",
       margin: 0,
     },
     specsRow: {
