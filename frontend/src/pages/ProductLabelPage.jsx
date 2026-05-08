@@ -97,58 +97,71 @@ function Label({ product }) {
       color: "#111",
       padding: "2.5mm",
       display: "flex",
-      flexDirection: "column",
+      flexDirection: "row",
       alignItems: "center",
+      gap: "3mm",
       overflow: "hidden",
+    },
+    qrImg: {
+      width: "34mm",
+      height: "34mm",
+      display: "block",
+      flexShrink: 0,
+    },
+    divider: {
+      width: "0.5px",
+      alignSelf: "stretch",
+      background: "#e5e5e5",
+      flexShrink: 0,
+    },
+    textCol: {
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      minWidth: 0,
     },
     brandBlock: {
       display: "flex",
       alignItems: "center",
       gap: "3px",
-      marginBottom: "1.5mm",
+      marginBottom: "2mm",
     },
     logoImg: {
-      width: "12px",
-      height: "12px",
+      width: "11px",
+      height: "11px",
       borderRadius: "3px",
     },
     brand: {
-      fontSize: "6pt",
+      fontSize: "5.5pt",
       letterSpacing: "0.18em",
       textTransform: "uppercase",
-      color: "#aaa",
+      color: "#bbb",
       margin: 0,
-    },
-    qrImg: {
-      width: "16mm",
-      height: "16mm",
-      display: "block",
-      marginBottom: "1.5mm",
     },
     model: {
       fontSize: "13pt",
       fontWeight: "700",
       letterSpacing: "-0.03em",
       lineHeight: 1,
-      margin: "0 0 1mm",
-      textAlign: "center",
+      margin: "0 0 1.5mm",
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
     },
     subtitle: {
-      fontSize: "8pt",
+      fontSize: "7.5pt",
       color: "#555",
-      margin: 0,
+      margin: "0 0 2mm",
       letterSpacing: "-0.01em",
-      textAlign: "center",
     },
     specsRow: {
       display: "flex",
-      gap: "2mm",
-      marginTop: "1.5mm",
+      gap: "1.5mm",
       flexWrap: "wrap",
-      justifyContent: "center",
     },
     specChip: {
-      fontSize: "6pt",
+      fontSize: "5.5pt",
       color: "#666",
       background: "#f3f3f4",
       borderRadius: "3px",
@@ -160,33 +173,34 @@ function Label({ product }) {
 
   return (
     <div style={S.wrap}>
-      {/* Logo + marca */}
-      <div style={S.brandBlock}>
-        <img src={logo} alt="Xylo" style={S.logoImg} />
-        <p style={S.brand}>Xylo Selection</p>
-      </div>
-
-      {/* QR centrado */}
+      {/* QR a la izquierda */}
       <img
         src={`https://xylo-system-production.up.railway.app/products/${product.id}/qr`}
         alt="QR"
         style={S.qrImg}
       />
 
-      {/* Modelo */}
-      <p style={S.model}>{product.model || "iPhone"}</p>
+      <div style={S.divider} />
 
-      {/* Storage · Color */}
-      <p style={S.subtitle}>
-        {[product.storage, product.color].filter(Boolean).join(" · ") || "—"}
-      </p>
-
-      {/* Chips de specs */}
-      {chips.length > 0 && (
-        <div style={S.specsRow}>
-          {chips.map((c) => <span key={c} style={S.specChip}>{c}</span>)}
+      {/* Texto a la derecha */}
+      <div style={S.textCol}>
+        <div style={S.brandBlock}>
+          <img src={logo} alt="Xylo" style={S.logoImg} />
+          <p style={S.brand}>Xylo Selection</p>
         </div>
-      )}
+
+        <p style={S.model}>{product.model || "iPhone"}</p>
+
+        <p style={S.subtitle}>
+          {[product.storage, product.color].filter(Boolean).join(" · ") || "—"}
+        </p>
+
+        {chips.length > 0 && (
+          <div style={S.specsRow}>
+            {chips.map((c) => <span key={c} style={S.specChip}>{c}</span>)}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
