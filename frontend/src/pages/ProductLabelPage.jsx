@@ -32,18 +32,16 @@ export default function ProductLabelPage() {
   return (
     <>
       {/* Botón solo visible en pantalla */}
-      <div className="print:hidden flex justify-center items-center min-h-screen bg-[#f5f5f7]">
-        <div className="text-center">
-          <div style={{ width: "55mm", margin: "0 auto 20px" }}>
-            <Label product={product} />
-          </div>
-          <button
-            onClick={() => window.print()}
-            className="rounded-2xl bg-black text-white px-5 py-3 text-sm font-medium hover:opacity-90 transition"
-          >
-            Imprimir etiqueta
-          </button>
+      <div className="print:hidden flex flex-col justify-center items-center min-h-screen bg-[#f5f5f7]">
+        <div style={{ marginBottom: "20px" }}>
+          <Label product={product} />
         </div>
+        <button
+          onClick={() => window.print()}
+          className="rounded-2xl bg-black text-white px-5 py-3 text-sm font-medium hover:opacity-90 transition"
+        >
+          Imprimir etiqueta
+        </button>
       </div>
 
       {/* Lo que se imprime */}
