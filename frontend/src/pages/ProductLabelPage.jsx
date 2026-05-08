@@ -35,7 +35,7 @@ export default function ProductLabelPage() {
       {/* Botón solo visible en pantalla */}
       <div className="print:hidden flex justify-center items-center min-h-screen bg-[#f5f5f7]">
         <div className="text-center">
-          <div style={{ width: "80mm", margin: "0 auto 20px" }}>
+          <div style={{ width: "55mm", margin: "0 auto 20px" }}>
             <Label product={product} />
           </div>
           <button
@@ -55,7 +55,7 @@ export default function ProductLabelPage() {
       <style>{`
         @media print {
           @page {
-            size: 80mm auto;
+            size: 55mm 44mm;
             margin: 0;
           }
           * {
@@ -83,203 +83,141 @@ export default function ProductLabelPage() {
 }
 
 function Label({ product }) {
-  const specs = [
-    { label: "Batería", value: product.battery_health ? `${product.battery_health}%` : null },
-    { label: "Condición", value: product.condition_type || null },
-    { label: "Estado estético", value: product.cosmetic_condition || null },
-    { label: "Estado funcional", value: product.functional_condition || null },
-    { label: "Tipo de SIM", value: product.sim_type || null },
-  ].filter((s) => s.value);
+  const battery = product.battery_health ? `${product.battery_health}%` : null;
+  const condition = product.condition_type || null;
+  const cosmetic = product.cosmetic_condition || null;
 
   const S = {
     wrap: {
-      width: "80mm",
+      width: "55mm",
+      height: "44mm",
       boxSizing: "border-box",
       background: "white",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif",
       color: "#111",
-      padding: "5mm",
-    },
-    header: {
-      display: "flex",
-      alignItems: "center",
-      gap: "6px",
-      marginBottom: "4mm",
-    },
-    logoImg: {
-      width: "18px",
-      height: "18px",
-      borderRadius: "4px",
-    },
-    brand: {
-      fontSize: "8pt",
-      letterSpacing: "0.2em",
-      textTransform: "uppercase",
-      color: "#999",
-      margin: 0,
-    },
-    model: {
-      fontSize: "22pt",
-      fontWeight: "600",
-      letterSpacing: "-0.03em",
-      lineHeight: 1,
-      margin: "0 0 1.5mm",
-    },
-    subtitle: {
-      fontSize: "11pt",
-      color: "#555",
-      margin: "0 0 4mm",
-    },
-    row: {
-      display: "flex",
-      gap: "3mm",
-      alignItems: "stretch",
-      marginBottom: "4mm",
-    },
-    specsBox: {
-      flex: 1,
-      background: "#f7f7f8",
-      borderRadius: "8px",
-      padding: "3mm",
-    },
-    specItem: {
-      marginBottom: "2mm",
-    },
-    specLabel: {
-      fontSize: "6.5pt",
-      textTransform: "uppercase",
-      letterSpacing: "0.12em",
-      color: "#999",
-      margin: "0 0 0.5mm",
-    },
-    specValue: {
-      fontSize: "9pt",
-      fontWeight: "500",
-      color: "#111",
-      margin: 0,
-    },
-    priceBox: {
-      width: "22mm",
-      background: "#f7f7f8",
-      borderRadius: "8px",
-      padding: "3mm",
+      padding: "2.5mm",
       display: "flex",
       flexDirection: "column",
-      justifyContent: "center",
-      alignItems: "center",
-      textAlign: "center",
+      overflow: "hidden",
     },
-    priceCurrency: {
-      fontSize: "6.5pt",
-      textTransform: "uppercase",
-      letterSpacing: "0.15em",
-      color: "#999",
-      margin: "0 0 2mm",
+    // Fila superior: logo/marca a la izquierda, QR a la derecha
+    topRow: {
+      display: "flex",
+      alignItems: "flex-start",
+      justifyContent: "space-between",
+      marginBottom: "1mm",
     },
-    priceLine: {
-      width: "100%",
-      borderBottom: "1.5px solid #bbb",
-      height: "8mm",
-    },
-    notes: {
-      background: "#f7f7f8",
-      borderRadius: "8px",
-      padding: "3mm",
-      marginBottom: "4mm",
-    },
-    notesLabel: {
-      fontSize: "6.5pt",
-      textTransform: "uppercase",
-      letterSpacing: "0.12em",
-      color: "#999",
-      margin: "0 0 1.5mm",
-    },
-    notesText: {
-      fontSize: "8.5pt",
-      color: "#444",
-      lineHeight: 1.5,
-      margin: 0,
-    },
-    footer: {
-      borderTop: "1px solid #eee",
-      paddingTop: "3mm",
+    brandBlock: {
       display: "flex",
       alignItems: "center",
-      gap: "3mm",
+      gap: "3px",
     },
-    qrWrap: {
-      background: "white",
-      border: "1px solid #eee",
-      borderRadius: "8px",
-      padding: "2mm",
-      flexShrink: 0,
+    logoImg: {
+      width: "12px",
+      height: "12px",
+      borderRadius: "3px",
+    },
+    brand: {
+      fontSize: "6pt",
+      letterSpacing: "0.18em",
+      textTransform: "uppercase",
+      color: "#aaa",
+      margin: 0,
     },
     qrImg: {
-      width: "22mm",
-      height: "22mm",
+      width: "13mm",
+      height: "13mm",
       display: "block",
     },
-    qrText: {
-      fontSize: "7.5pt",
+    // Contenido principal
+    model: {
+      fontSize: "15pt",
+      fontWeight: "700",
+      letterSpacing: "-0.03em",
+      lineHeight: 1,
+      margin: "0 0 1mm",
+    },
+    subtitle: {
+      fontSize: "8.5pt",
+      color: "#555",
+      margin: "0 0 1.5mm",
+      letterSpacing: "-0.01em",
+    },
+    specsRow: {
+      display: "flex",
+      gap: "4mm",
+      marginBottom: "1.5mm",
+    },
+    specChip: {
+      fontSize: "6.5pt",
       color: "#666",
-      lineHeight: 1.5,
+      background: "#f3f3f4",
+      borderRadius: "3px",
+      padding: "0.5mm 1.5mm",
+    },
+    divider: {
+      borderTop: "0.5px solid #ddd",
+      margin: "1mm 0",
+    },
+    // Fila de precio al fondo
+    priceRow: {
+      display: "flex",
+      alignItems: "center",
+      gap: "2mm",
+      marginTop: "auto",
+    },
+    priceLabel: {
+      fontSize: "6pt",
+      textTransform: "uppercase",
+      letterSpacing: "0.15em",
+      color: "#aaa",
+      whiteSpace: "nowrap",
       margin: 0,
+    },
+    priceLine: {
+      flex: 1,
+      borderBottom: "1px solid #bbb",
     },
   };
 
+  const chips = [battery, condition, cosmetic].filter(Boolean);
+
   return (
     <div style={S.wrap}>
-      {/* Header */}
-      <div style={S.header}>
-        <img src={logo} alt="Xylo" style={S.logoImg} />
-        <p style={S.brand}>Xylo Selection</p>
+      {/* Top: marca + QR */}
+      <div style={S.topRow}>
+        <div style={S.brandBlock}>
+          <img src={logo} alt="Xylo" style={S.logoImg} />
+          <p style={S.brand}>Xylo Selection</p>
+        </div>
+        <img
+          src={`https://xylo-system-production.up.railway.app/products/${product.id}/qr`}
+          alt="QR"
+          style={S.qrImg}
+        />
       </div>
 
       {/* Modelo */}
       <p style={S.model}>{product.model || "iPhone"}</p>
+
+      {/* Storage · Color */}
       <p style={S.subtitle}>
         {[product.storage, product.color].filter(Boolean).join(" · ") || "—"}
       </p>
 
-      {/* Specs + precio */}
-      <div style={S.row}>
-        {specs.length > 0 && (
-          <div style={S.specsBox}>
-            {specs.map((s) => (
-              <div key={s.label} style={S.specItem}>
-                <p style={S.specLabel}>{s.label}</p>
-                <p style={S.specValue}>{s.value}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div style={S.priceBox}>
-          <p style={S.priceCurrency}>Precio USD</p>
-          <div style={S.priceLine} />
-        </div>
-      </div>
-
-      {/* Notas */}
-      {product.notes && (
-        <div style={S.notes}>
-          <p style={S.notesLabel}>Observaciones</p>
-          <p style={S.notesText}>{product.notes}</p>
+      {/* Chips de specs */}
+      {chips.length > 0 && (
+        <div style={S.specsRow}>
+          {chips.map((c) => <span key={c} style={S.specChip}>{c}</span>)}
         </div>
       )}
 
-      {/* Footer QR */}
-      <div style={S.footer}>
-        <div style={S.qrWrap}>
-          <img
-            src={`https://xylo-system-production.up.railway.app/products/${product.id}/qr`}
-            alt="QR producto"
-            style={S.qrImg}
-          />
-        </div>
-        <p style={S.qrText}>
-          Escaneá este código para abrir el producto y acceder rápido a la venta.
-        </p>
+      <div style={S.divider} />
+
+      {/* Precio */}
+      <div style={S.priceRow}>
+        <p style={S.priceLabel}>USD</p>
+        <div style={S.priceLine} />
       </div>
     </div>
   );
