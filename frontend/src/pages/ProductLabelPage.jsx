@@ -102,22 +102,10 @@ function Label({ product }) {
       justifyContent: "space-between",
       overflow: "hidden",
     },
-    brandBlock: {
-      display: "flex",
-      alignItems: "center",
-      gap: "3px",
-    },
     logoImg: {
-      width: "11px",
-      height: "11px",
-      borderRadius: "3px",
-    },
-    brand: {
-      fontSize: "5.5pt",
-      letterSpacing: "0.18em",
-      textTransform: "uppercase",
-      color: "#bbb",
-      margin: 0,
+      width: "8mm",
+      height: "8mm",
+      borderRadius: "2mm",
     },
     qrImg: {
       width: "22mm",
@@ -161,10 +149,7 @@ function Label({ product }) {
   return (
     <div style={S.wrap}>
       {/* Logo arriba */}
-      <div style={S.brandBlock}>
-        <img src={logo} alt="Xylo" style={S.logoImg} />
-        <p style={S.brand}>Xylo Selection</p>
-      </div>
+      <img src={logo} alt="Xylo" style={S.logoImg} />
 
       {/* QR al medio */}
       <img
