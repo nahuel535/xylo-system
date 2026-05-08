@@ -175,6 +175,7 @@ function Label({ product }) {
         <p style={S.subtitle}>
           {[product.storage, product.color].filter(Boolean).join(" · ") || "—"}
         </p>
+        {battery && <p style={S.subtitle}>{battery} batería</p>}
       </div>
     </div>
   );
