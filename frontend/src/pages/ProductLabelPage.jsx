@@ -95,37 +95,17 @@ function Label({ product }) {
       background: "white",
       fontFamily: "-apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif",
       color: "#111",
-      padding: "2.5mm",
-      display: "flex",
-      flexDirection: "row",
-      alignItems: "center",
-      gap: "3mm",
-      overflow: "hidden",
-    },
-    qrImg: {
-      width: "34mm",
-      height: "34mm",
-      display: "block",
-      flexShrink: 0,
-    },
-    divider: {
-      width: "0.5px",
-      alignSelf: "stretch",
-      background: "#e5e5e5",
-      flexShrink: 0,
-    },
-    textCol: {
-      flex: 1,
+      padding: "2mm 2.5mm",
       display: "flex",
       flexDirection: "column",
-      justifyContent: "center",
-      minWidth: 0,
+      alignItems: "center",
+      justifyContent: "space-between",
+      overflow: "hidden",
     },
     brandBlock: {
       display: "flex",
       alignItems: "center",
       gap: "3px",
-      marginBottom: "2mm",
     },
     logoImg: {
       width: "11px",
@@ -139,26 +119,33 @@ function Label({ product }) {
       color: "#bbb",
       margin: 0,
     },
+    qrImg: {
+      width: "22mm",
+      height: "22mm",
+      display: "block",
+    },
+    textBlock: {
+      textAlign: "center",
+      width: "100%",
+    },
     model: {
-      fontSize: "13pt",
+      fontSize: "12pt",
       fontWeight: "700",
       letterSpacing: "-0.03em",
       lineHeight: 1,
-      margin: "0 0 1.5mm",
-      whiteSpace: "nowrap",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
+      margin: "0 0 1mm",
     },
     subtitle: {
-      fontSize: "7.5pt",
+      fontSize: "7pt",
       color: "#555",
-      margin: "0 0 2mm",
-      letterSpacing: "-0.01em",
+      margin: 0,
     },
     specsRow: {
       display: "flex",
       gap: "1.5mm",
       flexWrap: "wrap",
+      justifyContent: "center",
+      marginTop: "1mm",
     },
     specChip: {
       fontSize: "5.5pt",
@@ -173,28 +160,25 @@ function Label({ product }) {
 
   return (
     <div style={S.wrap}>
-      {/* QR a la izquierda */}
+      {/* Logo arriba */}
+      <div style={S.brandBlock}>
+        <img src={logo} alt="Xylo" style={S.logoImg} />
+        <p style={S.brand}>Xylo Selection</p>
+      </div>
+
+      {/* QR al medio */}
       <img
         src={`https://xylo-system-production.up.railway.app/products/${product.id}/qr`}
         alt="QR"
         style={S.qrImg}
       />
 
-      <div style={S.divider} />
-
-      {/* Texto a la derecha */}
-      <div style={S.textCol}>
-        <div style={S.brandBlock}>
-          <img src={logo} alt="Xylo" style={S.logoImg} />
-          <p style={S.brand}>Xylo Selection</p>
-        </div>
-
+      {/* Nombre y specs abajo */}
+      <div style={S.textBlock}>
         <p style={S.model}>{product.model || "iPhone"}</p>
-
         <p style={S.subtitle}>
           {[product.storage, product.color].filter(Boolean).join(" · ") || "—"}
         </p>
-
         {chips.length > 0 && (
           <div style={S.specsRow}>
             {chips.map((c) => <span key={c} style={S.specChip}>{c}</span>)}
