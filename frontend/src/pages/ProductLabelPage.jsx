@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../services/api";
+import logo from "../assets/logo.png";
 
 export default function ProductLabelPage() {
   const { id } = useParams();
@@ -101,13 +102,11 @@ function Label({ product }) {
       justifyContent: "space-between",
       overflow: "hidden",
     },
-    brandText: {
-      fontSize: "9pt",
-      fontWeight: "700",
-      letterSpacing: "0.25em",
-      textTransform: "uppercase",
-      color: "#111",
-      margin: 0,
+    logoImg: {
+      width: "8mm",
+      height: "8mm",
+      borderRadius: "2mm",
+      filter: "grayscale(1)",
     },
     qrImg: {
       width: "22mm",
@@ -150,8 +149,8 @@ function Label({ product }) {
 
   return (
     <div style={S.wrap}>
-      {/* Marca arriba */}
-      <p style={S.brandText}>Xylo</p>
+      {/* Logo arriba */}
+      <img src={logo} alt="Xylo" style={S.logoImg} />
 
       {/* QR al medio */}
       <img
