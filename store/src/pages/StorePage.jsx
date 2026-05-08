@@ -2979,7 +2979,7 @@ export default function StorePage() {
   const [modelFilter, setModelFilter] = useState("");
   const [storageFilter, setStorageFilter] = useState("");
   const [sortBy, setSortBy] = useState("");
-  const [viewMode, setViewMode] = useState(() => window.innerWidth < 640 ? "list" : "grid");
+  const [viewMode, setViewMode] = useState("grid");
   const [scrolled, setScrolled] = useState(false);
   const [offerPopup, setOfferPopup] = useState(null);
   const stockHeaderRef = useRef(null);
