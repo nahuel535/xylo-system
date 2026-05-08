@@ -164,11 +164,6 @@ function Label({ product }) {
         <p style={S.subtitle}>
           {[product.storage, product.color].filter(Boolean).join(" · ") || "—"}
         </p>
-        {chips.length > 0 && (
-          <div style={S.specsRow}>
-            {chips.map((c) => <span key={c} style={S.specChip}>{c}</span>)}
-          </div>
-        )}
       </div>
     </div>
   );
