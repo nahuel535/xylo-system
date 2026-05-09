@@ -2992,7 +2992,7 @@ export default function StorePage() {
           api.get("/products/"),
           api.get("/exchange-rates/active").catch(() => ({ data: null })),
         ]);
-        const inStock = prodRes.data.filter((p) => p.status === "in_stock");
+        const inStock = prodRes.data.filter((p) => p.status === "in_stock" && p.category?.toLowerCase() === "iphone");
         setProducts(inStock);
         setExchange(exRes.data);
         // Popup oferta del día — solo 1 vez por sesión
