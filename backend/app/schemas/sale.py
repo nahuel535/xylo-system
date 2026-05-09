@@ -1,10 +1,14 @@
 from pydantic import BaseModel
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 from typing import Optional, List
 from app.schemas.sale_payment import SalePaymentCreate, SalePaymentResponse
 
+
+class SaleAccessoryItem(BaseModel):
+    accessory_id: int
+    quantity: int
+    sale_price_usd: Optional[Decimal] = None
 
 
 class SaleCreate(BaseModel):
@@ -20,6 +24,7 @@ class SaleCreate(BaseModel):
     remaining_balance_usd: Optional[Decimal] = None
     status: str = "completed"
     payments: List[SalePaymentCreate] = []
+    accessories: Optional[List[SaleAccessoryItem]] = None
 
 
 class SaleUpdate(BaseModel):

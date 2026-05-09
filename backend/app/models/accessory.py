@@ -24,9 +24,29 @@ class AccessorySale(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     accessory_id = Column(Integer, ForeignKey("accessories.id", ondelete="CASCADE"), nullable=False)
+    sale_id = Column(Integer, ForeignKey("sales.id", ondelete="SET NULL"), nullable=True)
     quantity_sold = Column(Integer, default=1, nullable=False)
     sale_price_usd = Column(Numeric(10, 2), nullable=False)
     purchase_price_usd = Column(Numeric(10, 2), nullable=False)
     gross_profit_usd = Column(Numeric(10, 2), nullable=False)
     notes = Column(Text, nullable=True)
     sold_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class Combo(Base):
+    __tablename__ = "combos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    sale_price_usd = Column(Numeric(10, 2), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class ComboItem(Base):
+    __tablename__ = "combo_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    combo_id = Column(Integer, ForeignKey("combos.id", ondelete="CASCADE"), nullable=False)
+    accessory_id = Column(Integer, ForeignKey("accessories.id", ondelete="CASCADE"), nullable=False)
+    quantity = Column(Integer, default=1, nullable=False)

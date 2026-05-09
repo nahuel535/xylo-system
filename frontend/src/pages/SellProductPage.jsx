@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
+import { Plus, Minus, Trash2, Cable, ChevronDown, ChevronUp } from "lucide-react";
 
 const METHODS = [
   { value: "transferencia", label: "Transferencia" },
@@ -17,6 +18,7 @@ export default function SellProductPage() {
   const [product, setProduct] = useState(null);
   const [exchange, setExchange] = useState(null);
   const [users, setUsers] = useState([]);
+  const [allAccessories, setAllAccessories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -28,31 +30,28 @@ export default function SellProductPage() {
     status: "completed",
   });
 
-  const [pay1, setPay1] = useState({
-    method: "transferencia",
-    amount_usd: "",
-    reference: "",
-  });
+  const [pay1, setPay1] = useState({ method: "transferencia", amount_usd: "", reference: "" });
+  const [pay2, setPay2] = useState({ enabled: false, method: "efectivo", amount_usd: "", reference: "" });
 
-  const [pay2, setPay2] = useState({
-    enabled: false,
-    method: "efectivo",
-    amount_usd: "",
-    reference: "",
-  });
+  // Accesorios seleccionados: [{accessory, quantity, sale_price_usd}]
+  const [selectedAccessories, setSelectedAccessories] = useState([]);
+  const [showAccessories, setShowAccessories] = useState(false);
+  const [accSearch, setAccSearch] = useState("");
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [productRes, exchangeRes, usersRes] = await Promise.all([
+        const [productRes, exchangeRes, usersRes, accRes] = await Promise.all([
           api.get(`/products/${id}`),
           api.get("/exchange-rates/active"),
           api.get("/users/"),
+          api.get("/accessories/").catch(() => ({ data: [] })),
         ]);
         const productData = productRes.data;
         setProduct(productData);
         setExchange(exchangeRes.data);
         setUsers(usersRes.data);
+        setAllAccessories(accRes.data.filter((a) => a.quantity > 0));
         const suggestedPrice = productData.suggested_sale_price_usd || "";
         setForm((prev) => ({
           ...prev,
@@ -73,6 +72,47 @@ export default function SellProductPage() {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   }
+
+  // ── Accesorios helpers ───────────────────────────────────────────────────
+
+  function addAccessory(acc) {
+    setSelectedAccessories((prev) => {
+      const existing = prev.find((s) => s.accessory.id === acc.id);
+      if (existing) return prev; // ya está
+      return [...prev, { accessory: acc, quantity: 1, sale_price_usd: Number(acc.sale_price_usd) }];
+    });
+    setAccSearch("");
+  }
+
+  function removeAccessory(accId) {
+    setSelectedAccessories((prev) => prev.filter((s) => s.accessory.id !== accId));
+  }
+
+  function changeAccQty(accId, delta) {
+    setSelectedAccessories((prev) =>
+      prev.map((s) => {
+        if (s.accessory.id !== accId) return s;
+        const newQty = Math.max(1, Math.min(s.accessory.quantity, s.quantity + delta));
+        return { ...s, quantity: newQty };
+      })
+    );
+  }
+
+  function changeAccPrice(accId, val) {
+    setSelectedAccessories((prev) =>
+      prev.map((s) => s.accessory.id === accId ? { ...s, sale_price_usd: Number(val) } : s)
+    );
+  }
+
+  const accTotal = selectedAccessories.reduce((sum, s) => sum + s.sale_price_usd * s.quantity, 0);
+  const filteredAccList = allAccessories.filter((a) => {
+    const already = selectedAccessories.some((s) => s.accessory.id === a.id);
+    if (already) return false;
+    if (accSearch) return a.name.toLowerCase().includes(accSearch.toLowerCase()) || a.category.toLowerCase().includes(accSearch.toLowerCase());
+    return true;
+  });
+
+  // ── Submit ───────────────────────────────────────────────────────────────
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -100,6 +140,12 @@ export default function SellProductPage() {
       });
     }
 
+    const accessories = selectedAccessories.map((s) => ({
+      accessory_id: s.accessory.id,
+      quantity: s.quantity,
+      sale_price_usd: s.sale_price_usd,
+    }));
+
     try {
       await api.post("/sales/", {
         product_id: Number(id),
@@ -114,6 +160,7 @@ export default function SellProductPage() {
         remaining_balance_usd: null,
         status: form.status,
         payments,
+        accessories: accessories.length > 0 ? accessories : null,
       });
       navigate("/products");
     } catch (error) {
@@ -140,7 +187,6 @@ export default function SellProductPage() {
   const inputClass = "w-full bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition";
   const selectClass = inputClass;
 
-  // Balance check
   const salePrice = Number(form.sale_price_usd || 0);
   const totalPaid = Number(pay1.amount_usd || 0) + (pay2.enabled ? Number(pay2.amount_usd || 0) : 0);
   const diff = salePrice - totalPaid;
@@ -161,157 +207,208 @@ export default function SellProductPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-base-card border border-base-border rounded-2xl p-6 space-y-5 shadow-card">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="bg-base-card border border-base-border rounded-2xl p-6 space-y-5 shadow-card">
 
-        {/* Vendedor */}
-        <div>
-          <p className="text-sm text-base-muted mb-2">Vendedor</p>
-          <select
-            name="seller_id"
-            value={form.seller_id}
-            onChange={handleChange}
-            className={selectClass}
-          >
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>{u.name}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Precio de venta + cliente */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Vendedor */}
           <div>
-            <p className="text-sm text-base-muted mb-2">Precio de venta USD</p>
-            <input
-              name="sale_price_usd"
-              value={form.sale_price_usd}
-              onChange={handleChange}
-              className={inputClass}
-              type="number"
-              min="0"
-              step="0.01"
+            <p className="text-sm text-base-muted mb-2">Vendedor</p>
+            <select name="seller_id" value={form.seller_id} onChange={handleChange} className={selectClass}>
+              {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+            </select>
+          </div>
+
+          {/* Precio + cliente */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <p className="text-sm text-base-muted mb-2">Precio de venta USD</p>
+              <input name="sale_price_usd" value={form.sale_price_usd} onChange={handleChange} className={inputClass} type="number" min="0" step="0.01" />
+            </div>
+            <ReadOnlyField
+              label="Precio de venta ARS"
+              value={exchange && form.sale_price_usd ? `ARS ${toArs(form.sale_price_usd, exchange.sell_rate_ars)}` : "-"}
             />
-          </div>
-          <ReadOnlyField
-            label="Precio de venta ARS"
-            value={exchange && form.sale_price_usd ? `ARS ${toArs(form.sale_price_usd, exchange.sell_rate_ars)}` : "-"}
-          />
-          <div className="md:col-span-2">
-            <p className="text-sm text-base-muted mb-2">Cliente</p>
-            <input name="client_name" value={form.client_name} onChange={handleChange} className={inputClass} placeholder="Nombre del cliente (opcional)" />
-          </div>
-        </div>
-
-        {/* Sección de pagos */}
-        <div className="border border-base-border rounded-xl p-4 space-y-4">
-          <p className="text-sm font-semibold text-base-text">Cobro</p>
-
-          {/* Pago 1 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-base-muted mb-2">Método 1</p>
-              <select value={pay1.method} onChange={(e) => setPay1((p) => ({ ...p, method: e.target.value }))} className={selectClass}>
-                {METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-              </select>
-            </div>
-            <div>
-              <p className="text-sm text-base-muted mb-2">Monto USD</p>
-              <input
-                value={pay1.amount_usd}
-                onChange={(e) => setPay1((p) => ({ ...p, amount_usd: e.target.value }))}
-                className={inputClass}
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-              />
-            </div>
-            <div>
-              <p className="text-sm text-base-muted mb-2">Referencia</p>
-              <input
-                value={pay1.reference}
-                onChange={(e) => setPay1((p) => ({ ...p, reference: e.target.value }))}
-                className={inputClass}
-                placeholder="Opcional"
-              />
+            <div className="md:col-span-2">
+              <p className="text-sm text-base-muted mb-2">Cliente</p>
+              <input name="client_name" value={form.client_name} onChange={handleChange} className={inputClass} placeholder="Nombre del cliente (opcional)" />
             </div>
           </div>
 
-          {/* Pago 2 */}
-          {!pay2.enabled ? (
-            <button
-              type="button"
-              onClick={() => setPay2((p) => ({ ...p, enabled: true }))}
-              className="text-xs text-xylo-500 hover:text-xylo-600 transition font-medium flex items-center gap-1"
-            >
-              + Agregar segundo método de pago
-            </button>
-          ) : (
-            <>
-              <div className="border-t border-base-border pt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm text-base-muted mb-2">Método 2</p>
-                  <select value={pay2.method} onChange={(e) => setPay2((p) => ({ ...p, method: e.target.value }))} className={selectClass}>
-                    {METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <p className="text-sm text-base-muted mb-2">Monto USD</p>
-                  <input
-                    value={pay2.amount_usd}
-                    onChange={(e) => setPay2((p) => ({ ...p, amount_usd: e.target.value }))}
-                    className={inputClass}
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                  />
-                </div>
-                <div>
-                  <p className="text-sm text-base-muted mb-2">Referencia</p>
-                  <input
-                    value={pay2.reference}
-                    onChange={(e) => setPay2((p) => ({ ...p, reference: e.target.value }))}
-                    className={inputClass}
-                    placeholder="Opcional"
-                  />
-                </div>
+          {/* Pagos */}
+          <div className="border border-base-border rounded-xl p-4 space-y-4">
+            <p className="text-sm font-semibold text-base-text">Cobro</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-base-muted mb-2">Método 1</p>
+                <select value={pay1.method} onChange={(e) => setPay1((p) => ({ ...p, method: e.target.value }))} className={selectClass}>
+                  {METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
               </div>
-              <button
-                type="button"
-                onClick={() => setPay2({ enabled: false, method: "efectivo", amount_usd: "", reference: "" })}
-                className="text-xs text-red-400 hover:text-red-500 transition font-medium"
-              >
-                × Quitar segundo pago
-              </button>
-            </>
-          )}
+              <div>
+                <p className="text-sm text-base-muted mb-2">Monto USD</p>
+                <input value={pay1.amount_usd} onChange={(e) => setPay1((p) => ({ ...p, amount_usd: e.target.value }))} className={inputClass} type="number" min="0" step="0.01" placeholder="0.00" />
+              </div>
+              <div>
+                <p className="text-sm text-base-muted mb-2">Referencia</p>
+                <input value={pay1.reference} onChange={(e) => setPay1((p) => ({ ...p, reference: e.target.value }))} className={inputClass} placeholder="Opcional" />
+              </div>
+            </div>
 
-          {/* Balance */}
-          {salePrice > 0 && diff !== 0 && (
-            <div className={`text-xs px-3 py-2 rounded-lg border ${diff > 0 ? "bg-amber-50 text-amber-600 border-amber-100" : "bg-red-50 text-red-500 border-red-100"}`}>
-              {diff > 0
-                ? `Faltan cubrir USD ${diff.toFixed(2)} (total cobrado: USD ${totalPaid.toFixed(2)})`
-                : `Exceso de USD ${Math.abs(diff).toFixed(2)} sobre el precio de venta`}
-            </div>
-          )}
-          {salePrice > 0 && diff === 0 && totalPaid > 0 && (
-            <div className="text-xs px-3 py-2 rounded-lg border bg-green-50 text-green-600 border-green-100">
-              ✓ Pago completo — USD {totalPaid.toFixed(2)}
-            </div>
-          )}
+            {!pay2.enabled ? (
+              <button type="button" onClick={() => setPay2((p) => ({ ...p, enabled: true }))} className="text-xs text-xylo-500 hover:text-xylo-600 transition font-medium flex items-center gap-1">
+                + Agregar segundo método de pago
+              </button>
+            ) : (
+              <>
+                <div className="border-t border-base-border pt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-sm text-base-muted mb-2">Método 2</p>
+                    <select value={pay2.method} onChange={(e) => setPay2((p) => ({ ...p, method: e.target.value }))} className={selectClass}>
+                      {METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <p className="text-sm text-base-muted mb-2">Monto USD</p>
+                    <input value={pay2.amount_usd} onChange={(e) => setPay2((p) => ({ ...p, amount_usd: e.target.value }))} className={inputClass} type="number" min="0" step="0.01" placeholder="0.00" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-base-muted mb-2">Referencia</p>
+                    <input value={pay2.reference} onChange={(e) => setPay2((p) => ({ ...p, reference: e.target.value }))} className={inputClass} placeholder="Opcional" />
+                  </div>
+                </div>
+                <button type="button" onClick={() => setPay2({ enabled: false, method: "efectivo", amount_usd: "", reference: "" })} className="text-xs text-red-400 hover:text-red-500 transition font-medium">
+                  × Quitar segundo pago
+                </button>
+              </>
+            )}
+
+            {salePrice > 0 && diff !== 0 && (
+              <div className={`text-xs px-3 py-2 rounded-lg border ${diff > 0 ? "bg-amber-50 text-amber-600 border-amber-100" : "bg-red-50 text-red-500 border-red-100"}`}>
+                {diff > 0 ? `Faltan cubrir USD ${diff.toFixed(2)} (total cobrado: USD ${totalPaid.toFixed(2)})` : `Exceso de USD ${Math.abs(diff).toFixed(2)} sobre el precio de venta`}
+              </div>
+            )}
+            {salePrice > 0 && diff === 0 && totalPaid > 0 && (
+              <div className="text-xs px-3 py-2 rounded-lg border bg-green-50 text-green-600 border-green-100">
+                ✓ Pago completo — USD {totalPaid.toFixed(2)}
+              </div>
+            )}
+          </div>
+
+          {/* Notas */}
+          <div>
+            <p className="text-sm text-base-muted mb-2">Notas</p>
+            <textarea name="notes" value={form.notes} onChange={handleChange} className="w-full min-h-[90px] bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition" placeholder="Observaciones de la venta" />
+          </div>
         </div>
 
-        {/* Notas */}
-        <div>
-          <p className="text-sm text-base-muted mb-2">Notas</p>
-          <textarea
-            name="notes"
-            value={form.notes}
-            onChange={handleChange}
-            className="w-full min-h-[90px] bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
-            placeholder="Observaciones de la venta"
-          />
+        {/* ── Accesorios ───────────────────────────────────────────────────── */}
+        <div className="bg-base-card border border-base-border rounded-2xl shadow-card overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowAccessories((p) => !p)}
+            className="w-full flex items-center justify-between px-6 py-4 text-left"
+          >
+            <div className="flex items-center gap-2.5">
+              <Cable size={16} className="text-base-muted" />
+              <span className="font-semibold text-base-text text-sm">Accesorios incluidos en la venta</span>
+              {selectedAccessories.length > 0 && (
+                <span className="text-xs bg-xylo-500 text-white rounded-full px-2 py-0.5 font-semibold">
+                  {selectedAccessories.length}
+                </span>
+              )}
+            </div>
+            {showAccessories ? <ChevronUp size={16} className="text-base-muted" /> : <ChevronDown size={16} className="text-base-muted" />}
+          </button>
+
+          {showAccessories && (
+            <div className="border-t border-base-border px-6 pb-5 pt-4 space-y-4">
+              <p className="text-xs text-base-muted">
+                Los accesorios se registran como ventas separadas, vinculadas a esta operación. No modifican el precio del iPhone.
+              </p>
+
+              {/* Buscador de accesorios */}
+              {allAccessories.length > 0 ? (
+                <>
+                  <input
+                    type="text"
+                    placeholder="Buscar accesorio..."
+                    value={accSearch}
+                    onChange={(e) => setAccSearch(e.target.value)}
+                    className="w-full bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-sm text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
+                  />
+
+                  {(accSearch || filteredAccList.length > 0) && filteredAccList.length > 0 && (
+                    <div className="border border-base-border rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                      {filteredAccList.slice(0, 12).map((acc) => (
+                        <button
+                          key={acc.id}
+                          type="button"
+                          onClick={() => addAccessory(acc)}
+                          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-base-subtle text-left border-b border-base-border last:border-0 transition"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-base-text">{acc.name}</p>
+                            <p className="text-xs text-base-muted">{acc.category} · {acc.quantity} en stock</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs font-semibold text-xylo-500">USD {Number(acc.sale_price_usd).toFixed(2)}</p>
+                            <Plus size={14} className="text-base-muted ml-auto mt-0.5" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-base-muted">No hay accesorios con stock disponible.</p>
+              )}
+
+              {/* Seleccionados */}
+              {selectedAccessories.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-base-muted uppercase tracking-wider">Agregados</p>
+                  {selectedAccessories.map((s) => (
+                    <div key={s.accessory.id} className="flex items-center gap-3 bg-base-subtle border border-base-border rounded-xl px-3 py-2.5">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-base-text truncate">{s.accessory.name}</p>
+                        <p className="text-xs text-base-muted">{s.accessory.category}</p>
+                      </div>
+                      {/* Qty controls */}
+                      <div className="flex items-center gap-1">
+                        <button type="button" onClick={() => changeAccQty(s.accessory.id, -1)} className="p-1 rounded-lg hover:bg-base-border text-base-muted transition">
+                          <Minus size={12} />
+                        </button>
+                        <span className="text-sm font-semibold text-base-text w-6 text-center">{s.quantity}</span>
+                        <button type="button" onClick={() => changeAccQty(s.accessory.id, 1)} className="p-1 rounded-lg hover:bg-base-border text-base-muted transition" disabled={s.quantity >= s.accessory.quantity}>
+                          <Plus size={12} />
+                        </button>
+                      </div>
+                      {/* Price */}
+                      <div className="w-24">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={s.sale_price_usd}
+                          onChange={(e) => changeAccPrice(s.accessory.id, e.target.value)}
+                          className="w-full bg-base-card border border-base-border rounded-lg px-2 py-1 text-sm text-right text-base-text outline-none focus:border-xylo-500 transition"
+                        />
+                      </div>
+                      <button type="button" onClick={() => removeAccessory(s.accessory.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-base-muted hover:text-red-500 transition">
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+
+                  <div className="flex items-center justify-between pt-2 border-t border-base-border">
+                    <span className="text-xs text-base-muted">Total accesorios</span>
+                    <span className="text-sm font-bold text-base-text">USD {accTotal.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {message && (
@@ -344,9 +441,7 @@ function ReadOnlyField({ label, value }) {
   return (
     <div>
       <p className="text-sm text-base-muted mb-2">{label}</p>
-      <div className="w-full bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-muted text-sm">
-        {value}
-      </div>
+      <div className="w-full bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-muted text-sm">{value}</div>
     </div>
   );
 }

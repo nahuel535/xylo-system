@@ -71,6 +71,24 @@ def create_sale(request: Request, sale_data: SaleCreate, db: Session = Depends(g
 
     product.status = "sold"
 
+    # Accesorios opcionales incluidos en esta venta
+    if sale_data.accessories:
+        from app.models.accessory import Accessory, AccessorySale
+        for item in sale_data.accessories:
+            acc = db.query(Accessory).filter(Accessory.id == item.accessory_id).first()
+            if acc and acc.quantity >= item.quantity:
+                sp = item.sale_price_usd if item.sale_price_usd is not None else acc.sale_price_usd
+                profit = (float(sp) - float(acc.purchase_price_usd)) * item.quantity
+                db.add(AccessorySale(
+                    accessory_id=acc.id,
+                    sale_id=new_sale.id,
+                    quantity_sold=item.quantity,
+                    sale_price_usd=sp,
+                    purchase_price_usd=acc.purchase_price_usd,
+                    gross_profit_usd=profit,
+                ))
+                acc.quantity -= item.quantity
+
     user_id = get_optional_user_id(request)
     db.add(AuditLog(entity_type="sale", entity_id=new_sale.id, user_id=user_id, action="created"))
 
