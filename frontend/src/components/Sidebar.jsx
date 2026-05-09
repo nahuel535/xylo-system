@@ -1,7 +1,7 @@
 import {
   Home, Package, PackagePlus, ShoppingBag,
   ReceiptText, TrendingUp, ScanLine, LogOut, Sun, Moon,
-  Users, Wallet, LayoutGrid, TrendingDown,
+  Users, Wallet, LayoutGrid, TrendingDown, Cable,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -27,6 +27,7 @@ const DESKTOP_SECTIONS = [
       { to: "/products/new", label: "Cargar stock", icon: PackagePlus },
       { to: "/debtors", label: "Deudores", icon: Wallet },
       { to: "/gastos", label: "Gastos", icon: TrendingDown },
+      { to: "/accessories", label: "Accesorios", icon: Cable },
     ],
   },
   {
@@ -54,6 +55,7 @@ const SHEET_LINKS = [
   { to: "/scanner", label: "Escanear", icon: ScanLine, color: "#ef4444" },
   { to: "/debtors", label: "Deudores", icon: Wallet, color: "#f43f5e" },
   { to: "/gastos", label: "Gastos", icon: TrendingDown, color: "#ef4444" },
+  { to: "/accessories", label: "Accesorios", icon: Cable, color: "#0891b2" },
   { to: "/users", label: "Usuarios", icon: Users, color: "#64748b" },
 ];
 
@@ -66,6 +68,7 @@ const PAGE_TITLES = {
   "/exchange": "Cotización",
   "/scanner": "Escanear",
   "/debtors": "Deudores",
+  "/accessories": "Accesorios",
   "/users": "Usuarios",
 };
 
