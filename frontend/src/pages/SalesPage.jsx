@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
-import { Smartphone, Cable } from "lucide-react";
+import { Smartphone, Cable, Pencil, Trash2, X } from "lucide-react";
 
 export default function SalesPage() {
   const navigate = useNavigate();
@@ -16,6 +16,12 @@ export default function SalesPage() {
   const [search, setSearch] = useState("");
   const [sellerFilter, setSellerFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("all"); // "all" | "iphone" | "accessory"
+
+  // Edit/delete state for accessory sales
+  const [editingAcc, setEditingAcc] = useState(null); // { id, unit_price, notes, name, qty }
+  const [savingAcc, setSavingAcc] = useState(false);
+  const [accEditError, setAccEditError] = useState("");
+  const [confirmDeleteAcc, setConfirmDeleteAcc] = useState(null); // id
 
   useEffect(() => {
     async function loadData() {
@@ -60,6 +66,8 @@ export default function SalesPage() {
       qty: null,
       payments: s.payments?.length || 0,
       clickable: true,
+      unit_price: null,
+      notes_raw: null,
     }));
 
     const accs = accSales.map((s) => ({
@@ -76,6 +84,8 @@ export default function SalesPage() {
       qty: s.quantity_sold,
       payments: null,
       clickable: false,
+      unit_price: s.sale_price_usd,
+      notes_raw: s.notes || "",
     }));
 
     return [...iphones, ...accs].sort((a, b) => {
@@ -95,7 +105,48 @@ export default function SalesPage() {
     });
   }, [unified, typeFilter, sellerFilter, search, usersMap]);
 
+  async function saveEditAcc() {
+    setSavingAcc(true);
+    setAccEditError("");
+    try {
+      const unitPrice = Number(editingAcc.unit_price);
+      await api.put(`/accessories/sales/${editingAcc.id}`, {
+        sale_price_usd: unitPrice,
+        notes: editingAcc.notes || null,
+      });
+      setAccSales((prev) =>
+        prev.map((s) =>
+          s.id === editingAcc.id
+            ? {
+                ...s,
+                sale_price_usd: unitPrice,
+                gross_profit_usd: (unitPrice - s.purchase_price_usd) * s.quantity_sold,
+                notes: editingAcc.notes || null,
+              }
+            : s
+        )
+      );
+      setEditingAcc(null);
+    } catch {
+      setAccEditError("Error al guardar. Intentá de nuevo.");
+    } finally {
+      setSavingAcc(false);
+    }
+  }
+
+  async function deleteAcc(id) {
+    try {
+      await api.delete(`/accessories/sales/${id}`);
+      setAccSales((prev) => prev.filter((s) => s.id !== id));
+    } catch {
+      /* ignore */
+    } finally {
+      setConfirmDeleteAcc(null);
+    }
+  }
+
   const inputClass = "bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition";
+  const modalInputClass = "w-full bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition";
 
   return (
     <div>
@@ -121,7 +172,6 @@ export default function SalesPage() {
               <option key={seller.id} value={seller.id}>{seller.name}</option>
             ))}
           </select>
-          {/* Tipo */}
           <div className="flex gap-1 bg-base-subtle rounded-xl p-1 border border-base-border">
             {[
               { value: "all", label: "Todos" },
@@ -160,7 +210,7 @@ export default function SalesPage() {
         <table className="w-full text-sm">
           <thead className="bg-base-subtle border-b border-base-border">
             <tr>
-              {["Tipo", "Fecha", "Producto / Accesorio", "Cliente / Nota", "Vendedor", "Venta", "Ganancia"].map((h) => (
+              {["Tipo", "Fecha", "Producto / Accesorio", "Cliente / Nota", "Vendedor", "Venta", "Ganancia", ""].map((h) => (
                 <th key={h} className="text-left px-4 py-3.5 text-xs font-medium text-base-muted uppercase tracking-wide">
                   {h}
                 </th>
@@ -169,9 +219,9 @@ export default function SalesPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="7" className="px-5 py-6 text-base-muted text-sm">Cargando ventas...</td></tr>
+              <tr><td colSpan="8" className="px-5 py-6 text-base-muted text-sm">Cargando ventas...</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan="7" className="px-5 py-6 text-base-muted text-sm">No hay ventas que coincidan.</td></tr>
+              <tr><td colSpan="8" className="px-5 py-6 text-base-muted text-sm">No hay ventas que coincidan.</td></tr>
             ) : (
               filtered.map((row) => (
                 <tr
@@ -205,6 +255,44 @@ export default function SalesPage() {
                   <td className="px-4 py-3.5 font-medium text-base-text">USD {row.price.toFixed(2)}</td>
                   <td className="px-4 py-3.5">
                     <span className="text-xylo-500 font-medium">USD {Number(row.profit).toFixed(2)}</span>
+                  </td>
+                  <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
+                    {row.type === "accessory" && (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            setAccEditError("");
+                            setEditingAcc({ id: row.id, unit_price: String(row.unit_price), notes: row.notes_raw, name: row.name, qty: row.qty });
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-base-subtle text-base-muted hover:text-base-text transition"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                        {confirmDeleteAcc === row.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => deleteAcc(row.id)}
+                              className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+                            >
+                              Eliminar
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteAcc(null)}
+                              className="text-[11px] px-2 py-1 rounded-lg border border-base-border text-base-muted hover:bg-base-subtle transition"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteAcc(row.id)}
+                            className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-base-muted hover:text-red-500 transition"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))
@@ -252,10 +340,106 @@ export default function SalesPage() {
                 <span className="text-xs text-base-muted">{formatDate(row.date)}</span>
                 <span className="text-xs text-green-500 font-medium">+USD {Number(row.profit).toFixed(2)}</span>
               </div>
+              {row.type === "accessory" && (
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-base-border" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => {
+                      setAccEditError("");
+                      setEditingAcc({ id: row.id, unit_price: String(row.unit_price), notes: row.notes_raw, name: row.name, qty: row.qty });
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-base-border text-base-muted hover:text-base-text hover:bg-base-subtle transition"
+                  >
+                    <Pencil size={11} /> Editar
+                  </button>
+                  {confirmDeleteAcc === row.id ? (
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => deleteAcc(row.id)} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition">
+                        Eliminar
+                      </button>
+                      <button onClick={() => setConfirmDeleteAcc(null)} className="text-xs px-3 py-1.5 rounded-lg border border-base-border text-base-muted hover:bg-base-subtle transition">
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDeleteAcc(row.id)}
+                      className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-base-border text-base-muted hover:text-red-500 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+                    >
+                      <Trash2 size={11} /> Eliminar
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           ))
         )}
       </div>
+
+      {/* Modal de edición de accesorio */}
+      {editingAcc && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setEditingAcc(null)}
+        >
+          <div
+            className="bg-base-card border border-base-border rounded-2xl p-6 shadow-2xl w-full max-w-sm mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-base-text">Editar venta de accesorio</h3>
+              <button onClick={() => setEditingAcc(null)} className="p-1.5 rounded-lg hover:bg-base-subtle text-base-muted transition">
+                <X size={14} />
+              </button>
+            </div>
+            <p className="text-xs text-base-muted mb-5">
+              {editingAcc.name}{editingAcc.qty > 1 ? ` × ${editingAcc.qty}` : ""}
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-base-muted mb-1.5">Precio por unidad USD</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={editingAcc.unit_price}
+                  onChange={(e) => setEditingAcc((p) => ({ ...p, unit_price: e.target.value }))}
+                  className={modalInputClass}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-base-muted mb-1.5">
+                  Notas <span className="opacity-40">opcional</span>
+                </label>
+                <input
+                  type="text"
+                  value={editingAcc.notes}
+                  onChange={(e) => setEditingAcc((p) => ({ ...p, notes: e.target.value }))}
+                  placeholder="Observaciones de la venta"
+                  className={modalInputClass}
+                />
+              </div>
+              {accEditError && <p className="text-xs text-red-500">{accEditError}</p>}
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setEditingAcc(null)}
+                  className="flex-1 border border-base-border text-base-muted rounded-xl py-2.5 text-sm hover:bg-base-subtle transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={saveEditAcc}
+                  disabled={savingAcc}
+                  className="flex-1 bg-xylo-500 hover:bg-xylo-600 transition text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-60"
+                >
+                  {savingAcc ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

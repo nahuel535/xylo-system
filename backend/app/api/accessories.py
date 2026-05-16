@@ -5,7 +5,7 @@ from app.db.session import get_db
 from app.models.accessory import Accessory, AccessorySale, Combo, ComboItem
 from app.schemas.accessory import (
     AccessoryCreate, AccessoryUpdate, AccessoryResponse,
-    AddStockRequest, SellRequest, AccessorySaleResponse,
+    AddStockRequest, SellRequest, AccessorySaleResponse, AccessorySaleUpdate,
     ComboCreate, ComboResponse, SellComboRequest,
 )
 
@@ -131,6 +131,33 @@ def get_all_accessory_sales(db: Session = Depends(get_db)):
         }
         for s, a in rows
     ]
+
+
+@router.put("/sales/{sale_id}", response_model=AccessorySaleResponse)
+def update_accessory_sale(sale_id: int, data: AccessorySaleUpdate, db: Session = Depends(get_db)):
+    sale = db.query(AccessorySale).filter(AccessorySale.id == sale_id).first()
+    if not sale:
+        raise HTTPException(status_code=404, detail="Venta de accesorio no encontrada")
+    if data.sale_price_usd is not None:
+        sale.sale_price_usd = data.sale_price_usd
+        sale.gross_profit_usd = (float(data.sale_price_usd) - float(sale.purchase_price_usd)) * sale.quantity_sold
+    sale.notes = data.notes
+    db.commit()
+    db.refresh(sale)
+    return sale
+
+
+@router.delete("/sales/{sale_id}")
+def delete_accessory_sale(sale_id: int, db: Session = Depends(get_db)):
+    sale = db.query(AccessorySale).filter(AccessorySale.id == sale_id).first()
+    if not sale:
+        raise HTTPException(status_code=404, detail="Venta de accesorio no encontrada")
+    acc = db.query(Accessory).filter(Accessory.id == sale.accessory_id).first()
+    if acc:
+        acc.quantity += sale.quantity_sold
+    db.delete(sale)
+    db.commit()
+    return {"message": "Venta eliminada"}
 
 
 # ── Combos ───────────────────────────────────────────────────────────────────

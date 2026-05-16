@@ -105,6 +105,11 @@ class ComboResponse(BaseModel):
         from_attributes = True
 
 
+class AccessorySaleUpdate(BaseModel):
+    sale_price_usd: Optional[Decimal] = None
+    notes: Optional[str] = None
+
+
 class SellComboRequest(BaseModel):
     override_price_usd: Optional[Decimal] = None
     sale_id: Optional[int] = None
