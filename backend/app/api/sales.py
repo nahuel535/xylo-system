@@ -1,5 +1,7 @@
+from datetime import date as date_type, timedelta, datetime
 from decimal import Decimal
 from fastapi import APIRouter, Depends, HTTPException, Request
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models.sale_payment import SalePayment
 from app.models.audit_log import AuditLog
@@ -9,8 +11,47 @@ from app.models.product import Product
 from app.models.user import User
 from app.schemas.sale import SaleCreate, SaleUpdate, SaleResponse
 from app.core.dependencies import get_optional_user_id
+from app.models.client import Client, ClientInteraction, ClientReminder
 
 router = APIRouter(prefix="/sales", tags=["Sales"])
+
+
+def _sync_crm_client(db: Session, client_name: str, sale_date: date_type) -> None:
+    """Crea o actualiza el cliente en el CRM y genera los recordatorios automáticos."""
+    name = client_name.strip()
+    if not name:
+        return
+
+    client = db.query(Client).filter(func.lower(Client.name) == name.lower()).first()
+
+    if not client:
+        client = Client(name=name, status="client", source="venta")
+        db.add(client)
+        db.flush()
+    else:
+        client.status = "client"
+
+    if not client.last_contact_date or sale_date >= client.last_contact_date:
+        client.last_contact_date = sale_date
+
+    db.add(ClientInteraction(client_id=client.id, type="venta", date=sale_date))
+
+    for rtype, days, note in [
+        ("followup_1week", 7,  "Llamar o escribir para saber cómo se siente con el nuevo celular."),
+        ("promo_3months",  90, "Ofrecer promo de referidos: descuento especial si trae un amigo."),
+    ]:
+        already = db.query(ClientReminder).filter(
+            ClientReminder.client_id == client.id,
+            ClientReminder.type == rtype,
+            ClientReminder.status == "pending",
+        ).first()
+        if not already:
+            db.add(ClientReminder(
+                client_id=client.id,
+                type=rtype,
+                due_date=sale_date + timedelta(days=days),
+                note=note,
+            ))
 
 
 @router.post("/", response_model=SaleResponse)
@@ -91,6 +132,9 @@ def create_sale(request: Request, sale_data: SaleCreate, db: Session = Depends(g
 
     user_id = get_optional_user_id(request)
     db.add(AuditLog(entity_type="sale", entity_id=new_sale.id, user_id=user_id, action="created"))
+
+    if sale_data.client_name:
+        _sync_crm_client(db, sale_data.client_name, datetime.now().date())
 
     db.commit()
     db.refresh(new_sale)
