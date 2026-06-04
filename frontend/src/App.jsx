@@ -26,6 +26,8 @@ import DebtorsPage from "./pages/DebtorsPage";
 import GastosPage from "./pages/GastosPage";
 import AccessoriesPage from "./pages/AccessoriesPage";
 import AccessoryLabelPage from "./pages/AccessoryLabelPage";
+import CRMPage from "./pages/CRMPage";
+import ClientDetailPage from "./pages/ClientDetailPage";
 
 function Layout() {
   return (
@@ -52,7 +54,8 @@ function Layout() {
           <Route path="/gastos" element={<ProtectedRoute><GastosPage /></ProtectedRoute>} />
           <Route path="/accessories" element={<ProtectedRoute><AccessoriesPage /></ProtectedRoute>} />
           <Route path="/accessories/:id/label" element={<ProtectedRoute><AccessoryLabelPage /></ProtectedRoute>} />
-
+          <Route path="/crm" element={<ProtectedRoute><CRMPage /></ProtectedRoute>} />
+          <Route path="/crm/:id" element={<ProtectedRoute><ClientDetailPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>
