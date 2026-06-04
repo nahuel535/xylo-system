@@ -3,8 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import {
   ChevronLeft, Phone, Mail, Instagram, Bell, BellOff,
-  Pencil, Check, X, Trash2, Plus,
-  PhoneCall, MessageCircle, Users2, FileText, AtSign,
+  Pencil, X, Trash2, Plus,
+  PhoneCall, MessageCircle, Users2, FileText, AtSign, ShoppingBag,
+  CheckCircle2, Clock, AlertCircle,
 } from "lucide-react";
 
 const STATUS_META = {
@@ -17,19 +18,27 @@ const SOURCES = ["", "venta", "referido", "instagram", "facebook", "whatsapp", "
 const SOURCE_LABELS = { "": "—", venta: "Venta", referido: "Referido", instagram: "Instagram", facebook: "Facebook", whatsapp: "WhatsApp", otro: "Otro" };
 
 const INTERACTION_TYPES = [
-  { value: "llamada",    label: "Llamada",    icon: PhoneCall    },
+  { value: "llamada",    label: "Llamada",    icon: PhoneCall     },
   { value: "whatsapp",   label: "WhatsApp",   icon: MessageCircle },
-  { value: "presencial", label: "Presencial", icon: Users2       },
-  { value: "email",      label: "Email",      icon: AtSign       },
-  { value: "nota",       label: "Nota",       icon: FileText     },
+  { value: "presencial", label: "Presencial", icon: Users2        },
+  { value: "email",      label: "Email",      icon: AtSign        },
+  { value: "nota",       label: "Nota",       icon: FileText      },
+  { value: "venta",      label: "Venta",      icon: ShoppingBag   },
 ];
 
 const INT_COLORS = {
-  llamada:    { bg: "bg-blue-50 dark:bg-blue-950/30",   text: "text-blue-500"   },
-  whatsapp:   { bg: "bg-green-50 dark:bg-green-950/30", text: "text-green-500"  },
-  presencial: { bg: "bg-purple-50 dark:bg-purple-950/30", text: "text-purple-500" },
-  email:      { bg: "bg-orange-50 dark:bg-orange-950/30", text: "text-orange-500" },
-  nota:       { bg: "bg-gray-100 dark:bg-gray-900/40",  text: "text-gray-500"   },
+  llamada:    { bg: "bg-blue-50 dark:bg-blue-950/30",    text: "text-blue-500"    },
+  whatsapp:   { bg: "bg-green-50 dark:bg-green-950/30",  text: "text-green-500"   },
+  presencial: { bg: "bg-purple-50 dark:bg-purple-950/30",text: "text-purple-500"  },
+  email:      { bg: "bg-orange-50 dark:bg-orange-950/30",text: "text-orange-500"  },
+  nota:       { bg: "bg-gray-100 dark:bg-gray-900/40",   text: "text-gray-500"    },
+  venta:      { bg: "bg-xylo-500/10",                    text: "text-xylo-500"    },
+};
+
+const REMINDER_META = {
+  followup_1week: { label: "Seguimiento 1 semana", icon: MessageCircle, color: "text-blue-500",   bg: "bg-blue-50 dark:bg-blue-950/30"   },
+  promo_3months:  { label: "Promo amigos 3 meses",  icon: Bell,          color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-950/30" },
+  custom:         { label: "Recordatorio",          icon: Clock,         color: "text-base-muted", bg: "bg-base-subtle"                   },
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -45,6 +54,15 @@ function formatDate(d) {
   return new Date(d + "T12:00:00").toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+function urgencyOf(dueDateStr) {
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const due = new Date(dueDateStr + "T00:00:00");
+  const diff = Math.floor((due - now) / 86400000);
+  if (diff < 0) return "overdue";
+  if (diff === 0) return "today";
+  return "future";
+}
+
 export default function ClientDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -52,16 +70,18 @@ export default function ClientDetailPage() {
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Edit mode
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState(null);
   const [savingEdit, setSavingEdit] = useState(false);
   const [editError, setEditError] = useState("");
 
-  // Interaction form
   const [intForm, setIntForm] = useState({ type: "nota", content: "", date: today() });
   const [savingInt, setSavingInt] = useState(false);
   const [confirmDeleteInt, setConfirmDeleteInt] = useState(null);
+
+  // Recordatorios
+  const [showAddReminder, setShowAddReminder] = useState(false);
+  const [reminderForm, setReminderForm] = useState({ type: "custom", due_date: today(), note: "" });
 
   useEffect(() => { load(); }, [id]);
 
@@ -87,15 +107,10 @@ export default function ClientDetailPage() {
       needs_followup: client.needs_followup,
       followup_date: client.followup_date || "",
     });
-    setEditError("");
-    setEditing(true);
+    setEditError(""); setEditing(true);
   }
 
-  function cancelEdit() {
-    setEditing(false);
-    setEditForm(null);
-    setEditError("");
-  }
+  function cancelEdit() { setEditing(false); setEditForm(null); setEditError(""); }
 
   function handleEditChange(ev) {
     const { name, value, type, checked } = ev.target;
@@ -120,7 +135,6 @@ export default function ClientDetailPage() {
       });
       setClient(res.data);
       setEditing(false);
-      setEditForm(null);
     } catch { setEditError("Error al guardar."); }
     finally { setSavingEdit(false); }
   }
@@ -136,19 +150,15 @@ export default function ClientDetailPage() {
 
   async function addInteraction(ev) {
     ev.preventDefault();
-    if (!intForm.content.trim() && intForm.type !== "nota") return;
     setSavingInt(true);
     try {
-      const res = await api.post(`/clients/${id}/interactions`, {
+      await api.post(`/clients/${id}/interactions`, {
         type: intForm.type,
         content: intForm.content || null,
         date: intForm.date,
       });
-      setClient((p) => ({
-        ...p,
-        interactions: [res.data, ...p.interactions],
-        last_contact_date: intForm.date > (p.last_contact_date || "") ? intForm.date : p.last_contact_date,
-      }));
+      // Reload full client to get updated reminders and status
+      await load();
       setIntForm((p) => ({ ...p, content: "", date: today() }));
     } catch {}
     finally { setSavingInt(false); }
@@ -157,39 +167,57 @@ export default function ClientDetailPage() {
   async function deleteInteraction(intId) {
     try {
       await api.delete(`/clients/${id}/interactions/${intId}`);
-      setClient((p) => ({
-        ...p,
-        interactions: p.interactions.filter((i) => i.id !== intId),
-      }));
+      setClient((p) => ({ ...p, interactions: p.interactions.filter((i) => i.id !== intId) }));
     } catch {}
     finally { setConfirmDeleteInt(null); }
+  }
+
+  async function addReminder(ev) {
+    ev.preventDefault();
+    try {
+      await api.post(`/clients/${id}/reminders`, {
+        type: reminderForm.type,
+        due_date: reminderForm.due_date,
+        note: reminderForm.note || null,
+      });
+      await load();
+      setShowAddReminder(false);
+      setReminderForm({ type: "custom", due_date: today(), note: "" });
+    } catch {}
+  }
+
+  async function markReminder(reminderId, status) {
+    try {
+      await api.put(`/clients/reminders/${reminderId}`, { status });
+      setClient((p) => ({
+        ...p,
+        reminders: p.reminders.map((r) => r.id === reminderId ? { ...r, status } : r),
+      }));
+    } catch {}
   }
 
   if (loading) return <p className="text-base-muted">Cargando...</p>;
   if (!client) return null;
 
   const sm = STATUS_META[client.status] || STATUS_META.lead;
+  const pendingReminders = (client.reminders || []).filter((r) => r.status === "pending");
+  const doneReminders = (client.reminders || []).filter((r) => r.status !== "pending");
 
   return (
     <div>
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <div className="flex items-start gap-3">
-          <button
-            onClick={() => navigate("/crm")}
-            className="p-2 rounded-xl hover:bg-base-subtle text-base-muted hover:text-base-text transition mt-0.5"
-          >
+          <button onClick={() => navigate("/crm")} className="p-2 rounded-xl hover:bg-base-subtle text-base-muted hover:text-base-text transition mt-0.5">
             <ChevronLeft size={18} />
           </button>
           <div>
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-xl font-bold text-base-text">{client.name}</h1>
-              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${sm.bg} ${sm.text} ${sm.border}`}>
-                {sm.label}
-              </span>
-              {client.needs_followup && (
-                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
-                  <Bell size={11} /> Seguimiento
+              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${sm.bg} ${sm.text} ${sm.border}`}>{sm.label}</span>
+              {pendingReminders.length > 0 && (
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-xylo-500/10 text-xylo-500 flex items-center gap-1">
+                  <Bell size={11} /> {pendingReminders.length} recordatorio{pendingReminders.length !== 1 ? "s" : ""}
                 </span>
               )}
             </div>
@@ -212,10 +240,7 @@ export default function ClientDetailPage() {
             <span className="hidden sm:inline">{client.needs_followup ? "Quitar seguimiento" : "Marcar seguimiento"}</span>
           </button>
           {!editing && (
-            <button
-              onClick={startEdit}
-              className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border border-base-border text-base-muted hover:bg-base-subtle hover:text-base-text transition"
-            >
+            <button onClick={startEdit} className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border border-base-border text-base-muted hover:bg-base-subtle hover:text-base-text transition">
               <Pencil size={13} />
               <span className="hidden sm:inline">Editar</span>
             </button>
@@ -225,9 +250,10 @@ export default function ClientDetailPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
 
-        {/* ── LEFT: Client info ── */}
+        {/* ── LEFT ── */}
         <div className="xl:col-span-1 space-y-4">
 
+          {/* Client info */}
           {editing ? (
             <div className="bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
               <h3 className="text-sm font-semibold text-base-text mb-4">Editar información</h3>
@@ -273,13 +299,7 @@ export default function ClientDetailPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-base-muted mb-1.5">Notas</label>
-                  <textarea
-                    name="notes"
-                    value={editForm.notes}
-                    onChange={handleEditChange}
-                    rows={3}
-                    className="w-full bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition resize-none"
-                  />
+                  <textarea name="notes" value={editForm.notes} onChange={handleEditChange} rows={3} className="w-full bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition resize-none" />
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" name="needs_followup" checked={editForm.needs_followup} onChange={handleEditChange} className="w-4 h-4 accent-xylo-500" />
@@ -293,9 +313,7 @@ export default function ClientDetailPage() {
                 )}
                 {editError && <p className="text-xs text-red-500">{editError}</p>}
                 <div className="flex gap-2">
-                  <button type="button" onClick={cancelEdit} className="flex-1 border border-base-border text-base-muted rounded-xl py-2.5 text-sm hover:bg-base-subtle transition">
-                    Cancelar
-                  </button>
+                  <button type="button" onClick={cancelEdit} className="flex-1 border border-base-border text-base-muted rounded-xl py-2.5 text-sm hover:bg-base-subtle transition">Cancelar</button>
                   <button type="button" onClick={saveEdit} disabled={savingEdit} className="flex-1 bg-xylo-500 hover:bg-xylo-600 transition text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-60">
                     {savingEdit ? "Guardando..." : "Guardar"}
                   </button>
@@ -306,66 +324,138 @@ export default function ClientDetailPage() {
             <div className="bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
               <h3 className="text-sm font-semibold text-base-text mb-4">Información de contacto</h3>
               <div className="space-y-3">
-                {client.phone && (
-                  <InfoRow icon={<Phone size={14} />} label="Teléfono">
-                    <a href={`tel:${client.phone}`} className="text-xylo-500 hover:underline">{client.phone}</a>
-                  </InfoRow>
-                )}
-                {client.email && (
-                  <InfoRow icon={<Mail size={14} />} label="Email">
-                    <a href={`mailto:${client.email}`} className="text-xylo-500 hover:underline">{client.email}</a>
-                  </InfoRow>
-                )}
-                {client.instagram && (
-                  <InfoRow icon={<Instagram size={14} />} label="Instagram">
-                    <a href={`https://instagram.com/${client.instagram}`} target="_blank" rel="noreferrer" className="text-xylo-500 hover:underline">
-                      @{client.instagram}
-                    </a>
-                  </InfoRow>
-                )}
-                {!client.phone && !client.email && !client.instagram && (
-                  <p className="text-sm text-base-muted">Sin datos de contacto.</p>
-                )}
+                {client.phone && <InfoRow icon={<Phone size={14} />} label="Teléfono"><a href={`tel:${client.phone}`} className="text-xylo-500 hover:underline">{client.phone}</a></InfoRow>}
+                {client.email && <InfoRow icon={<Mail size={14} />} label="Email"><a href={`mailto:${client.email}`} className="text-xylo-500 hover:underline">{client.email}</a></InfoRow>}
+                {client.instagram && <InfoRow icon={<Instagram size={14} />} label="Instagram"><a href={`https://instagram.com/${client.instagram}`} target="_blank" rel="noreferrer" className="text-xylo-500 hover:underline">@{client.instagram}</a></InfoRow>}
+                {!client.phone && !client.email && !client.instagram && <p className="text-sm text-base-muted">Sin datos de contacto.</p>}
               </div>
-
               {(client.tags || []).length > 0 && (
                 <div className="mt-4 pt-4 border-t border-base-border">
                   <p className="text-xs font-medium text-base-muted uppercase tracking-wide mb-2">Tags</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {client.tags.map((tag) => (
-                      <span key={tag} className="text-xs font-medium px-2.5 py-1 rounded-full bg-xylo-500/10 text-xylo-500">
-                        {tag}
-                      </span>
-                    ))}
+                    {client.tags.map((tag) => <span key={tag} className="text-xs font-medium px-2.5 py-1 rounded-full bg-xylo-500/10 text-xylo-500">{tag}</span>)}
                   </div>
                 </div>
               )}
-
               {client.notes && (
                 <div className="mt-4 pt-4 border-t border-base-border">
                   <p className="text-xs font-medium text-base-muted uppercase tracking-wide mb-2">Notas</p>
                   <p className="text-sm text-base-text whitespace-pre-wrap">{client.notes}</p>
                 </div>
               )}
-
               {client.followup_date && (
                 <div className="mt-4 pt-4 border-t border-base-border">
-                  <p className="text-xs font-medium text-base-muted uppercase tracking-wide mb-1">Fecha de seguimiento</p>
+                  <p className="text-xs font-medium text-base-muted uppercase tracking-wide mb-1">Fecha seguimiento</p>
                   <p className="text-sm text-amber-600 dark:text-amber-400 font-medium">{formatDate(client.followup_date)}</p>
                 </div>
               )}
             </div>
           )}
+
+          {/* Recordatorios */}
+          <div className="bg-base-card border border-base-border rounded-2xl shadow-card overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-base-border">
+              <h3 className="text-sm font-semibold text-base-text flex items-center gap-2">
+                <Bell size={14} className="text-xylo-500" />
+                Recordatorios
+                {pendingReminders.length > 0 && (
+                  <span className="text-xs font-medium px-1.5 py-0.5 rounded-full bg-xylo-500/10 text-xylo-500">{pendingReminders.length}</span>
+                )}
+              </h3>
+              <button
+                onClick={() => setShowAddReminder((p) => !p)}
+                className="p-1.5 rounded-lg hover:bg-base-subtle text-base-muted hover:text-base-text transition"
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+
+            {showAddReminder && (
+              <form onSubmit={addReminder} className="px-5 py-4 border-b border-base-border bg-base-subtle/50 space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-base-muted mb-1">Tipo</label>
+                    <select value={reminderForm.type} onChange={(e) => setReminderForm((p) => ({ ...p, type: e.target.value }))} className={inputClass}>
+                      <option value="custom">Personalizado</option>
+                      <option value="followup_1week">Seguimiento 1 semana</option>
+                      <option value="promo_3months">Promo amigos 3 meses</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-base-muted mb-1">Fecha</label>
+                    <input type="date" value={reminderForm.due_date} onChange={(e) => setReminderForm((p) => ({ ...p, due_date: e.target.value }))} className={inputClass} required />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-base-muted mb-1">Nota <span className="opacity-40">opcional</span></label>
+                  <input type="text" value={reminderForm.note} onChange={(e) => setReminderForm((p) => ({ ...p, note: e.target.value }))} className={inputClass} placeholder="¿Qué tenés que hacer?" />
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setShowAddReminder(false)} className="flex-1 border border-base-border text-base-muted rounded-xl py-2 text-xs hover:bg-base-subtle transition">Cancelar</button>
+                  <button type="submit" className="flex-1 bg-xylo-500 hover:bg-xylo-600 text-white rounded-xl py-2 text-xs font-semibold transition">Agregar</button>
+                </div>
+              </form>
+            )}
+
+            {pendingReminders.length === 0 && doneReminders.length === 0 ? (
+              <div className="px-5 py-8 text-center text-xs text-base-muted">
+                Sin recordatorios. Registrá una <strong>venta</strong> para generarlos automáticamente.
+              </div>
+            ) : (
+              <div className="divide-y divide-base-border">
+                {pendingReminders.map((r) => {
+                  const meta = REMINDER_META[r.type] || REMINDER_META.custom;
+                  const Icon = meta.icon;
+                  const urgency = urgencyOf(r.due_date);
+                  return (
+                    <div key={r.id} className={`flex items-start gap-3 px-5 py-3.5 ${meta.bg}`}>
+                      <div className={`p-1.5 rounded-lg bg-white/50 dark:bg-black/20 flex-shrink-0`}>
+                        <Icon size={13} className={meta.color} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-xs font-semibold ${meta.color}`}>{meta.label}</p>
+                        {r.note && <p className="text-xs text-base-muted mt-0.5 leading-relaxed">{r.note}</p>}
+                        <p className={`text-[11px] mt-1 font-medium ${urgency === "overdue" ? "text-red-500" : urgency === "today" ? "text-amber-500" : "text-base-muted"}`}>
+                          {urgency === "overdue" ? "⚠ Vencido · " : urgency === "today" ? "★ Hoy · " : ""}{formatDate(r.due_date)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => markReminder(r.id, "done")}
+                        title="Marcar como hecho"
+                        className="flex-shrink-0 p-1.5 rounded-lg hover:bg-green-100 dark:hover:bg-green-950/30 text-base-muted hover:text-green-500 transition"
+                      >
+                        <CheckCircle2 size={14} />
+                      </button>
+                    </div>
+                  );
+                })}
+                {doneReminders.length > 0 && (
+                  <div className="px-5 py-2.5">
+                    <p className="text-[10px] font-semibold text-base-muted uppercase tracking-wide">{doneReminders.length} completado{doneReminders.length !== 1 ? "s" : ""}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── RIGHT: Interactions ── */}
         <div className="xl:col-span-2 space-y-4">
 
-          {/* Add interaction form */}
+          {/* Add interaction */}
           <div className="bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
             <h3 className="text-sm font-semibold text-base-text mb-4">Registrar interacción</h3>
+
+            {intForm.type === "venta" && (
+              <div className="mb-3 flex items-start gap-2 bg-xylo-500/10 border border-xylo-500/20 rounded-xl px-4 py-3">
+                <AlertCircle size={14} className="text-xylo-500 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-xylo-500">
+                  Al registrar una <strong>venta</strong>, se crean automáticamente 2 recordatorios: seguimiento a 1 semana y promo de amigos a los 3 meses.
+                </p>
+              </div>
+            )}
+
             <form onSubmit={addInteraction} className="space-y-3">
-              {/* Type selector */}
               <div className="flex flex-wrap gap-2">
                 {INTERACTION_TYPES.map(({ value, label, icon: Icon }) => (
                   <button
@@ -374,7 +464,7 @@ export default function ClientDetailPage() {
                     onClick={() => setIntForm((p) => ({ ...p, type: value }))}
                     className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition ${
                       intForm.type === value
-                        ? `${INT_COLORS[value].bg} ${INT_COLORS[value].text} border-current`
+                        ? `${INT_COLORS[value]?.bg || "bg-base-subtle"} ${INT_COLORS[value]?.text || "text-base-text"} border-current`
                         : "border-base-border text-base-muted hover:border-base-muted"
                     }`}
                   >
@@ -394,17 +484,8 @@ export default function ClientDetailPage() {
                   />
                 </div>
                 <div className="flex flex-col gap-3">
-                  <input
-                    type="date"
-                    value={intForm.date}
-                    onChange={(e) => setIntForm((p) => ({ ...p, date: e.target.value }))}
-                    className={inputClass}
-                  />
-                  <button
-                    type="submit"
-                    disabled={savingInt}
-                    className="flex items-center justify-center gap-2 bg-xylo-500 hover:bg-xylo-600 transition text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-60"
-                  >
+                  <input type="date" value={intForm.date} onChange={(e) => setIntForm((p) => ({ ...p, date: e.target.value }))} className={inputClass} />
+                  <button type="submit" disabled={savingInt} className="flex items-center justify-center gap-2 bg-xylo-500 hover:bg-xylo-600 transition text-white rounded-xl py-2.5 text-sm font-semibold disabled:opacity-60">
                     <Plus size={14} /> {savingInt ? "Guardando..." : "Registrar"}
                   </button>
                 </div>
@@ -420,11 +501,8 @@ export default function ClientDetailPage() {
                 <span className="ml-2 text-xs font-normal text-base-muted">({client.interactions.length})</span>
               </h3>
             </div>
-
             {client.interactions.length === 0 ? (
-              <div className="text-center py-10 text-base-muted text-sm">
-                Todavía no hay interacciones registradas.
-              </div>
+              <div className="text-center py-10 text-base-muted text-sm">Todavía no hay interacciones registradas.</div>
             ) : (
               <div className="divide-y divide-base-border">
                 {client.interactions.map((interaction) => {
@@ -441,24 +519,16 @@ export default function ClientDetailPage() {
                           <span className={`text-xs font-semibold capitalize ${colors.text}`}>{meta.label}</span>
                           <span className="text-[11px] text-base-muted flex-shrink-0">{formatDate(interaction.date)}</span>
                         </div>
-                        {interaction.content && (
-                          <p className="text-sm text-base-text mt-1 whitespace-pre-wrap">{interaction.content}</p>
-                        )}
+                        {interaction.content && <p className="text-sm text-base-text mt-1 whitespace-pre-wrap">{interaction.content}</p>}
+                        {interaction.type === "venta" && <p className="text-[10px] text-xylo-500 mt-1">✓ Recordatorios generados automáticamente</p>}
                       </div>
                       {confirmDeleteInt === interaction.id ? (
                         <div className="flex items-center gap-1 flex-shrink-0">
-                          <button onClick={() => deleteInteraction(interaction.id)} className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-red-500 text-white hover:bg-red-600 transition">
-                            Eliminar
-                          </button>
-                          <button onClick={() => setConfirmDeleteInt(null)} className="text-[11px] px-2 py-1 rounded-lg border border-base-border text-base-muted hover:bg-base-subtle transition">
-                            No
-                          </button>
+                          <button onClick={() => deleteInteraction(interaction.id)} className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-red-500 text-white hover:bg-red-600 transition">Eliminar</button>
+                          <button onClick={() => setConfirmDeleteInt(null)} className="text-[11px] px-2 py-1 rounded-lg border border-base-border text-base-muted hover:bg-base-subtle transition">No</button>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => setConfirmDeleteInt(interaction.id)}
-                          className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-base-muted hover:text-red-500 transition flex-shrink-0"
-                        >
+                        <button onClick={() => setConfirmDeleteInt(interaction.id)} className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-base-muted hover:text-red-500 transition flex-shrink-0">
                           <Trash2 size={12} />
                         </button>
                       )}

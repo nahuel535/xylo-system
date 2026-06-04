@@ -27,6 +27,12 @@ class Client(Base):
         cascade="all, delete-orphan",
         order_by="ClientInteraction.date.desc()",
     )
+    reminders = relationship(
+        "ClientReminder",
+        back_populates="client",
+        cascade="all, delete-orphan",
+        order_by="ClientReminder.due_date.asc()",
+    )
 
 
 class ClientInteraction(Base):
@@ -34,9 +40,24 @@ class ClientInteraction(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
-    type = Column(String, nullable=False)    # llamada | whatsapp | presencial | email | nota
+    type = Column(String, nullable=False)    # llamada | whatsapp | presencial | email | nota | venta
     content = Column(Text, nullable=True)
     date = Column(Date, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     client = relationship("Client", back_populates="interactions")
+
+
+class ClientReminder(Base):
+    __tablename__ = "client_reminders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("clients.id", ondelete="CASCADE"), nullable=False)
+    # followup_1week | promo_3months | custom
+    type = Column(String, nullable=False)
+    due_date = Column(Date, nullable=False)
+    status = Column(String, default="pending", nullable=False)  # pending | done | dismissed
+    note = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    client = relationship("Client", back_populates="reminders")

@@ -21,6 +21,46 @@ class ClientInteractionResponse(BaseModel):
         from_attributes = True
 
 
+class ReminderCreate(BaseModel):
+    type: str = "custom"
+    due_date: date
+    note: Optional[str] = None
+
+
+class ReminderUpdate(BaseModel):
+    status: str  # done | dismissed | pending
+
+
+class ReminderResponse(BaseModel):
+    id: int
+    client_id: int
+    type: str
+    due_date: date
+    status: str
+    note: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class ReminderWithClientResponse(BaseModel):
+    id: int
+    client_id: int
+    type: str
+    due_date: date
+    status: str
+    note: Optional[str]
+    created_at: datetime
+    client_name: str
+    client_phone: Optional[str]
+    client_instagram: Optional[str]
+    client_status: str
+
+    class Config:
+        from_attributes = True
+
+
 class ClientCreate(BaseModel):
     name: str
     phone: Optional[str] = None
@@ -62,6 +102,7 @@ class ClientResponse(BaseModel):
     last_contact_date: Optional[date]
     created_at: datetime
     interactions: List[ClientInteractionResponse] = []
+    reminders: List[ReminderResponse] = []
 
     class Config:
         from_attributes = True
