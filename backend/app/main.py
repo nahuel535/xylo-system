@@ -18,6 +18,7 @@ from app.api.debtors import router as debtors_router
 from app.api.expenses import router as expenses_router
 from app.api.accessories import router as accessories_router
 from app.api.clients import router as clients_router
+from app.api.notifications import router as notifications_router
 from app.models.expense import Expense  # noqa: ensure table is registered
 from app.models.accessory import Accessory, AccessorySale  # noqa: ensure tables are registered
 from app.models.client import Client, ClientInteraction  # noqa: ensure tables are registered
@@ -75,6 +76,7 @@ app.include_router(debtors_router)
 app.include_router(expenses_router)
 app.include_router(accessories_router)
 app.include_router(clients_router)
+app.include_router(notifications_router)
 
 
 ARG_TZ = timezone(timedelta(hours=-3))

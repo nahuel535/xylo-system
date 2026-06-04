@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
 
@@ -67,12 +68,14 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
       <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/store" element={<StorePage />} />
-          <Route path="/store/:id" element={<StoreProductPage />} />
-          <Route path="/*" element={<Layout />} />
-        </Routes>
+        <NotificationProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/store" element={<StorePage />} />
+            <Route path="/store/:id" element={<StoreProductPage />} />
+            <Route path="/*" element={<Layout />} />
+          </Routes>
+        </NotificationProvider>
       </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

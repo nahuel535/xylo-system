@@ -1,7 +1,7 @@
-from datetime import date as date_type, timedelta
+from datetime import date as date_type, timedelta, date
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from typing import Optional
 
 from app.db.session import get_db
@@ -28,6 +28,17 @@ REMINDER_TEMPLATES = {
 
 
 # ── Recordatorios globales ──────────────────────────────────────────────────
+
+@router.get("/reminders/count")
+def get_reminder_count(db: Session = Depends(get_db)):
+    today = date.today()
+    count = (
+        db.query(ClientReminder)
+        .filter(ClientReminder.status == "pending", ClientReminder.due_date <= today)
+        .count()
+    )
+    return {"count": count}
+
 
 @router.get("/reminders", response_model=list[ReminderWithClientResponse])
 def list_reminders(
@@ -192,6 +203,46 @@ def delete_interaction(client_id: int, interaction_id: int, db: Session = Depend
         client.last_contact_date = remaining.date if remaining else None
     db.commit()
     return {"message": "Interacción eliminada"}
+
+
+# ── Ventas por cliente (match por nombre) ───────────────────────────────────
+
+@router.get("/{client_id}/sales")
+def get_client_sales(client_id: int, db: Session = Depends(get_db)):
+    from app.models.sale import Sale
+    from app.models.product import Product
+
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+
+    rows = (
+        db.query(Sale, Product)
+        .join(Product, Sale.product_id == Product.id)
+        .filter(func.lower(Sale.client_name) == client.name.lower())
+        .order_by(Sale.sale_date.desc())
+        .limit(20)
+        .all()
+    )
+
+    total_usd = sum(float(s.sale_price_usd) for s, _ in rows)
+
+    return {
+        "total_sales": len(rows),
+        "total_usd": round(total_usd, 2),
+        "sales": [
+            {
+                "id": s.id,
+                "model": p.model,
+                "storage": p.storage,
+                "color": p.color,
+                "sale_price_usd": float(s.sale_price_usd),
+                "gross_profit_usd": float(s.gross_profit_usd),
+                "sale_date": s.sale_date,
+            }
+            for s, p in rows
+        ],
+    }
 
 
 # ── Recordatorios por cliente ───────────────────────────────────────────────

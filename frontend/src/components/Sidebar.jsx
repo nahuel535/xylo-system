@@ -7,6 +7,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import { useNotifications } from "../context/NotificationContext";
 import logo from "../assets/logo.png";
 
 const DESKTOP_SECTIONS = [
@@ -134,6 +135,7 @@ export default function Sidebar() {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { dark, toggleTheme } = useTheme();
+  const { count: reminderCount } = useNotifications();
 
   const bg = dark ? "rgba(20,20,22,0.94)" : "rgba(252,252,253,0.94)";
   const border = dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
@@ -202,21 +204,30 @@ export default function Sidebar() {
                   {label}
                 </p>
                 <div className="space-y-0.5">
-                  {links.map(({ to, label: linkLabel, icon: Icon }) => (
-                    <NavLink
-                      key={to}
-                      to={to}
-                      end={to === "/"}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all ${
-                          isActive
-                            ? "bg-xylo-500 text-white font-medium shadow-sm"
-                            : "text-base-muted hover:bg-base-subtle hover:text-base-text"
-                        }`}
-                    >
-                      <Icon size={16} /><span>{linkLabel}</span>
-                    </NavLink>
-                  ))}
+                  {links.map(({ to, label: linkLabel, icon: Icon }) => {
+                    const badge = to === "/crm" && reminderCount > 0 ? reminderCount : 0;
+                    return (
+                      <NavLink
+                        key={to}
+                        to={to}
+                        end={to === "/"}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all ${
+                            isActive
+                              ? "bg-xylo-500 text-white font-medium shadow-sm"
+                              : "text-base-muted hover:bg-base-subtle hover:text-base-text"
+                          }`}
+                      >
+                        <Icon size={16} />
+                        <span className="flex-1">{linkLabel}</span>
+                        {badge > 0 && (
+                          <span className="ml-auto text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center leading-none">
+                            {badge > 99 ? "99+" : badge}
+                          </span>
+                        )}
+                      </NavLink>
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -425,13 +436,27 @@ export default function Sidebar() {
                       transition: "background 0.15s",
                     }}
                   >
-                    <div style={{
-                      width: 52, height: 52, borderRadius: 14,
-                      background: color,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      boxShadow: `0 4px 12px ${color}55`,
-                    }}>
-                      <Icon size={24} color="#fff" strokeWidth={1.8} />
+                    <div style={{ position: "relative" }}>
+                      <div style={{
+                        width: 52, height: 52, borderRadius: 14,
+                        background: color,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        boxShadow: `0 4px 12px ${color}55`,
+                      }}>
+                        <Icon size={24} color="#fff" strokeWidth={1.8} />
+                      </div>
+                      {to === "/crm" && reminderCount > 0 && (
+                        <div style={{
+                          position: "absolute", top: -4, right: -4,
+                          background: "#ef4444", color: "white",
+                          borderRadius: 99, minWidth: 18, height: 18,
+                          fontSize: 10, fontWeight: 700,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          padding: "0 4px", lineHeight: 1,
+                        }}>
+                          {reminderCount > 99 ? "99+" : reminderCount}
+                        </div>
+                      )}
                     </div>
                     <span style={{
                       fontSize: 11, fontWeight: 500,

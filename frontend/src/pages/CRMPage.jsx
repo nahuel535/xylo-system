@@ -2,11 +2,24 @@ import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
+import { useNotifications } from "../context/NotificationContext";
 import {
   Plus, Search, Phone, Mail, Instagram, Bell, BellOff, Trash2,
   ChevronRight, X, Users, UserCheck, AlertCircle, Check,
   Clock, CheckCircle2, ChevronDown, ChevronUp, MessageCircle,
+  CalendarPlus, Send, Settings2, MailCheck, MailX,
 } from "lucide-react";
+
+// Genera URL para agregar al Google Calendar (sin OAuth, abre en navegador)
+function gcalUrl(dueDateStr, title, description) {
+  const d = dueDateStr.replace(/-/g, "");
+  const next = (() => {
+    const dt = new Date(dueDateStr + "T00:00:00");
+    dt.setDate(dt.getDate() + 1);
+    return dt.toISOString().slice(0, 10).replace(/-/g, "");
+  })();
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${d}/${next}&details=${encodeURIComponent(description || "")}`;
+}
 
 const STATUS_META = {
   lead:     { label: "Lead",     bg: "bg-amber-50 dark:bg-amber-950/30",  text: "text-amber-600 dark:text-amber-400",  border: "border-amber-200 dark:border-amber-800"  },
@@ -55,10 +68,18 @@ const URGENCY_STYLE = {
 };
 
 export default function CRMPage() {
+  const { refresh: refreshCount } = useNotifications();
+
   const [clients, setClients] = useState([]);
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [remindersOpen, setRemindersOpen] = useState(true);
+
+  // Email / notificaciones
+  const [emailStatus, setEmailStatus] = useState(null); // { email_configured, notify_email }
+  const [showEmailPanel, setShowEmailPanel] = useState(false);
+  const [sendingDigest, setSendingDigest] = useState(false);
+  const [digestResult, setDigestResult] = useState(null);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -71,7 +92,7 @@ export default function CRMPage() {
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(null);
 
-  useEffect(() => { loadAll(); }, []);
+  useEffect(() => { loadAll(); loadEmailStatus(); }, []);
 
   async function loadAll() {
     setLoading(true);
@@ -84,6 +105,26 @@ export default function CRMPage() {
       setReminders(remindersRes.data);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
+  }
+
+  async function loadEmailStatus() {
+    try {
+      const res = await api.get("/notifications/status");
+      setEmailStatus(res.data);
+    } catch {}
+  }
+
+  async function sendDigest() {
+    setSendingDigest(true);
+    setDigestResult(null);
+    try {
+      const res = await api.post("/notifications/send-digest");
+      setDigestResult(res.data);
+    } catch (e) {
+      setDigestResult({ message: "Error al enviar el email.", sent: false });
+    } finally {
+      setSendingDigest(false);
+    }
   }
 
   function handleChange(ev) {
@@ -136,6 +177,7 @@ export default function CRMPage() {
     try {
       await api.put(`/clients/reminders/${id}`, { status });
       setReminders((prev) => prev.filter((r) => r.id !== id));
+      refreshCount();
     } catch {}
   }
 
@@ -170,13 +212,86 @@ export default function CRMPage() {
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
         <Header title="CRM" subtitle="Clientes y seguimiento comercial" />
-        <button
-          onClick={() => { setForm(blankForm); setError(""); setShowModal(true); }}
-          className="flex items-center gap-2 bg-xylo-500 hover:bg-xylo-600 transition text-white rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm"
-        >
-          <Plus size={15} /> Agregar cliente
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => { setShowEmailPanel((p) => !p); setDigestResult(null); }}
+            title="Configuración de notificaciones"
+            className={`p-2.5 rounded-xl border transition ${
+              showEmailPanel
+                ? "bg-xylo-500/10 border-xylo-500/30 text-xylo-500"
+                : "border-base-border text-base-muted hover:bg-base-subtle hover:text-base-text"
+            }`}
+          >
+            <Settings2 size={15} />
+          </button>
+          <button
+            onClick={() => { setForm(blankForm); setError(""); setShowModal(true); }}
+            className="flex items-center gap-2 bg-xylo-500 hover:bg-xylo-600 transition text-white rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm"
+          >
+            <Plus size={15} /> Agregar cliente
+          </button>
+        </div>
       </div>
+
+      {/* ── Panel de notificaciones por email ── */}
+      {showEmailPanel && (
+        <div className="mb-5 bg-base-card border border-base-border rounded-2xl p-5 shadow-card">
+          <div className="flex items-center gap-2 mb-4">
+            <Settings2 size={15} className="text-xylo-500" />
+            <h3 className="text-sm font-semibold text-base-text">Notificaciones por email</h3>
+          </div>
+
+          {emailStatus ? (
+            emailStatus.email_configured ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                  <MailCheck size={15} />
+                  <span>Email configurado: <strong>{emailStatus.notify_email}</strong></span>
+                </div>
+                <p className="text-xs text-base-muted">
+                  Enviá un resumen ahora con todos los seguimientos pendientes de los próximos 7 días.
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={sendDigest}
+                    disabled={sendingDigest}
+                    className="flex items-center gap-2 bg-xylo-500 hover:bg-xylo-600 transition text-white rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
+                  >
+                    <Send size={13} /> {sendingDigest ? "Enviando..." : "Enviar resumen ahora"}
+                  </button>
+                  {digestResult && (
+                    <span className={`text-xs font-medium ${digestResult.sent ? "text-green-500" : "text-amber-500"}`}>
+                      {digestResult.message} {digestResult.count !== undefined && `(${digestResult.count} seguimientos)`}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                  <MailX size={15} />
+                  <span>Email no configurado</span>
+                </div>
+                <p className="text-xs text-base-muted">
+                  Agregá estas variables de entorno en Railway para recibir el resumen diario de seguimientos:
+                </p>
+                <div className="bg-base-subtle border border-base-border rounded-xl px-4 py-3 font-mono text-xs text-base-text space-y-1">
+                  <p>SMTP_HOST=smtp.gmail.com</p>
+                  <p>SMTP_PORT=587</p>
+                  <p>SMTP_USER=tu@gmail.com</p>
+                  <p>SMTP_PASS=contraseña_de_aplicación</p>
+                  <p>NOTIFY_EMAIL=donde_llega@email.com</p>
+                </div>
+                <p className="text-xs text-base-muted">
+                  Para Gmail usá una <em>contraseña de aplicación</em> (requiere 2FA activado en tu cuenta Google).
+                </p>
+              </div>
+            )
+          ) : (
+            <p className="text-sm text-base-muted">Cargando configuración...</p>
+          )}
+        </div>
+      )}
 
       {/* ── Seguimientos pendientes ── */}
       {reminders.length > 0 && (
@@ -245,6 +360,15 @@ export default function CRMPage() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-1 flex-shrink-0">
+                      <a
+                        href={gcalUrl(r.due_date, `${meta.label}: ${r.client_name}`, r.note || "")}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Agregar a Google Calendar"
+                        className="p-1.5 rounded-lg text-base-muted hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-500 transition"
+                      >
+                        <CalendarPlus size={13} />
+                      </a>
                       <button
                         onClick={() => markReminder(r.id, "done")}
                         title="Marcar como hecho"
