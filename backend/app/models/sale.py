@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Numeric, Boolean, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, Numeric, Boolean, ForeignKey, Text, Date
 from sqlalchemy.sql import func
 from app.db.session import Base
 from sqlalchemy.orm import relationship
@@ -15,6 +15,7 @@ class Sale(Base):
     sale_price_usd = Column(Numeric(10, 2), nullable=False)
     purchase_price_usd_snapshot = Column(Numeric(10, 2), nullable=False)
     gross_profit_usd = Column(Numeric(10, 2), nullable=False)
+    commission_usd = Column(Numeric(10, 2), nullable=True)
 
     client_name = Column(String, nullable=True)
     notes = Column(Text, nullable=True)
@@ -27,7 +28,11 @@ class Sale(Base):
     has_deposit = Column(Boolean, default=False)
     deposit_amount_usd = Column(Numeric(10, 2), nullable=True)
     remaining_balance_usd = Column(Numeric(10, 2), nullable=True)
-    
+
+    is_returned = Column(Boolean, default=False, server_default="false", nullable=False)
+    return_date = Column(Date, nullable=True)
+    return_reason = Column(Text, nullable=True)
+
     payments = relationship("SalePayment", backref="sale", cascade="all, delete-orphan")
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())

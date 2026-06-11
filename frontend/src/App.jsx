@@ -30,6 +30,8 @@ import AccessoryLabelPage from "./pages/AccessoryLabelPage";
 import CRMPage from "./pages/CRMPage";
 import ClientDetailPage from "./pages/ClientDetailPage";
 import AgendaPage from "./pages/AgendaPage";
+import CommissionsPage from "./pages/CommissionsPage";
+import QuotesPage from "./pages/QuotesPage";
 
 function Layout() {
   return (
@@ -59,6 +61,8 @@ function Layout() {
           <Route path="/crm" element={<ProtectedRoute><CRMPage /></ProtectedRoute>} />
           <Route path="/crm/:id" element={<ProtectedRoute><ClientDetailPage /></ProtectedRoute>} />
           <Route path="/agenda" element={<ProtectedRoute><AgendaPage /></ProtectedRoute>} />
+          <Route path="/comisiones" element={<ProtectedRoute><CommissionsPage /></ProtectedRoute>} />
+          <Route path="/presupuestos" element={<ProtectedRoute><QuotesPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

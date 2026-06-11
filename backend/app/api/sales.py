@@ -9,7 +9,7 @@ from app.db.session import get_db
 from app.models.sale import Sale
 from app.models.product import Product
 from app.models.user import User
-from app.schemas.sale import SaleCreate, SaleUpdate, SaleResponse
+from app.schemas.sale import SaleCreate, SaleUpdate, SaleResponse, SaleReturnRequest
 from app.core.dependencies import get_optional_user_id
 from app.models.client import Client, ClientInteraction, ClientReminder
 
@@ -70,6 +70,7 @@ def create_sale(request: Request, sale_data: SaleCreate, db: Session = Depends(g
     purchase_price = Decimal(product.purchase_price_usd)
     sale_price = Decimal(sale_data.sale_price_usd)
     gross_profit = sale_price - purchase_price
+    commission_usd = (gross_profit * Decimal(str(seller.commission_rate)) / Decimal("100")).quantize(Decimal("0.01"))
 
     total_payments = sum(Decimal(payment.amount_usd) for payment in sale_data.payments)
 
@@ -85,6 +86,7 @@ def create_sale(request: Request, sale_data: SaleCreate, db: Session = Depends(g
         sale_price_usd=sale_price,
         purchase_price_usd_snapshot=purchase_price,
         gross_profit_usd=gross_profit,
+        commission_usd=commission_usd,
         client_name=sale_data.client_name,
         notes=sale_data.notes,
         status=sale_data.status,
@@ -154,9 +156,14 @@ def update_sale(request: Request, sale_id: int, sale_data: SaleUpdate, db: Sessi
             raise HTTPException(status_code=400, detail="Vendedor no encontrado")
         sale.seller_id = sale_data.seller_id
 
-    if sale_data.sale_price_usd is not None:
-        sale.sale_price_usd = sale_data.sale_price_usd
-        sale.gross_profit_usd = Decimal(sale_data.sale_price_usd) - Decimal(sale.purchase_price_usd_snapshot)
+    if sale_data.sale_price_usd is not None or sale_data.seller_id is not None:
+        new_price = Decimal(str(sale_data.sale_price_usd)) if sale_data.sale_price_usd is not None else Decimal(str(sale.sale_price_usd))
+        new_profit = new_price - Decimal(str(sale.purchase_price_usd_snapshot))
+        seller_for_commission = db.query(User).filter(User.id == (sale_data.seller_id or sale.seller_id)).first()
+        rate = Decimal(str(seller_for_commission.commission_rate)) if seller_for_commission else Decimal("0")
+        sale.sale_price_usd = new_price
+        sale.gross_profit_usd = new_profit
+        sale.commission_usd = (new_profit * rate / Decimal("100")).quantize(Decimal("0.01"))
 
     if sale_data.client_name is not None:
         sale.client_name = sale_data.client_name
@@ -239,4 +246,37 @@ def get_sale(sale_id: int, db: Session = Depends(get_db)):
     sale = db.query(Sale).filter(Sale.id == sale_id).first()
     if not sale:
         raise HTTPException(status_code=404, detail="Venta no encontrada")
+    return sale
+
+
+@router.post("/{sale_id}/return", response_model=SaleResponse)
+def return_sale(
+    request: Request,
+    sale_id: int,
+    data: SaleReturnRequest,
+    db: Session = Depends(get_db),
+):
+    from datetime import date as date_type
+    sale = db.query(Sale).filter(Sale.id == sale_id).first()
+    if not sale:
+        raise HTTPException(status_code=404, detail="Venta no encontrada")
+    if sale.is_returned:
+        raise HTTPException(status_code=400, detail="Esta venta ya fue devuelta")
+
+    sale.is_returned = True
+    sale.return_date = date_type.today()
+    sale.return_reason = data.reason
+
+    product = db.query(Product).filter(Product.id == sale.product_id).first()
+    if product:
+        product.status = "in_stock"
+
+    user_id = get_optional_user_id(request)
+    db.add(AuditLog(
+        entity_type="sale", entity_id=sale_id, user_id=user_id,
+        action="returned", changes={"reason": data.reason},
+    ))
+
+    db.commit()
+    db.refresh(sale)
     return sale

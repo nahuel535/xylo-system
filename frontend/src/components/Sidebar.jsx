@@ -2,6 +2,7 @@ import {
   Home, Package, PackagePlus, ShoppingBag,
   ReceiptText, TrendingUp, ScanLine, LogOut, Sun, Moon,
   Users, Wallet, LayoutGrid, TrendingDown, Cable, BookUser, CalendarDays,
+  BadgeDollarSign, FileText,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -31,6 +32,8 @@ const DESKTOP_SECTIONS = [
       { to: "/accessories", label: "Accesorios", icon: Cable },
       { to: "/crm", label: "CRM", icon: BookUser },
       { to: "/agenda", label: "Agenda", icon: CalendarDays },
+      { to: "/presupuestos", label: "Presupuestos", icon: FileText },
+      { to: "/comisiones", label: "Comisiones", icon: BadgeDollarSign },
     ],
   },
   {
@@ -61,6 +64,8 @@ const SHEET_LINKS = [
   { to: "/accessories", label: "Accesorios", icon: Cable, color: "#0891b2" },
   { to: "/crm", label: "CRM", icon: BookUser, color: "#7c3aed" },
   { to: "/agenda", label: "Agenda", icon: CalendarDays, color: "#0ea5e9" },
+  { to: "/presupuestos", label: "Presupuestos", icon: FileText, color: "#8b5cf6" },
+  { to: "/comisiones", label: "Comisiones", icon: BadgeDollarSign, color: "#f59e0b" },
   { to: "/users", label: "Usuarios", icon: Users, color: "#64748b" },
 ];
 
@@ -76,6 +81,8 @@ const PAGE_TITLES = {
   "/accessories": "Accesorios",
   "/crm": "CRM",
   "/agenda": "Agenda",
+  "/presupuestos": "Presupuestos",
+  "/comisiones": "Comisiones",
   "/users": "Usuarios",
 };
 

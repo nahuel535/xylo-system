@@ -20,10 +20,12 @@ from app.api.accessories import router as accessories_router
 from app.api.clients import router as clients_router
 from app.api.notifications import router as notifications_router
 from app.api.appointments import router as appointments_router
+from app.api.quotes import router as quotes_router
 from app.models.expense import Expense  # noqa: ensure table is registered
 from app.models.accessory import Accessory, AccessorySale  # noqa: ensure tables are registered
 from app.models.client import Client, ClientInteraction  # noqa: ensure tables are registered
 from app.models.appointment import Appointment  # noqa: ensure table is registered
+from app.models.quote import Quote  # noqa: ensure table is registered
 
 Base.metadata.create_all(bind=engine)
 
@@ -45,6 +47,26 @@ with engine.connect() as conn:
     conn.execute(text("""
         ALTER TABLE accessory_sales
         ADD COLUMN IF NOT EXISTS sale_id INTEGER REFERENCES sales(id) ON DELETE SET NULL
+    """))
+    conn.execute(text("""
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS commission_rate NUMERIC(5,2) NOT NULL DEFAULT 0
+    """))
+    conn.execute(text("""
+        ALTER TABLE sales
+        ADD COLUMN IF NOT EXISTS commission_usd NUMERIC(10,2)
+    """))
+    conn.execute(text("""
+        ALTER TABLE sales
+        ADD COLUMN IF NOT EXISTS is_returned BOOLEAN NOT NULL DEFAULT FALSE
+    """))
+    conn.execute(text("""
+        ALTER TABLE sales
+        ADD COLUMN IF NOT EXISTS return_date DATE
+    """))
+    conn.execute(text("""
+        ALTER TABLE sales
+        ADD COLUMN IF NOT EXISTS return_reason TEXT
     """))
     conn.commit()
 
@@ -80,6 +102,7 @@ app.include_router(accessories_router)
 app.include_router(clients_router)
 app.include_router(notifications_router)
 app.include_router(appointments_router)
+app.include_router(quotes_router)
 
 
 ARG_TZ = timezone(timedelta(hours=-3))

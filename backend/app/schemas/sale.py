@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from typing import Optional, List
 from app.schemas.sale_payment import SalePaymentCreate, SalePaymentResponse
@@ -41,6 +41,10 @@ class SaleUpdate(BaseModel):
     payments: Optional[List[SalePaymentCreate]] = None
 
 
+class SaleReturnRequest(BaseModel):
+    reason: Optional[str] = None
+
+
 class SaleResponse(BaseModel):
     id: int
     product_id: int
@@ -49,6 +53,7 @@ class SaleResponse(BaseModel):
     sale_price_usd: Decimal
     purchase_price_usd_snapshot: Decimal
     gross_profit_usd: Decimal
+    commission_usd: Optional[Decimal]
     client_name: Optional[str]
     notes: Optional[str]
     status: str
@@ -57,6 +62,9 @@ class SaleResponse(BaseModel):
     has_deposit: bool
     deposit_amount_usd: Optional[Decimal]
     remaining_balance_usd: Optional[Decimal]
+    is_returned: bool
+    return_date: Optional[date]
+    return_reason: Optional[str]
     created_at: datetime
     payments: list[SalePaymentResponse] = []
 
