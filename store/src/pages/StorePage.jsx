@@ -1968,6 +1968,26 @@ function ProductCard({ product, exchange }) {
     my.set(0);
   }
 
+  const [shared, setShared] = useState(false);
+  const shareUrl = `https://xylobox.store/producto/${product.id}`;
+  async function handleShare(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const title = [product.model, product.storage].filter(Boolean).join(" · ");
+    const batteryDesc = product.battery_health
+      ? (product.battery_health >= 85 ? "Batería excelente" : product.battery_health >= 70 ? "Batería en buen estado" : "Batería con desgaste") + ` · ${product.battery_health}%`
+      : "";
+    const text = [batteryDesc, `USD ${Number(product.suggested_sale_price_usd).toLocaleString("es-AR")}`].filter(Boolean).join(" · ");
+    if (navigator.share) {
+      try { await navigator.share({ title, text, url: shareUrl }); return; } catch {}
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setShared(true);
+      setTimeout(() => setShared(false), 2200);
+    } catch {}
+  }
+
   return (
     <Link to={`/producto/${product.id}`} style={{ textDecoration: "none", color: "inherit", height: "100%", display: "block" }}>
       <motion.div
@@ -2032,6 +2052,35 @@ function ProductCard({ product, exchange }) {
               </div>
             )}
           </div>
+
+          {/* Botón compartir */}
+          <button
+            onClick={handleShare}
+            title={shared ? "¡Copiado!" : "Compartir"}
+            style={{
+              position: "absolute", top: "10px", right: "10px",
+              width: "30px", height: "30px",
+              background: shared ? T.accentLight : "rgba(255,255,255,0.92)",
+              backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+              border: `1px solid ${shared ? T.accentBorder : T.border}`,
+              borderRadius: "50%",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", zIndex: 10, padding: 0,
+              transition: "background 0.2s, border-color 0.2s",
+            }}
+          >
+            {shared ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.textSec} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+              </svg>
+            )}
+          </button>
         </div>
 
         {/* Body */}
@@ -2081,6 +2130,26 @@ function ProductRow({ product, exchange }) {
     : null;
   const batteryColor = !product.battery_health ? T.textMuted : product.battery_health >= 85 ? "#16a34a" : product.battery_health >= 70 ? "#d97706" : "#dc2626";
   const isNewProduct = product.created_at ? isNew(product.created_at) : false;
+
+  const [rowShared, setRowShared] = useState(false);
+  const rowShareUrl = `https://xylobox.store/producto/${product.id}`;
+  async function handleRowShare(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const title = [product.model, product.storage].filter(Boolean).join(" · ");
+    const batteryDesc = product.battery_health
+      ? (product.battery_health >= 85 ? "Batería excelente" : product.battery_health >= 70 ? "Batería en buen estado" : "Batería con desgaste") + ` · ${product.battery_health}%`
+      : "";
+    const text = [batteryDesc, `USD ${Number(product.suggested_sale_price_usd).toLocaleString("es-AR")}`].filter(Boolean).join(" · ");
+    if (navigator.share) {
+      try { await navigator.share({ title, text, url: rowShareUrl }); return; } catch {}
+    }
+    try {
+      await navigator.clipboard.writeText(rowShareUrl);
+      setRowShared(true);
+      setTimeout(() => setRowShared(false), 2200);
+    } catch {}
+  }
 
   return (
     <Link to={`/producto/${product.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
@@ -2150,7 +2219,31 @@ function ProductRow({ product, exchange }) {
           {ars && <p style={{ fontSize: "10px", color: T.textMuted, marginTop: "3px", whiteSpace: "nowrap" }}>ARS {ars}</p>}
         </div>
 
-        <ChevronRight size={14} color={T.textMuted} style={{ flexShrink: 0 }} />
+        <button
+          onClick={handleRowShare}
+          title={rowShared ? "¡Copiado!" : "Compartir"}
+          style={{
+            width: "28px", height: "28px", flexShrink: 0,
+            background: rowShared ? T.accentLight : "rgba(0,0,0,0.03)",
+            border: `1px solid ${rowShared ? T.accentBorder : T.border}`,
+            borderRadius: "50%",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", padding: 0,
+            transition: "background 0.2s, border-color 0.2s",
+          }}
+        >
+          {rowShared ? (
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          ) : (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+          )}
+        </button>
       </motion.div>
     </Link>
   );
