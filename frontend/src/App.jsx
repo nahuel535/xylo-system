@@ -29,6 +29,7 @@ import AccessoriesPage from "./pages/AccessoriesPage";
 import AccessoryLabelPage from "./pages/AccessoryLabelPage";
 import CRMPage from "./pages/CRMPage";
 import ClientDetailPage from "./pages/ClientDetailPage";
+import AgendaPage from "./pages/AgendaPage";
 
 function Layout() {
   return (
@@ -57,6 +58,7 @@ function Layout() {
           <Route path="/accessories/:id/label" element={<ProtectedRoute><AccessoryLabelPage /></ProtectedRoute>} />
           <Route path="/crm" element={<ProtectedRoute><CRMPage /></ProtectedRoute>} />
           <Route path="/crm/:id" element={<ProtectedRoute><ClientDetailPage /></ProtectedRoute>} />
+          <Route path="/agenda" element={<ProtectedRoute><AgendaPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

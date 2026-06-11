@@ -19,9 +19,11 @@ from app.api.expenses import router as expenses_router
 from app.api.accessories import router as accessories_router
 from app.api.clients import router as clients_router
 from app.api.notifications import router as notifications_router
+from app.api.appointments import router as appointments_router
 from app.models.expense import Expense  # noqa: ensure table is registered
 from app.models.accessory import Accessory, AccessorySale  # noqa: ensure tables are registered
 from app.models.client import Client, ClientInteraction  # noqa: ensure tables are registered
+from app.models.appointment import Appointment  # noqa: ensure table is registered
 
 Base.metadata.create_all(bind=engine)
 
@@ -77,6 +79,7 @@ app.include_router(expenses_router)
 app.include_router(accessories_router)
 app.include_router(clients_router)
 app.include_router(notifications_router)
+app.include_router(appointments_router)
 
 
 ARG_TZ = timezone(timedelta(hours=-3))
