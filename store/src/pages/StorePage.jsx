@@ -1989,6 +1989,7 @@ function ProductCard({ product, exchange }) {
   }
 
   return (
+    <div style={{ position: "relative", height: "100%" }}>
     <Link to={`/producto/${product.id}`} style={{ textDecoration: "none", color: "inherit", height: "100%", display: "block" }}>
       <motion.div
         onMouseMove={onMouseMove}
@@ -2053,34 +2054,6 @@ function ProductCard({ product, exchange }) {
             )}
           </div>
 
-          {/* Botón compartir */}
-          <button
-            onClick={handleShare}
-            title={shared ? "¡Copiado!" : "Compartir"}
-            style={{
-              position: "absolute", top: "10px", right: "10px",
-              width: "30px", height: "30px",
-              background: shared ? T.accentLight : "rgba(255,255,255,0.92)",
-              backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
-              border: `1px solid ${shared ? T.accentBorder : T.border}`,
-              borderRadius: "50%",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", zIndex: 10, padding: 0,
-              transition: "background 0.2s, border-color 0.2s",
-            }}
-          >
-            {shared ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            ) : (
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.textSec} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-              </svg>
-            )}
-          </button>
         </div>
 
         {/* Body */}
@@ -2118,6 +2091,35 @@ function ProductCard({ product, exchange }) {
         </div>
       </motion.div>
     </Link>
+
+    <button
+      onClick={handleShare}
+      title={shared ? "¡Copiado!" : "Compartir"}
+      style={{
+        position: "absolute", top: "10px", right: "10px",
+        width: "30px", height: "30px",
+        background: shared ? T.accentLight : "rgba(255,255,255,0.92)",
+        backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+        border: `1px solid ${shared ? T.accentBorder : T.border}`,
+        borderRadius: "50%",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        cursor: "pointer", zIndex: 20, padding: 0,
+        transition: "background 0.2s, border-color 0.2s",
+      }}
+    >
+      {shared ? (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.textSec} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+        </svg>
+      )}
+    </button>
+    </div>
   );
 }
 
@@ -2152,12 +2154,13 @@ function ProductRow({ product, exchange }) {
   }
 
   return (
+    <div style={{ position: "relative" }}>
     <Link to={`/producto/${product.id}`} style={{ textDecoration: "none", color: "inherit", display: "block" }}>
       <motion.div
         whileHover={{ backgroundColor: "#fafaf9" }}
         style={{
           display: "flex", alignItems: "center", gap: "14px",
-          padding: "14px 16px",
+          padding: "14px 54px 14px 16px",
           background: T.card, border: `1px solid ${T.border}`,
           borderRadius: "16px", cursor: "pointer",
           fontFamily: T.body, transition: "background 0.15s",
@@ -2219,33 +2222,38 @@ function ProductRow({ product, exchange }) {
           {ars && <p style={{ fontSize: "10px", color: T.textMuted, marginTop: "3px", whiteSpace: "nowrap" }}>ARS {ars}</p>}
         </div>
 
-        <button
-          onClick={handleRowShare}
-          title={rowShared ? "¡Copiado!" : "Compartir"}
-          style={{
-            width: "28px", height: "28px", flexShrink: 0,
-            background: rowShared ? T.accentLight : "rgba(0,0,0,0.03)",
-            border: `1px solid ${rowShared ? T.accentBorder : T.border}`,
-            borderRadius: "50%",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", padding: 0,
-            transition: "background 0.2s, border-color 0.2s",
-          }}
-        >
-          {rowShared ? (
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          ) : (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
-              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-            </svg>
-          )}
-        </button>
       </motion.div>
     </Link>
+
+    <button
+      onClick={handleRowShare}
+      title={rowShared ? "¡Copiado!" : "Compartir"}
+      style={{
+        position: "absolute", right: "16px", top: "50%",
+        transform: "translateY(-50%)",
+        width: "28px", height: "28px",
+        background: rowShared ? T.accentLight : "rgba(255,255,255,0.92)",
+        backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)",
+        border: `1px solid ${rowShared ? T.accentBorder : T.border}`,
+        borderRadius: "50%",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        cursor: "pointer", zIndex: 20, padding: 0,
+        transition: "background 0.2s, border-color 0.2s",
+      }}
+    >
+      {rowShared ? (
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={ACCENT} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+        </svg>
+      )}
+    </button>
+    </div>
   );
 }
 
