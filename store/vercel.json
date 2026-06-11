@@ -2,12 +2,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/producto/:id", "destination": "/api/producto/:id" },
+    {
+      "source": "/producto/:id",
+      "missing": [{ "type": "query", "key": "v" }],
+      "destination": "/api/producto/:id"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "functions": {
-    "api/producto/[id].js": {
-      "includeFiles": "dist/index.html"
-    }
-  }
+  ]
 }

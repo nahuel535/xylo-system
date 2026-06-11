@@ -233,6 +233,15 @@ export default function StoreProductPage() {
   const heroRef = useRef(null);
 
   useEffect(() => {
+    // Limpiar ?v=1 que agrega la función OG de Vercel
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("v")) {
+      url.searchParams.delete("v");
+      window.history.replaceState({}, "", url.pathname);
+    }
+  }, []);
+
+  useEffect(() => {
     async function load() {
       try {
         const [prodRes, exRes] = await Promise.all([
