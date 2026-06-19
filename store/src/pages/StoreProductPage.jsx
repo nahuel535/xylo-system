@@ -4,6 +4,7 @@ import { motion, useInView, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Smartphone } from "lucide-react";
 import api from "../services/api";
 import { XyloLogo, WhatsAppIcon } from "../components/Icons";
+import { trackViewContent, trackContact } from "../utils/metaPixel";
 
 const WHATSAPP = "5493518916482";
 const ACCENT = "#00C896";
@@ -23,6 +24,12 @@ const T = {
   accentLight: "rgba(0,200,150,0.08)",
   accentBorder: "rgba(0,200,150,0.20)",
 };
+
+useEffect(() => {
+  if (product) {
+    trackViewContent(product);
+  }
+}, [product]);
 
 function waLink(product) {
   const msg = `Hola! Me interesa el ${product.model}${product.storage ? ` ${product.storage}` : ""}${product.color ? ` ${product.color}` : ""}. ¿Sigue disponible?`;
