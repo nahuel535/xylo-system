@@ -527,7 +527,8 @@ export default function StoreProductPage() {
               style={{ fontSize: "14px", color: T.textMuted, textDecoration: "none", transition: "color 0.2s" }}
               onMouseEnter={(e) => e.currentTarget.style.color = T.textSec}
               onMouseLeave={(e) => e.currentTarget.style.color = T.textMuted}
-            >
+              onClick={() => trackContact(product)}
+              >
               ← Ver más equipos
             </Link>
           </div>
