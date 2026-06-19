@@ -508,6 +508,7 @@ export default function StoreProductPage() {
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
             <motion.a
               href={waLink(product)}
+              onClick={() => trackContact(product)}
               target="_blank" rel="noreferrer"
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
