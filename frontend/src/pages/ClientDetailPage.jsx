@@ -94,6 +94,7 @@ export default function ClientDetailPage() {
   const [client, setClient] = useState(null);
   const [loading, setLoading] = useState(true);
   const [salesData, setSalesData] = useState(null); // { total_sales, total_usd, sales: [] }
+  const [commercialActivity, setCommercialActivity] = useState({ quotes: [], appointments: [] });
 
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState(null);
@@ -107,7 +108,7 @@ export default function ClientDetailPage() {
   const [showAddReminder, setShowAddReminder] = useState(false);
   const [reminderForm, setReminderForm] = useState({ type: "custom", due_date: today(), note: "" });
 
-  useEffect(() => { load(); loadSales(); }, [id]);
+  useEffect(() => { load(); loadSales(); loadCommercialActivity(); }, [id]);
 
   async function load() {
     setLoading(true);
@@ -123,6 +124,21 @@ export default function ClientDetailPage() {
       const res = await api.get(`/clients/${id}/sales`);
       setSalesData(res.data);
     } catch {}
+  }
+
+  async function loadCommercialActivity() {
+    try {
+      const [quotes, appointments] = await Promise.all([
+        api.get(`/quotes?client_id=${id}`),
+        api.get(`/appointments?client_id=${id}`),
+      ]);
+      setCommercialActivity({
+        quotes: quotes.data,
+        appointments: appointments.data,
+      });
+    } catch {
+      setCommercialActivity({ quotes: [], appointments: [] });
+    }
   }
 
   function startEdit() {
@@ -253,6 +269,18 @@ export default function ClientDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => navigate(`/quotes?client_id=${id}`)}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/30 hover:bg-purple-100 transition"
+          >
+            <FileText size={13} /> <span className="hidden sm:inline">Presupuesto</span>
+          </button>
+          <button
+            onClick={() => navigate(`/agenda?client_id=${id}`)}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 transition"
+          >
+            <CalendarPlus size={13} /> <span className="hidden sm:inline">Agendar</span>
+          </button>
           {/* Quick contact: WhatsApp */}
           {client.phone && (
             <a
@@ -542,6 +570,48 @@ export default function ClientDetailPage() {
                       )}
                     </div>
                   </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(commercialActivity.quotes.length > 0 || commercialActivity.appointments.length > 0) && (
+            <div className="bg-base-card border border-base-border rounded-2xl shadow-card overflow-hidden">
+              <div className="px-5 py-4 border-b border-base-border">
+                <h3 className="text-sm font-semibold text-base-text">Actividad comercial</h3>
+                <p className="text-xs text-base-muted mt-0.5">Agenda y presupuestos vinculados al cliente</p>
+              </div>
+              <div className="divide-y divide-base-border">
+                {commercialActivity.appointments.slice(0, 4).map((appointment) => (
+                  <button
+                    key={`appointment-${appointment.id}`}
+                    onClick={() => navigate("/agenda")}
+                    className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-base-subtle/40 transition"
+                  >
+                    <CalendarPlus size={14} className="text-amber-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-base-text truncate">{appointment.title}</p>
+                      <p className="text-xs text-base-muted">{formatDate(appointment.date)} · {appointment.start_time}</p>
+                    </div>
+                    <span className="text-[11px] text-base-muted capitalize">{appointment.status}</span>
+                  </button>
+                ))}
+                {commercialActivity.quotes.slice(0, 4).map((quote) => (
+                  <button
+                    key={`quote-${quote.id}`}
+                    onClick={() => navigate("/quotes")}
+                    className="w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-base-subtle/40 transition"
+                  >
+                    <FileText size={14} className="text-purple-500 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-base-text">Presupuesto #{quote.id}</p>
+                      <p className="text-xs text-base-muted">{formatDate(quote.created_at?.slice(0, 10))}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-semibold text-base-text">USD {Number(quote.total_usd || 0).toFixed(0)}</p>
+                      <p className="text-[11px] text-base-muted capitalize">{quote.status}</p>
+                    </div>
+                  </button>
                 ))}
               </div>
             </div>

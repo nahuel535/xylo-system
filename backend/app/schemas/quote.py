@@ -12,6 +12,7 @@ class QuoteItem(BaseModel):
 
 
 class QuoteCreate(BaseModel):
+    client_id: Optional[int] = None
     client_name: str
     client_phone: Optional[str] = None
     items: List[QuoteItem]
@@ -22,6 +23,7 @@ class QuoteCreate(BaseModel):
 
 
 class QuoteUpdate(BaseModel):
+    client_id: Optional[int] = None
     client_name: Optional[str] = None
     client_phone: Optional[str] = None
     items: Optional[List[QuoteItem]] = None
@@ -34,6 +36,7 @@ class QuoteUpdate(BaseModel):
 class QuoteResponse(BaseModel):
     id: int
     created_by: Optional[int]
+    client_id: Optional[int]
     client_name: str
     client_phone: Optional[str]
     items: List[dict]

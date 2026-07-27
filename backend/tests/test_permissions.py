@@ -130,3 +130,54 @@ def test_user_management_rejects_duplicate_email(client, seeded):
         json={"email": seeded["seller_b"].email.upper()},
     )
     assert response.status_code == 400
+
+
+def test_seller_can_link_quote_and_filter_activity_by_owned_client(client, seeded):
+    headers = auth_headers(seeded["seller_a"])
+    own_client = seeded["client_a"]
+
+    created = client.post(
+        "/quotes",
+        headers=headers,
+        json={
+            "client_id": own_client.id,
+            "client_name": "Ignored manual name",
+            "client_phone": "Ignored manual phone",
+            "items": [{
+                "description": "iPhone",
+                "quantity": 1,
+                "unit_price_usd": 500,
+                "subtotal_usd": 500,
+            }],
+            "discount_usd": 0,
+        },
+    )
+    assert created.status_code == 200
+    assert created.json()["client_id"] == own_client.id
+    assert created.json()["client_name"] == own_client.name
+
+    quotes = client.get(f"/quotes?client_id={own_client.id}", headers=headers)
+    appointments = client.get(f"/appointments?client_id={own_client.id}", headers=headers)
+    assert quotes.status_code == 200
+    assert [item["id"] for item in quotes.json()] == [created.json()["id"]]
+    assert appointments.status_code == 200
+    assert [item["id"] for item in appointments.json()] == [seeded["appointment_a"].id]
+
+
+def test_seller_cannot_link_or_filter_by_another_sellers_client(client, seeded):
+    headers = auth_headers(seeded["seller_a"])
+    other_client_id = seeded["client_b"].id
+
+    created = client.post(
+        "/quotes",
+        headers=headers,
+        json={
+            "client_id": other_client_id,
+            "client_name": "Other client",
+            "items": [],
+        },
+    )
+    filtered = client.get(f"/quotes?client_id={other_client_id}", headers=headers)
+
+    assert created.status_code == 404
+    assert filtered.status_code == 404

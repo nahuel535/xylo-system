@@ -8,6 +8,7 @@ class Quote(Base):
     __tablename__ = "quotes"
 
     id = Column(Integer, primary_key=True, index=True)
+    client_id = Column(Integer, ForeignKey("clients.id", ondelete="SET NULL"), nullable=True, index=True)
     client_name = Column(String, nullable=False)
     client_phone = Column(String, nullable=True)
     items = Column(JSON, nullable=False, default=list)  # [{description, quantity, unit_price_usd, subtotal_usd}]
@@ -22,3 +23,4 @@ class Quote(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     creator = relationship("User", foreign_keys=[created_by])
+    client = relationship("Client", foreign_keys=[client_id])

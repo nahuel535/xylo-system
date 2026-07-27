@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   ChevronLeft, ChevronRight, Plus, Clock, User,
   CheckCircle2, XCircle, AlertCircle, Trash2, Edit2, X,
@@ -432,6 +433,7 @@ function ApptCard({ appt, onEdit, onDelete, onStatusChange, dark }) {
 
 export default function AgendaPage() {
   const { dark } = useTheme();
+  const [searchParams, setSearchParams] = useSearchParams();
   const today = new Date();
 
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
@@ -480,6 +482,24 @@ export default function AgendaPage() {
   useEffect(() => {
     loadDay(selectedDate);
   }, [selectedDate, loadDay]);
+
+  useEffect(() => {
+    const clientId = searchParams.get("client_id");
+    if (!clientId || clients.length === 0) return;
+    const client = clients.find((item) => String(item.id) === clientId);
+    if (client) {
+      setModal({
+        appt: {
+          title: `Recontacto - ${client.name}`,
+          client_id: client.id,
+          contact_name: client.name,
+          contact_phone: client.phone || "",
+          contact_instagram: client.instagram || "",
+        },
+      });
+    }
+    setSearchParams({}, { replace: true });
+  }, [clients, searchParams, setSearchParams]);
 
   function refresh() {
     loadMonth(currentYear, currentMonth);

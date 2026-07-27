@@ -30,6 +30,7 @@ def list_appointments(
     month: Optional[int] = Query(None),
     year: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
+    client_id: Optional[int] = Query(None),
     current_user: User = Depends(get_current_user),
 ):
     q = db.query(Appointment).options(joinedload(Appointment.client))
@@ -47,6 +48,9 @@ def list_appointments(
 
     if status:
         q = q.filter(Appointment.status == status)
+    if client_id:
+        _validate_client_access(db, current_user, client_id)
+        q = q.filter(Appointment.client_id == client_id)
 
     return q.order_by(Appointment.date.asc(), Appointment.start_time.asc()).all()
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Plus, X, Trash2, Check, FileText, ChevronDown, ChevronRight } from "lucide-react";
 import api from "../services/api";
 import Header from "../components/Header";
@@ -26,6 +27,7 @@ function QuoteModal({ quote, onClose, onSave }) {
   const defaultExpiry = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
 
   const [form, setForm] = useState({
+    client_id: quote?.client_id ?? null,
     client_name: quote?.client_name ?? "",
     client_phone: quote?.client_phone ?? "",
     items: quote?.items?.length ? quote.items : [{ ...EMPTY_ITEM }],
@@ -106,13 +108,16 @@ function QuoteModal({ quote, onClose, onSave }) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={lbl}>Cliente *</label>
-              <input className={inp} value={form.client_name} onChange={(e) => setForm((p) => ({ ...p, client_name: e.target.value }))} placeholder="Nombre del cliente" autoFocus />
+              <input className={inp} value={form.client_name} onChange={(e) => setForm((p) => ({ ...p, client_name: e.target.value }))} placeholder="Nombre del cliente" autoFocus readOnly={Boolean(form.client_id)} />
             </div>
             <div>
               <label className={lbl}>Teléfono</label>
-              <input className={inp} value={form.client_phone} onChange={(e) => setForm((p) => ({ ...p, client_phone: e.target.value }))} placeholder="+54 9 ..." />
+              <input className={inp} value={form.client_phone} onChange={(e) => setForm((p) => ({ ...p, client_phone: e.target.value }))} placeholder="+54 9 ..." readOnly={Boolean(form.client_id)} />
             </div>
           </div>
+          {form.client_id && (
+            <p className="text-xs text-xylo-500 -mt-3">Vinculado al CRM: los datos de contacto se toman de la ficha del cliente.</p>
+          )}
 
           {/* Ítems */}
           <div>
@@ -192,6 +197,7 @@ function QuoteModal({ quote, onClose, onSave }) {
 }
 
 export default function QuotesPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
@@ -211,6 +217,21 @@ export default function QuotesPage() {
   }, [filter]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    const clientId = searchParams.get("client_id");
+    if (!clientId) return;
+    api.get(`/clients/${clientId}`)
+      .then(({ data }) => {
+        setModal({
+          client_id: data.id,
+          client_name: data.name,
+          client_phone: data.phone || "",
+        });
+        setSearchParams({}, { replace: true });
+      })
+      .catch(() => setSearchParams({}, { replace: true }));
+  }, [searchParams, setSearchParams]);
 
   async function handleDelete(id) {
     try { await api.delete(`/quotes/${id}`); load(); } catch {}
