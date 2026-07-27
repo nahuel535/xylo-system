@@ -27,79 +27,10 @@ from app.models.client import Client, ClientInteraction  # noqa: ensure tables a
 from app.models.appointment import Appointment  # noqa: ensure table is registered
 from app.models.quote import Quote  # noqa: ensure table is registered
 from app.core.dependencies import require_admin
+from app.db.migrations import run_migrations
 
 Base.metadata.create_all(bind=engine)
-
-# Add missing columns if they don't exist (manual migrations)
-with engine.connect() as conn:
-    from sqlalchemy import text
-    conn.execute(text("""
-        ALTER TABLE products
-        ADD COLUMN IF NOT EXISTS is_offer BOOLEAN NOT NULL DEFAULT FALSE
-    """))
-    conn.execute(text("""
-        ALTER TABLE products
-        ADD COLUMN IF NOT EXISTS warranty_days INTEGER
-    """))
-    conn.execute(text("""
-        ALTER TABLE products
-        ADD COLUMN IF NOT EXISTS gallery_urls JSONB
-    """))
-    conn.execute(text("""
-        ALTER TABLE accessory_sales
-        ADD COLUMN IF NOT EXISTS sale_id INTEGER REFERENCES sales(id) ON DELETE SET NULL
-    """))
-    conn.execute(text("""
-        ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS commission_rate NUMERIC(5,2) NOT NULL DEFAULT 0
-    """))
-    conn.execute(text("""
-        ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT FALSE
-    """))
-    conn.execute(text("""
-        ALTER TABLE clients
-        ADD COLUMN IF NOT EXISTS owner_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL
-    """))
-    conn.execute(text("""
-        CREATE INDEX IF NOT EXISTS ix_clients_owner_user_id ON clients(owner_user_id)
-    """))
-    conn.execute(text("""
-        ALTER TABLE quotes
-        ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id) ON DELETE SET NULL
-    """))
-    conn.execute(text("""
-        CREATE INDEX IF NOT EXISTS ix_quotes_created_by ON quotes(created_by)
-    """))
-    conn.execute(text("""
-        ALTER TABLE appointments
-        ADD COLUMN IF NOT EXISTS contact_name VARCHAR
-    """))
-    conn.execute(text("""
-        ALTER TABLE appointments
-        ADD COLUMN IF NOT EXISTS contact_phone VARCHAR
-    """))
-    conn.execute(text("""
-        ALTER TABLE appointments
-        ADD COLUMN IF NOT EXISTS contact_instagram VARCHAR
-    """))
-    conn.execute(text("""
-        ALTER TABLE sales
-        ADD COLUMN IF NOT EXISTS commission_usd NUMERIC(10,2)
-    """))
-    conn.execute(text("""
-        ALTER TABLE sales
-        ADD COLUMN IF NOT EXISTS is_returned BOOLEAN NOT NULL DEFAULT FALSE
-    """))
-    conn.execute(text("""
-        ALTER TABLE sales
-        ADD COLUMN IF NOT EXISTS return_date DATE
-    """))
-    conn.execute(text("""
-        ALTER TABLE sales
-        ADD COLUMN IF NOT EXISTS return_reason TEXT
-    """))
-    conn.commit()
+run_migrations()
 
 app = FastAPI(title="Xylo API")
 
