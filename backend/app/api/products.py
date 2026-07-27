@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -9,18 +11,25 @@ from app.models.sale_payment import SalePayment
 from app.models.audit_log import AuditLog
 from app.schemas.product import ProductCreate, ProductResponse, ProductUpdate
 from app.models.user import User
-from app.core.dependencies import get_current_user, require_admin
+from app.core.dependencies import get_optional_user_id, require_admin
 from app.utils.qr import generate_product_qr
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
 
-def _product_for_user(product: Product, current_user: User) -> dict:
+def _product_for_user(product: Product, current_user: Optional[User]) -> dict:
     data = ProductResponse.model_validate(product).model_dump()
-    if current_user.role != "admin":
+    if not current_user or current_user.role != "admin":
         for field in ("purchase_price_usd", "purchase_date", "supplier", "created_by"):
             data.pop(field, None)
     return data
+
+
+def _optional_current_user(request: Request, db: Session) -> Optional[User]:
+    user_id = get_optional_user_id(request)
+    if not user_id:
+        return None
+    return db.query(User).filter(User.id == user_id, User.is_active == True).first()
 
 
 @router.post("/", response_model=ProductResponse)
@@ -44,19 +53,21 @@ def create_product(
 
 @router.get("/")
 def list_products(
+    request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
+    current_user = _optional_current_user(request, db)
     products = db.query(Product).order_by(Product.id.desc()).all()
     return [_product_for_user(product, current_user) for product in products]
 
 
 @router.get("/{product_id}")
 def get_product(
+    request: Request,
     product_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
+    current_user = _optional_current_user(request, db)
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
