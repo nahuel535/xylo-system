@@ -15,7 +15,7 @@ const DESKTOP_SECTIONS = [
   {
     label: "Principal",
     links: [
-      { to: "/", label: "Dashboard", icon: Home, adminOnly: true },
+      { to: "/", label: "Inicio", icon: Home },
       { to: "/scanner", label: "Escanear", icon: ScanLine },
       { to: "/products", label: "Stock", icon: Package },
       { to: "/sold-products", label: "Vendidos", icon: ShoppingBag, adminOnly: true },
@@ -45,14 +45,14 @@ const DESKTOP_SECTIONS = [
 ];
 
 const TABS = [
-  { to: "/", label: "Inicio", icon: Home, adminOnly: true },
+  { to: "/", label: "Inicio", icon: Home },
   { to: "/products", label: "Stock", icon: Package },
   { to: "/sales", label: "Ventas", icon: ReceiptText },
   { to: "/scanner", label: "Escanear", icon: ScanLine },
 ];
 
 const SHEET_LINKS = [
-  { to: "/", label: "Dashboard", icon: Home, color: "#6366f1", adminOnly: true },
+  { to: "/", label: "Inicio", icon: Home, color: "#6366f1" },
   { to: "/products", label: "Stock", icon: Package, color: "#3b82f6" },
   { to: "/products/new", label: "Cargar", icon: PackagePlus, color: "#10b981", adminOnly: true },
   { to: "/sold-products", label: "Vendidos", icon: ShoppingBag, color: "#f59e0b", adminOnly: true },

@@ -6,7 +6,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Sidebar from "./components/Sidebar";
 
 import LoginPage from "./pages/LoginPage";
-import DashboardPage from "./pages/DashboardPage";
+import HomePage from "./pages/HomePage";
 import ProductsPage from "./pages/ProductsPage";
 import NewProductPage from "./pages/NewProductPage";
 import SoldProductsPage from "./pages/SoldProductsPage";
@@ -40,7 +40,7 @@ function Layout() {
       <Sidebar />
       <main className="flex-1 p-4 md:p-8 pt-20 md:pt-8 pb-24 md:pb-8">
         <Routes>
-          <Route path="/" element={<ProtectedRoute requireAdmin><DashboardPage /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
           <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
           <Route path="/scanner" element={<ProtectedRoute><ScannerPage /></ProtectedRoute>} />
           <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />

@@ -20,6 +20,7 @@ from app.api.clients import router as clients_router
 from app.api.products import router as products_router
 from app.api.quotes import router as quotes_router
 from app.api.sales import router as sales_router
+from app.api.seller_dashboard import router as seller_dashboard_router
 from app.api.users import router as users_router
 from app.core.security import create_access_token
 from app.db.session import Base, get_db
@@ -86,7 +87,7 @@ def seeded(db_session):
 
     appointment_a = Appointment(
         title="Appointment A",
-        date=date(2026, 7, 27),
+        date=date.today(),
         start_time="10:00",
         status="pending",
         created_by=seller_a.id,
@@ -94,7 +95,7 @@ def seeded(db_session):
     )
     appointment_b = Appointment(
         title="Appointment B",
-        date=date(2026, 7, 27),
+        date=date.today(),
         start_time="11:00",
         status="pending",
         created_by=seller_b.id,
@@ -165,6 +166,7 @@ def app(db_session):
         products_router,
         quotes_router,
         sales_router,
+        seller_dashboard_router,
         users_router,
     ):
         test_app.include_router(router)

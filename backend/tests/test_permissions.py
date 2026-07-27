@@ -181,3 +181,23 @@ def test_seller_cannot_link_or_filter_by_another_sellers_client(client, seeded):
 
     assert created.status_code == 404
     assert filtered.status_code == 404
+
+
+def test_seller_dashboard_contains_only_operational_own_data(client, seeded):
+    response = client.get(
+        "/seller-dashboard/summary",
+        headers=auth_headers(seeded["seller_a"]),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["seller_name"] == seeded["seller_a"].name
+    assert payload["active_clients_count"] == 1
+    assert [sale["id"] for sale in payload["recent_sales"]] == [seeded["sale_a"].id]
+    assert [appointment["id"] for appointment in payload["upcoming_appointments"]] == [
+        seeded["appointment_a"].id
+    ]
+    serialized = str(payload)
+    assert "gross_profit" not in serialized
+    assert "purchase_price" not in serialized
+    assert "commission" not in serialized
