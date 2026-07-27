@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -5,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.quote import Quote
-from app.models.client import Client
+from app.models.client import Client, ClientReminder
 from app.models.user import User
 from app.schemas.quote import QuoteCreate, QuoteUpdate, QuoteResponse
 from app.core.dependencies import ensure_owner_or_admin, get_current_user
@@ -36,6 +37,17 @@ def _get_accessible_client(
     return client
 
 
+def _expire_due_quotes(db: Session, current_user: User) -> None:
+    query = db.query(Quote).filter(
+        Quote.valid_until < date.today(),
+        Quote.status.in_(["draft", "sent"]),
+    )
+    if current_user.role != "admin":
+        query = query.filter(Quote.created_by == current_user.id)
+    if query.update({Quote.status: "expired"}, synchronize_session=False):
+        db.commit()
+
+
 @router.get("", response_model=list[QuoteResponse])
 def list_quotes(
     db: Session = Depends(get_db),
@@ -43,6 +55,7 @@ def list_quotes(
     client_id: Optional[int] = Query(None),
     current_user: User = Depends(get_current_user),
 ):
+    _expire_due_quotes(db, current_user)
     q = db.query(Quote)
     if current_user.role != "admin":
         q = q.filter(Quote.created_by == current_user.id)
@@ -93,13 +106,10 @@ def get_quote(
     if not quote:
         raise HTTPException(status_code=404, detail="Presupuesto no encontrado")
     ensure_owner_or_admin(current_user, quote.created_by)
-    before = {
-        field: getattr(quote, field)
-        for field in [
-            "client_id", "client_name", "client_phone", "items", "discount_usd",
-            "status", "valid_until", "notes",
-        ]
-    }
+    if quote.valid_until and quote.valid_until < date.today() and quote.status in {"draft", "sent"}:
+        quote.status = "expired"
+        db.commit()
+        db.refresh(quote)
     return quote
 
 
@@ -114,6 +124,14 @@ def update_quote(
     if not quote:
         raise HTTPException(status_code=404, detail="Presupuesto no encontrado")
     ensure_owner_or_admin(current_user, quote.created_by)
+    previous_status = quote.status
+    before = {
+        field: getattr(quote, field)
+        for field in [
+            "client_id", "client_name", "client_phone", "items", "discount_usd",
+            "status", "valid_until", "notes",
+        ]
+    }
     if "client_id" in data.model_fields_set:
         client = _get_accessible_client(data.client_id, db, current_user)
         quote.client_id = client.id if client else None
@@ -156,6 +174,33 @@ def update_quote(
             action="updated",
             changes=changes,
         )
+
+    if quote.client_id and previous_status != "sent" and quote.status == "sent":
+        existing_reminder = db.query(ClientReminder).filter(
+            ClientReminder.client_id == quote.client_id,
+            ClientReminder.type == "quote_followup",
+            ClientReminder.status == "pending",
+        ).first()
+        if not existing_reminder:
+            due_date = date.today() + timedelta(days=2)
+            db.add(ClientReminder(
+                client_id=quote.client_id,
+                type="quote_followup",
+                due_date=due_date,
+                note=f"Consultar si pudo revisar el presupuesto #{quote.id}.",
+            ))
+            client = db.query(Client).filter(Client.id == quote.client_id).first()
+            if client:
+                client.needs_followup = True
+                if not client.followup_date or due_date < client.followup_date:
+                    client.followup_date = due_date
+
+    if quote.client_id and previous_status != "accepted" and quote.status == "accepted":
+        db.query(ClientReminder).filter(
+            ClientReminder.client_id == quote.client_id,
+            ClientReminder.type == "quote_followup",
+            ClientReminder.status == "pending",
+        ).update({ClientReminder.status: "done"}, synchronize_session=False)
 
     db.commit()
     db.refresh(quote)

@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from tests.conftest import auth_headers
 
 
@@ -234,3 +236,71 @@ def test_deleted_quote_can_be_restored_from_admin_trash(client, seeded, db_sessi
     ]
     assert "deleted" in actions
     assert "restored" in actions
+
+
+def test_quote_share_flow_creates_and_completes_followup(client, seeded):
+    headers = auth_headers(seeded["seller_a"])
+    client_id = seeded["client_a"].id
+    created = client.post(
+        "/quotes",
+        headers=headers,
+        json={
+            "client_id": client_id,
+            "client_name": "Client A",
+            "items": [{
+                "description": "iPhone",
+                "quantity": 1,
+                "unit_price_usd": 500,
+                "subtotal_usd": 500,
+            }],
+        },
+    )
+    quote_id = created.json()["id"]
+
+    sent = client.patch(
+        f"/quotes/{quote_id}",
+        headers=headers,
+        json={"status": "sent"},
+    )
+    assert sent.status_code == 200
+    assert sent.json()["status"] == "sent"
+    crm_client = client.get(f"/clients/{client_id}", headers=headers).json()
+    followup = next(
+        reminder
+        for reminder in crm_client["reminders"]
+        if reminder["type"] == "quote_followup"
+    )
+    assert followup["status"] == "pending"
+    assert followup["due_date"] == str(date.today() + timedelta(days=2))
+
+    accepted = client.patch(
+        f"/quotes/{quote_id}",
+        headers=headers,
+        json={"status": "accepted"},
+    )
+    assert accepted.status_code == 200
+    crm_client = client.get(f"/clients/{client_id}", headers=headers).json()
+    followup = next(
+        reminder
+        for reminder in crm_client["reminders"]
+        if reminder["type"] == "quote_followup"
+    )
+    assert followup["status"] == "done"
+
+
+def test_due_quote_expires_automatically(client, seeded):
+    headers = auth_headers(seeded["seller_a"])
+    created = client.post(
+        "/quotes",
+        headers=headers,
+        json={
+            "client_name": "Expired quote",
+            "items": [],
+            "valid_until": str(date.today() - timedelta(days=1)),
+        },
+    )
+    assert created.status_code == 200
+
+    quotes = client.get("/quotes", headers=headers)
+    expired = next(item for item in quotes.json() if item["id"] == created.json()["id"])
+    assert expired["status"] == "expired"

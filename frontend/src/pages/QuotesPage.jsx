@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Plus, X, Trash2, Check, FileText, ChevronDown, ChevronRight } from "lucide-react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Plus, X, Trash2, Check, FileText, ChevronDown, ChevronRight, MessageCircle, Printer } from "lucide-react";
 import api from "../services/api";
 import Header from "../components/Header";
 
@@ -197,6 +197,7 @@ function QuoteModal({ quote, onClose, onSave }) {
 }
 
 export default function QuotesPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -240,6 +241,22 @@ export default function QuotesPage() {
 
   async function updateStatus(id, status) {
     try { await api.patch(`/quotes/${id}`, { status }); load(); } catch {}
+  }
+
+  async function shareWhatsapp(event, quote) {
+    event.stopPropagation();
+    if (!quote.client_phone) {
+      window.alert("Este presupuesto no tiene un teléfono cargado.");
+      return;
+    }
+    const url = whatsappQuoteUrl(quote);
+    window.open(url, "_blank", "noopener,noreferrer");
+    if (quote.status === "draft") {
+      try {
+        await api.patch(`/quotes/${quote.id}`, { status: "sent" });
+        load();
+      } catch {}
+    }
   }
 
   function fmt(val) {
@@ -307,6 +324,16 @@ export default function QuotesPage() {
                   <p className="text-xs text-base-muted">{fmtDate(q.created_at)}</p>
                 </div>
                 <div className="flex gap-2 items-center">
+                  <button onClick={(e) => shareWhatsapp(e, q)}
+                    title="Enviar por WhatsApp"
+                    className="p-1.5 rounded-lg bg-green-50 text-green-500 hover:text-green-600 transition">
+                    <MessageCircle size={14} />
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); navigate(`/presupuestos/${q.id}/imprimir`); }}
+                    title="Imprimir o guardar PDF"
+                    className="p-1.5 rounded-lg bg-blue-50 text-blue-500 hover:text-blue-600 transition">
+                    <Printer size={14} />
+                  </button>
                   <button onClick={(e) => { e.stopPropagation(); setModal(q); }}
                     className="p-1.5 rounded-lg bg-base-subtle text-base-muted hover:text-base-text transition">
                     <FileText size={14} />
@@ -383,7 +410,7 @@ export default function QuotesPage() {
           <div className="bg-base-card border border-base-border rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
             <Trash2 size={28} className="text-red-500 mx-auto mb-3" />
             <h3 className="font-bold text-base-text mb-2">¿Eliminar presupuesto?</h3>
-            <p className="text-sm text-base-muted mb-5">Esta acción no se puede deshacer.</p>
+            <p className="text-sm text-base-muted mb-5">El presupuesto irá a la papelera y un administrador podrá restaurarlo.</p>
             <div className="flex gap-3">
               <button onClick={() => setConfirmDelete(null)} className="flex-1 bg-base-subtle text-base-muted rounded-xl py-2.5 text-sm font-medium">Cancelar</button>
               <button onClick={() => handleDelete(confirmDelete)} className="flex-1 bg-red-500 text-white rounded-xl py-2.5 text-sm font-bold">Eliminar</button>
@@ -393,4 +420,28 @@ export default function QuotesPage() {
       )}
     </div>
   );
+}
+
+function whatsappQuoteUrl(quote) {
+  const digits = quote.client_phone.replace(/\D/g, "");
+  const phone = digits.startsWith("549")
+    ? digits
+    : digits.startsWith("54")
+      ? digits
+      : digits.startsWith("0")
+        ? `549${digits.slice(1)}`
+        : `549${digits}`;
+  const itemLines = (quote.items || [])
+    .map((item) => `• ${item.description} x${item.quantity}: USD ${Number(item.subtotal_usd || 0).toFixed(2)}`)
+    .join("\n");
+  const validity = quote.valid_until
+    ? `\nVálido hasta: ${new Date(`${quote.valid_until}T12:00:00`).toLocaleDateString("es-AR")}`
+    : "";
+  const text = [
+    `Hola ${quote.client_name}! Te comparto el presupuesto #${quote.id} de XYLO:`,
+    itemLines,
+    `Total: USD ${Number(quote.total_usd || 0).toFixed(2)}${validity}`,
+    "Cualquier duda, escribime.",
+  ].filter(Boolean).join("\n\n");
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }

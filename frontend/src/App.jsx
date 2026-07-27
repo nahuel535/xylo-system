@@ -34,6 +34,7 @@ import CommissionsPage from "./pages/CommissionsPage";
 import QuotesPage from "./pages/QuotesPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import AdminActivityPage from "./pages/AdminActivityPage";
+import PrintQuotePage from "./pages/PrintQuotePage";
 
 function Layout() {
   return (
@@ -67,6 +68,7 @@ function Layout() {
           <Route path="/agenda" element={<ProtectedRoute><AgendaPage /></ProtectedRoute>} />
           <Route path="/comisiones" element={<ProtectedRoute requireAdmin><CommissionsPage /></ProtectedRoute>} />
           <Route path="/presupuestos" element={<ProtectedRoute><QuotesPage /></ProtectedRoute>} />
+          <Route path="/presupuestos/:id/imprimir" element={<ProtectedRoute><PrintQuotePage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>
