@@ -25,12 +25,6 @@ const T = {
   accentBorder: "rgba(0,200,150,0.20)",
 };
 
-useEffect(() => {
-  if (product) {
-    trackViewContent(product);
-  }
-}, [product]);
-
 function waLink(product) {
   const msg = `Hola! Me interesa el ${product.model}${product.storage ? ` ${product.storage}` : ""}${product.color ? ` ${product.color}` : ""}. ¿Sigue disponible?`;
   return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
@@ -238,6 +232,12 @@ export default function StoreProductPage() {
   const [scrolled, setScrolled] = useState(false);
   const [ctaVisible, setCtaVisible] = useState(false);
   const heroRef = useRef(null);
+
+  useEffect(() => {
+    if (product) {
+      trackViewContent(product);
+    }
+  }, [product]);
 
   useEffect(() => {
     // Limpiar ?v=1 que agrega la función OG de Vercel
