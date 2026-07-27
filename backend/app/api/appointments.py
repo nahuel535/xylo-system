@@ -5,11 +5,22 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.db.session import get_db
 from app.models.appointment import Appointment
+from app.models.client import Client
 from app.schemas.appointment import AppointmentCreate, AppointmentUpdate, AppointmentResponse
 from app.models.user import User
 from app.core.dependencies import ensure_owner_or_admin, get_current_user
 
 router = APIRouter(prefix="/appointments", tags=["Agenda"])
+
+
+def _validate_client_access(db: Session, current_user: User, client_id: Optional[int]) -> None:
+    if not client_id:
+        return
+    q = db.query(Client).filter(Client.id == client_id)
+    if current_user.role != "admin":
+        q = q.filter(Client.owner_user_id == current_user.id)
+    if not q.first():
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
 
 
 @router.get("", response_model=list[AppointmentResponse])
@@ -46,6 +57,7 @@ def create_appointment(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    _validate_client_access(db, current_user, data.client_id)
     appt = Appointment(created_by=current_user.id, **data.model_dump())
     db.add(appt)
     db.commit()
@@ -77,7 +89,10 @@ def update_appointment(
     if not appt:
         raise HTTPException(status_code=404, detail="Turno no encontrado")
     ensure_owner_or_admin(current_user, appt.created_by)
-    for field, value in data.model_dump(exclude_unset=True).items():
+    update_data = data.model_dump(exclude_unset=True)
+    if "client_id" in update_data:
+        _validate_client_access(db, current_user, update_data["client_id"])
+    for field, value in update_data.items():
         setattr(appt, field, value)
     db.commit()
     db.refresh(appt)

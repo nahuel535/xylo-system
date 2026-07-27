@@ -10,6 +10,9 @@ class Appointment(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     client_id = Column(Integer, ForeignKey("clients.id", ondelete="SET NULL"), nullable=True)
+    contact_name = Column(String, nullable=True)
+    contact_phone = Column(String, nullable=True)
+    contact_instagram = Column(String, nullable=True)
     description = Column(Text, nullable=True)
     date = Column(Date, nullable=False)
     start_time = Column(String(5), nullable=False)   # "HH:MM"

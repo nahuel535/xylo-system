@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   ChevronLeft, ChevronRight, Plus, Clock, User,
-  CheckCircle2, XCircle, AlertCircle, Circle, Trash2, Edit2, X,
+  CheckCircle2, XCircle, AlertCircle, Trash2, Edit2, X,
+  Phone, Instagram, MessageCircle,
 } from "lucide-react";
 import api from "../services/api";
 import { useTheme } from "../context/ThemeContext";
@@ -41,6 +42,9 @@ function AppointmentModal({ appt, defaultDate, clients, onClose, onSave }) {
   const [form, setForm] = useState({
     title: appt?.title ?? "",
     client_id: appt?.client_id ?? "",
+    contact_name: appt?.contact_name ?? appt?.client?.name ?? "",
+    contact_phone: appt?.contact_phone ?? appt?.client?.phone ?? "",
+    contact_instagram: appt?.contact_instagram ?? appt?.client?.instagram ?? "",
     description: appt?.description ?? "",
     date: appt?.date ?? defaultDate,
     start_time: appt?.start_time ?? "09:00",
@@ -59,6 +63,17 @@ function AppointmentModal({ appt, defaultDate, clients, onClose, onSave }) {
 
   function set(k, v) { setForm((p) => ({ ...p, [k]: v })); }
 
+  function selectClient(value) {
+    const client = clients.find((c) => String(c.id) === value);
+    setForm((p) => ({
+      ...p,
+      client_id: value,
+      contact_name: client?.name ?? p.contact_name,
+      contact_phone: client?.phone ?? p.contact_phone,
+      contact_instagram: client?.instagram ?? p.contact_instagram,
+    }));
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     if (!form.title.trim()) { setError("El título es obligatorio"); return; }
@@ -69,6 +84,9 @@ function AppointmentModal({ appt, defaultDate, clients, onClose, onSave }) {
       const payload = {
         ...form,
         client_id: form.client_id ? Number(form.client_id) : null,
+        contact_name: form.contact_name.trim() || null,
+        contact_phone: form.contact_phone.trim() || null,
+        contact_instagram: form.contact_instagram.trim() || null,
         end_time: form.end_time || null,
         description: form.description || null,
         notes: form.notes || null,
@@ -104,7 +122,8 @@ function AppointmentModal({ appt, defaultDate, clients, onClose, onSave }) {
     >
       <div style={{
         background: bg, borderRadius: 20, width: "100%", maxWidth: 460,
-        boxShadow: "0 24px 60px rgba(0,0,0,0.25)", overflow: "hidden",
+        maxHeight: "90vh", overflowY: "auto",
+        boxShadow: "0 24px 60px rgba(0,0,0,0.25)",
       }}>
         {/* Header */}
         <div style={{
@@ -137,7 +156,7 @@ function AppointmentModal({ appt, defaultDate, clients, onClose, onSave }) {
           </div>
 
           {/* Fecha y hora */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div>
               <label style={labelStyle}>Fecha *</label>
               <input type="date" style={inputStyle} value={form.date} onChange={(e) => set("date", e.target.value)} />
@@ -157,15 +176,48 @@ function AppointmentModal({ appt, defaultDate, clients, onClose, onSave }) {
             </div>
           </div>
 
-          {/* Cliente */}
+          {/* Cliente CRM */}
           <div>
-            <label style={labelStyle}>Cliente (opcional)</label>
-            <select style={inputStyle} value={form.client_id} onChange={(e) => set("client_id", e.target.value)}>
-              <option value="">Sin cliente</option>
+            <label style={labelStyle}>Vincular cliente del CRM (opcional)</label>
+            <select style={inputStyle} value={form.client_id} onChange={(e) => selectClient(e.target.value)}>
+              <option value="">Carga manual</option>
               {clients.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}{c.phone ? ` · ${c.phone}` : ""}</option>
               ))}
             </select>
+          </div>
+
+          {/* Datos de recontacto */}
+          <div>
+            <label style={labelStyle}>Cliente</label>
+            <input
+              style={inputStyle}
+              value={form.contact_name}
+              onChange={(e) => set("contact_name", e.target.value)}
+              placeholder="Nombre del cliente"
+            />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label style={labelStyle}>Teléfono / WhatsApp</label>
+              <input
+                style={inputStyle}
+                value={form.contact_phone}
+                onChange={(e) => set("contact_phone", e.target.value)}
+                placeholder="+54 9 351..."
+                inputMode="tel"
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Instagram</label>
+              <input
+                style={inputStyle}
+                value={form.contact_instagram}
+                onChange={(e) => set("contact_instagram", e.target.value)}
+                placeholder="@usuario"
+                autoCapitalize="none"
+              />
+            </div>
           </div>
 
           {/* Descripción */}
@@ -238,6 +290,15 @@ function ApptCard({ appt, onEdit, onDelete, onStatusChange, dark }) {
   const mutedColor = dark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)";
 
   const nextStatus = { pending: "confirmed", confirmed: "completed", completed: "pending", cancelled: "pending" };
+  const contactName = appt.contact_name || appt.client?.name;
+  const contactPhone = appt.contact_phone || appt.client?.phone;
+  const contactInstagram = appt.contact_instagram || appt.client?.instagram;
+  const whatsappNumber = (contactPhone || "").replace(/\D/g, "");
+  const instagramHandle = (contactInstagram || "")
+    .trim()
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+    .replace(/^@/, "")
+    .replace(/\/.*$/, "");
 
   return (
     <div style={{
@@ -296,10 +357,10 @@ function ApptCard({ appt, onEdit, onDelete, onStatusChange, dark }) {
       {/* Row 2: cliente + estado */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          {appt.client ? (
+          {contactName ? (
             <>
               <User size={12} style={{ color: mutedColor, flexShrink: 0 }} />
-              <span style={{ fontSize: 12, color: mutedColor }}>{appt.client.name}</span>
+              <span style={{ fontSize: 12, color: mutedColor }}>{contactName}</span>
             </>
           ) : (
             <span style={{ fontSize: 12, color: mutedColor }}>Sin cliente</span>
@@ -318,6 +379,42 @@ function ApptCard({ appt, onEdit, onDelete, onStatusChange, dark }) {
           {meta.label}
         </button>
       </div>
+
+      {(contactPhone || contactInstagram) && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingLeft: 54 }}>
+          {contactPhone && (
+            <a
+              href={whatsappNumber ? `https://wa.me/${whatsappNumber}` : `tel:${contactPhone}`}
+              target={whatsappNumber ? "_blank" : undefined}
+              rel={whatsappNumber ? "noreferrer" : undefined}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "5px 9px", borderRadius: 9, textDecoration: "none",
+                background: "rgba(16,185,129,0.12)", color: "#10b981",
+                fontSize: 11, fontWeight: 600,
+              }}
+            >
+              {whatsappNumber ? <MessageCircle size={12} /> : <Phone size={12} />}
+              {contactPhone}
+            </a>
+          )}
+          {instagramHandle && (
+            <a
+              href={`https://instagram.com/${instagramHandle}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "5px 9px", borderRadius: 9, textDecoration: "none",
+                background: "rgba(236,72,153,0.12)", color: "#ec4899",
+                fontSize: 11, fontWeight: 600,
+              }}
+            >
+              <Instagram size={12} /> @{instagramHandle}
+            </a>
+          )}
+        </div>
+      )}
 
       {appt.notes && (
         <p style={{
@@ -440,7 +537,7 @@ export default function AgendaPage() {
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,0.9fr)", gap: 20, alignItems: "start" }}>
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] gap-5 items-start">
 
         {/* ── CALENDARIO ── */}
         <div style={{ background: cardBg, borderRadius: 20, border: `1px solid ${borderColor}`, overflow: "hidden" }}>

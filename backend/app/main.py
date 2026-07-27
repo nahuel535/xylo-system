@@ -72,6 +72,18 @@ with engine.connect() as conn:
         CREATE INDEX IF NOT EXISTS ix_quotes_created_by ON quotes(created_by)
     """))
     conn.execute(text("""
+        ALTER TABLE appointments
+        ADD COLUMN IF NOT EXISTS contact_name VARCHAR
+    """))
+    conn.execute(text("""
+        ALTER TABLE appointments
+        ADD COLUMN IF NOT EXISTS contact_phone VARCHAR
+    """))
+    conn.execute(text("""
+        ALTER TABLE appointments
+        ADD COLUMN IF NOT EXISTS contact_instagram VARCHAR
+    """))
+    conn.execute(text("""
         ALTER TABLE sales
         ADD COLUMN IF NOT EXISTS commission_usd NUMERIC(10,2)
     """))
