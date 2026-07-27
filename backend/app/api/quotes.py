@@ -5,10 +5,11 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.models.quote import Quote
+from app.models.user import User
 from app.schemas.quote import QuoteCreate, QuoteUpdate, QuoteResponse
-from app.core.dependencies import require_admin
+from app.core.dependencies import ensure_owner_or_admin, get_current_user
 
-router = APIRouter(prefix="/quotes", tags=["Presupuestos"], dependencies=[Depends(require_admin)])
+router = APIRouter(prefix="/quotes", tags=["Presupuestos"])
 
 
 def _calc_totals(items, discount_usd):
@@ -21,15 +22,22 @@ def _calc_totals(items, discount_usd):
 def list_quotes(
     db: Session = Depends(get_db),
     status: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user),
 ):
     q = db.query(Quote)
+    if current_user.role != "admin":
+        q = q.filter(Quote.created_by == current_user.id)
     if status:
         q = q.filter(Quote.status == status)
     return q.order_by(Quote.id.desc()).all()
 
 
 @router.post("", response_model=QuoteResponse)
-def create_quote(data: QuoteCreate, db: Session = Depends(get_db)):
+def create_quote(
+    data: QuoteCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     subtotal, total = _calc_totals(data.items, data.discount_usd)
     quote = Quote(
         client_name=data.client_name,
@@ -41,6 +49,7 @@ def create_quote(data: QuoteCreate, db: Session = Depends(get_db)):
         status=data.status,
         valid_until=data.valid_until,
         notes=data.notes,
+        created_by=current_user.id,
     )
     db.add(quote)
     db.commit()
@@ -49,18 +58,29 @@ def create_quote(data: QuoteCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{quote_id}", response_model=QuoteResponse)
-def get_quote(quote_id: int, db: Session = Depends(get_db)):
+def get_quote(
+    quote_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     quote = db.query(Quote).filter(Quote.id == quote_id).first()
     if not quote:
         raise HTTPException(status_code=404, detail="Presupuesto no encontrado")
+    ensure_owner_or_admin(current_user, quote.created_by)
     return quote
 
 
 @router.patch("/{quote_id}", response_model=QuoteResponse)
-def update_quote(quote_id: int, data: QuoteUpdate, db: Session = Depends(get_db)):
+def update_quote(
+    quote_id: int,
+    data: QuoteUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     quote = db.query(Quote).filter(Quote.id == quote_id).first()
     if not quote:
         raise HTTPException(status_code=404, detail="Presupuesto no encontrado")
+    ensure_owner_or_admin(current_user, quote.created_by)
 
     if data.items is not None:
         discount = data.discount_usd if data.discount_usd is not None else Decimal(str(quote.discount_usd))
@@ -86,10 +106,15 @@ def update_quote(quote_id: int, data: QuoteUpdate, db: Session = Depends(get_db)
 
 
 @router.delete("/{quote_id}")
-def delete_quote(quote_id: int, db: Session = Depends(get_db)):
+def delete_quote(
+    quote_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     quote = db.query(Quote).filter(Quote.id == quote_id).first()
     if not quote:
         raise HTTPException(status_code=404, detail="Presupuesto no encontrado")
+    ensure_owner_or_admin(current_user, quote.created_by)
     db.delete(quote)
     db.commit()
     return {"ok": True}

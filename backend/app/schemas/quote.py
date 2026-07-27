@@ -33,6 +33,7 @@ class QuoteUpdate(BaseModel):
 
 class QuoteResponse(BaseModel):
     id: int
+    created_by: Optional[int]
     client_name: str
     client_phone: Optional[str]
     items: List[dict]

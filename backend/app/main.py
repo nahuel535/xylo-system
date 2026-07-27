@@ -65,6 +65,13 @@ with engine.connect() as conn:
         CREATE INDEX IF NOT EXISTS ix_clients_owner_user_id ON clients(owner_user_id)
     """))
     conn.execute(text("""
+        ALTER TABLE quotes
+        ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id) ON DELETE SET NULL
+    """))
+    conn.execute(text("""
+        CREATE INDEX IF NOT EXISTS ix_quotes_created_by ON quotes(created_by)
+    """))
+    conn.execute(text("""
         ALTER TABLE sales
         ADD COLUMN IF NOT EXISTS commission_usd NUMERIC(10,2)
     """))

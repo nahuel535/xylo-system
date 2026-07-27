@@ -48,7 +48,7 @@ function Layout() {
           <Route path="/sales" element={<ProtectedRoute><SalesPage /></ProtectedRoute>} />
           <Route path="/sales/:id" element={<ProtectedRoute><SaleDetailPage /></ProtectedRoute>} />
           <Route path="/sales/:id/edit" element={<ProtectedRoute requireAdmin><EditSalePage /></ProtectedRoute>} />
-          <Route path="/exchange" element={<ProtectedRoute requireAdmin><ExchangePage /></ProtectedRoute>} />
+          <Route path="/exchange" element={<ProtectedRoute><ExchangePage /></ProtectedRoute>} />
           <Route path="/products/new" element={<ProtectedRoute requireAdmin><NewProductPage /></ProtectedRoute>} />
           <Route path="/products/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
           <Route path="/products/:id/edit" element={<ProtectedRoute requireAdmin><EditProductPage /></ProtectedRoute>} />
@@ -64,7 +64,7 @@ function Layout() {
           <Route path="/crm/:id" element={<ProtectedRoute><ClientDetailPage /></ProtectedRoute>} />
           <Route path="/agenda" element={<ProtectedRoute><AgendaPage /></ProtectedRoute>} />
           <Route path="/comisiones" element={<ProtectedRoute requireAdmin><CommissionsPage /></ProtectedRoute>} />
-          <Route path="/presupuestos" element={<ProtectedRoute requireAdmin><QuotesPage /></ProtectedRoute>} />
+          <Route path="/presupuestos" element={<ProtectedRoute><QuotesPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

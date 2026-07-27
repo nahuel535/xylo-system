@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import api from "../services/api";
 import Header from "../components/Header";
 import { useCriptoYa } from "../hooks/useCriptoYa";
+import { useAuth } from "../context/AuthContext";
 import {
   DollarSign, Bitcoin, RefreshCw, CheckCircle,
   Edit3, Save, X, TrendingUp, TrendingDown, Clock
 } from "lucide-react";
 
 export default function ExchangePage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [rates, setRates] = useState([]);
   const [active, setActive] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -49,12 +52,12 @@ export default function ExchangePage() {
 
   async function loadRates() {
     try {
-      const [ratesRes, activeRes] = await Promise.all([
-        api.get("/exchange-rates/"),
-        api.get("/exchange-rates/active").catch(() => ({ data: null })),
-      ]);
-      setRates(ratesRes.data);
+      const activeRes = await api.get("/exchange-rates/active").catch(() => ({ data: null }));
       setActive(activeRes.data);
+      if (isAdmin) {
+        const ratesRes = await api.get("/exchange-rates/");
+        setRates(ratesRes.data);
+      }
     } catch (error) {
       console.error("Error cargando cotizaciones:", error);
     } finally {
@@ -132,7 +135,10 @@ export default function ExchangePage() {
 
   return (
     <div>
-      <Header title="Cotización" subtitle="Gestión del tipo de cambio y precios de mercado" />
+      <Header
+        title="Cotización"
+        subtitle={isAdmin ? "Gestión del tipo de cambio y precios de mercado" : "Tipo de cambio y precios de mercado"}
+      />
 
       {/* Cotización activa */}
       {active && (
@@ -143,14 +149,16 @@ export default function ExchangePage() {
             <span className="text-xs bg-xylo-500/20 text-xylo-300 px-2 py-0.5 rounded-full">
               {active.mode === "manual" ? "Override manual" : "Automático"}
             </span>
-            <button
-              onClick={handleSync}
-              disabled={syncing}
-              className="ml-auto flex items-center gap-1.5 bg-xylo-500/20 hover:bg-xylo-500/30 disabled:opacity-60 text-xylo-300 transition rounded-xl px-3 py-1.5 text-xs font-medium"
-            >
-              <RefreshCw size={12} className={syncing ? "animate-spin" : ""} />
-              {syncing ? "Sincronizando…" : "Sincronizar ahora"}
-            </button>
+            {isAdmin && (
+              <button
+                onClick={handleSync}
+                disabled={syncing}
+                className="ml-auto flex items-center gap-1.5 bg-xylo-500/20 hover:bg-xylo-500/30 disabled:opacity-60 text-xylo-300 transition rounded-xl px-3 py-1.5 text-xs font-medium"
+              >
+                <RefreshCw size={12} className={syncing ? "animate-spin" : ""} />
+                {syncing ? "Sincronizando…" : "Sincronizar ahora"}
+              </button>
+            )}
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
@@ -225,6 +233,7 @@ export default function ExchangePage() {
         )}
       </div>
 
+      {isAdmin && (<>
       {/* Acciones */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm font-medium">Cotizaciones guardadas</p>
@@ -378,6 +387,7 @@ export default function ExchangePage() {
           ))
         )}
       </div>
+      </>)}
     </div>
   );
 }
