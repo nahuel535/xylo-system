@@ -15,8 +15,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    const isLoginRequest = error.config?.url?.includes("/auth/login");
-    if (error.response?.status === 401 && !isLoginRequest) {
+    const isOnLoginPage = window.location.pathname === "/login";
+    if (error.response?.status === 401 && !isOnLoginPage) {
       localStorage.removeItem("xylo_token");
       window.location.href = "/login";
     }
