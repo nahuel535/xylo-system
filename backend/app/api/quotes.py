@@ -9,6 +9,7 @@ from app.models.client import Client
 from app.models.user import User
 from app.schemas.quote import QuoteCreate, QuoteUpdate, QuoteResponse
 from app.core.dependencies import ensure_owner_or_admin, get_current_user
+from app.services.audit import move_to_trash, record_audit
 
 router = APIRouter(prefix="/quotes", tags=["Presupuestos"])
 
@@ -75,6 +76,8 @@ def create_quote(
         created_by=current_user.id,
     )
     db.add(quote)
+    db.flush()
+    record_audit(db, entity_type="quote", entity_id=quote.id, user=current_user, action="created")
     db.commit()
     db.refresh(quote)
     return quote
@@ -90,6 +93,13 @@ def get_quote(
     if not quote:
         raise HTTPException(status_code=404, detail="Presupuesto no encontrado")
     ensure_owner_or_admin(current_user, quote.created_by)
+    before = {
+        field: getattr(quote, field)
+        for field in [
+            "client_id", "client_name", "client_phone", "items", "discount_usd",
+            "status", "valid_until", "notes",
+        ]
+    }
     return quote
 
 
@@ -132,6 +142,21 @@ def update_quote(
         if val is not None:
             setattr(quote, field, val)
 
+    changes = {
+        field: {"old": old_value, "new": getattr(quote, field)}
+        for field, old_value in before.items()
+        if old_value != getattr(quote, field)
+    }
+    if changes:
+        record_audit(
+            db,
+            entity_type="quote",
+            entity_id=quote.id,
+            user=current_user,
+            action="updated",
+            changes=changes,
+        )
+
     db.commit()
     db.refresh(quote)
     return quote
@@ -147,6 +172,26 @@ def delete_quote(
     if not quote:
         raise HTTPException(status_code=404, detail="Presupuesto no encontrado")
     ensure_owner_or_admin(current_user, quote.created_by)
+    move_to_trash(
+        db,
+        entity_type="quote",
+        entity_id=quote.id,
+        label=f"Presupuesto #{quote.id} · {quote.client_name}",
+        user=current_user,
+        payload={"record": {
+            "client_id": quote.client_id,
+            "client_name": quote.client_name,
+            "client_phone": quote.client_phone,
+            "items": quote.items,
+            "subtotal_usd": quote.subtotal_usd,
+            "discount_usd": quote.discount_usd,
+            "total_usd": quote.total_usd,
+            "status": quote.status,
+            "valid_until": quote.valid_until,
+            "notes": quote.notes,
+            "created_by": quote.created_by,
+        }},
+    )
     db.delete(quote)
     db.commit()
     return {"ok": True}

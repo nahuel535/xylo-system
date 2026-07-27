@@ -201,3 +201,36 @@ def test_seller_dashboard_contains_only_operational_own_data(client, seeded):
     assert "gross_profit" not in serialized
     assert "purchase_price" not in serialized
     assert "commission" not in serialized
+
+
+def test_deleted_quote_can_be_restored_from_admin_trash(client, seeded, db_session):
+    quote_id = seeded["quote_a"].id
+    seller_headers = auth_headers(seeded["seller_a"])
+    admin_headers = auth_headers(seeded["admin"])
+
+    deleted = client.delete(f"/quotes/{quote_id}", headers=seller_headers)
+    assert deleted.status_code == 200
+    assert client.get(f"/quotes/{quote_id}", headers=seller_headers).status_code == 404
+
+    assert client.get("/admin/trash", headers=seller_headers).status_code == 403
+    trash = client.get("/admin/trash", headers=admin_headers)
+    assert trash.status_code == 200
+    trash_item = next(item for item in trash.json() if item["entity_id"] == quote_id)
+
+    restored = client.post(
+        f"/admin/trash/{trash_item['id']}/restore",
+        headers=admin_headers,
+    )
+    assert restored.status_code == 200
+    quote = client.get(f"/quotes/{quote_id}", headers=seller_headers)
+    assert quote.status_code == 200
+    assert quote.json()["client_name"] == "Client A"
+
+    activity = client.get("/admin/activity", headers=admin_headers)
+    actions = [
+        item["action"]
+        for item in activity.json()
+        if item["entity_type"] == "quote" and item["entity_id"] == quote_id
+    ]
+    assert "deleted" in actions
+    assert "restored" in actions

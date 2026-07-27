@@ -6,5 +6,6 @@ from app.models.sale import Sale
 from app.models.sale_payment import SalePayment
 from app.models.exchange_rate_model import ExchangeRate
 from app.models.audit_log import AuditLog
+from app.models.trash_item import TrashItem
 from app.models.debtor import Debtor
 from app.models.accessory import Accessory, AccessorySale, Combo, ComboItem

@@ -16,6 +16,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite:////tmp/xylo-test-bootstrap.db")
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 
 from app.api.appointments import router as appointments_router
+from app.api.admin_activity import router as admin_activity_router
 from app.api.clients import router as clients_router
 from app.api.products import router as products_router
 from app.api.quotes import router as quotes_router
@@ -162,6 +163,7 @@ def app(db_session):
     test_app = FastAPI()
     for router in (
         appointments_router,
+        admin_activity_router,
         clients_router,
         products_router,
         quotes_router,

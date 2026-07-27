@@ -2,7 +2,7 @@ import {
   Home, Package, PackagePlus, ShoppingBag,
   ReceiptText, TrendingUp, ScanLine, LogOut, Sun, Moon,
   Users, Wallet, LayoutGrid, TrendingDown, Cable, BookUser, CalendarDays,
-  BadgeDollarSign, FileText,
+  BadgeDollarSign, FileText, History,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -40,6 +40,7 @@ const DESKTOP_SECTIONS = [
     label: "Admin",
     links: [
       { to: "/users", label: "Usuarios", icon: Users, adminOnly: true },
+      { to: "/admin/activity", label: "Auditoría", icon: History, adminOnly: true },
     ],
   },
 ];
@@ -67,6 +68,7 @@ const SHEET_LINKS = [
   { to: "/presupuestos", label: "Presupuestos", icon: FileText, color: "#8b5cf6" },
   { to: "/comisiones", label: "Comisiones", icon: BadgeDollarSign, color: "#f59e0b", adminOnly: true },
   { to: "/users", label: "Usuarios", icon: Users, color: "#64748b", adminOnly: true },
+  { to: "/admin/activity", label: "Auditoría", icon: History, color: "#64748b", adminOnly: true },
 ];
 
 const PAGE_TITLES = {
@@ -84,6 +86,7 @@ const PAGE_TITLES = {
   "/presupuestos": "Presupuestos",
   "/comisiones": "Comisiones",
   "/users": "Usuarios",
+  "/admin/activity": "Auditoría",
 };
 
 function TabButton({ to, label, icon: Icon, inactive }) {

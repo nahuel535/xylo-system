@@ -33,6 +33,7 @@ import AgendaPage from "./pages/AgendaPage";
 import CommissionsPage from "./pages/CommissionsPage";
 import QuotesPage from "./pages/QuotesPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
+import AdminActivityPage from "./pages/AdminActivityPage";
 
 function Layout() {
   return (
@@ -56,6 +57,7 @@ function Layout() {
           <Route path="/products/:id/label" element={<ProtectedRoute><ProductLabelPage /></ProtectedRoute>} />
           <Route path="/scan/:id" element={<ScanRedirectPage />} />
           <Route path="/users" element={<ProtectedRoute requireAdmin><UsersPage /></ProtectedRoute>} />
+          <Route path="/admin/activity" element={<ProtectedRoute requireAdmin><AdminActivityPage /></ProtectedRoute>} />
           <Route path="/debtors" element={<ProtectedRoute requireAdmin><DebtorsPage /></ProtectedRoute>} />
           <Route path="/gastos" element={<ProtectedRoute requireAdmin><GastosPage /></ProtectedRoute>} />
           <Route path="/accessories" element={<ProtectedRoute requireAdmin><AccessoriesPage /></ProtectedRoute>} />

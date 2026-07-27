@@ -18,6 +18,7 @@ from app.schemas.user import (
 )
 from app.core.security import hash_password
 from app.core.dependencies import require_admin
+from app.services.audit import record_audit
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -26,7 +27,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 def create_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    current_admin: User = Depends(require_admin),
 ):
     normalized_email = user_data.email.lower()
     existing_user = db.query(User).filter(sqlfunc.lower(User.email) == normalized_email).first()
@@ -42,6 +43,14 @@ def create_user(
         commission_rate=user_data.commission_rate,
     )
     db.add(new_user)
+    db.flush()
+    record_audit(
+        db,
+        entity_type="user",
+        entity_id=new_user.id,
+        user=current_admin,
+        action="created",
+    )
     db.commit()
     db.refresh(new_user)
     return new_user
@@ -107,6 +116,18 @@ def update_user(
     for field, value in changes.items():
         setattr(user, field, value)
 
+    if changes:
+        record_audit(
+            db,
+            entity_type="user",
+            entity_id=user.id,
+            user=current_admin,
+            action="updated",
+            changes={
+                field: {"new": value}
+                for field, value in changes.items()
+            },
+        )
     db.commit()
     db.refresh(user)
     return user
@@ -126,6 +147,13 @@ def update_user_status(
         _ensure_another_active_admin(user, db)
 
     user.is_active = data.is_active
+    record_audit(
+        db,
+        entity_type="user",
+        entity_id=user.id,
+        user=current_admin,
+        action="activated" if data.is_active else "deactivated",
+    )
     db.commit()
     db.refresh(user)
     return user
@@ -136,11 +164,18 @@ def reset_user_password(
     user_id: int,
     data: AdminPasswordReset,
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    current_admin: User = Depends(require_admin),
 ):
     user = _get_user_or_404(user_id, db)
     user.password_hash = hash_password(data.new_password)
     user.must_change_password = True
+    record_audit(
+        db,
+        entity_type="user",
+        entity_id=user.id,
+        user=current_admin,
+        action="password_reset",
+    )
     db.commit()
     return {"message": "Contraseña restablecida. El usuario deberá cambiarla al ingresar."}
 

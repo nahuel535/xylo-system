@@ -9,6 +9,7 @@ from app.models.client import Client
 from app.schemas.appointment import AppointmentCreate, AppointmentUpdate, AppointmentResponse
 from app.models.user import User
 from app.core.dependencies import ensure_owner_or_admin, get_current_user
+from app.services.audit import move_to_trash, record_audit
 
 router = APIRouter(prefix="/appointments", tags=["Agenda"])
 
@@ -64,6 +65,8 @@ def create_appointment(
     _validate_client_access(db, current_user, data.client_id)
     appt = Appointment(created_by=current_user.id, **data.model_dump())
     db.add(appt)
+    db.flush()
+    record_audit(db, entity_type="appointment", entity_id=appt.id, user=current_user, action="created")
     db.commit()
     db.refresh(appt)
     return db.query(Appointment).options(joinedload(Appointment.client)).filter(Appointment.id == appt.id).first()
@@ -96,8 +99,21 @@ def update_appointment(
     update_data = data.model_dump(exclude_unset=True)
     if "client_id" in update_data:
         _validate_client_access(db, current_user, update_data["client_id"])
+    changes = {}
     for field, value in update_data.items():
+        old_value = getattr(appt, field)
+        if old_value != value:
+            changes[field] = {"old": old_value, "new": value}
         setattr(appt, field, value)
+    if changes:
+        record_audit(
+            db,
+            entity_type="appointment",
+            entity_id=appt.id,
+            user=current_user,
+            action="updated",
+            changes=changes,
+        )
     db.commit()
     db.refresh(appt)
     return db.query(Appointment).options(joinedload(Appointment.client)).filter(Appointment.id == appt_id).first()
@@ -113,6 +129,27 @@ def delete_appointment(
     if not appt:
         raise HTTPException(status_code=404, detail="Turno no encontrado")
     ensure_owner_or_admin(current_user, appt.created_by)
+    move_to_trash(
+        db,
+        entity_type="appointment",
+        entity_id=appt.id,
+        label=appt.title,
+        user=current_user,
+        payload={"record": {
+            "title": appt.title,
+            "client_id": appt.client_id,
+            "contact_name": appt.contact_name,
+            "contact_phone": appt.contact_phone,
+            "contact_instagram": appt.contact_instagram,
+            "description": appt.description,
+            "date": appt.date,
+            "start_time": appt.start_time,
+            "end_time": appt.end_time,
+            "status": appt.status,
+            "notes": appt.notes,
+            "created_by": appt.created_by,
+        }},
+    )
     db.delete(appt)
     db.commit()
     return {"ok": True}

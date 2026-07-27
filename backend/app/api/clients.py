@@ -8,6 +8,7 @@ from app.db.session import get_db
 from app.models.client import Client, ClientInteraction, ClientReminder
 from app.models.user import User
 from app.core.dependencies import ensure_owner_or_admin, get_current_user
+from app.services.audit import move_to_trash, record_audit
 from app.schemas.client import (
     ClientCreate, ClientUpdate, ClientResponse,
     ClientInteractionCreate, ClientInteractionResponse,
@@ -129,6 +130,8 @@ def create_client(
 ):
     client = Client(owner_user_id=current_user.id, **data.model_dump())
     db.add(client)
+    db.flush()
+    record_audit(db, entity_type="client", entity_id=client.id, user=current_user, action="created")
     db.commit()
     db.refresh(client)
     return client
@@ -158,8 +161,21 @@ def update_client(
     if not client:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     ensure_owner_or_admin(current_user, client.owner_user_id)
+    changes = {}
     for field, value in data.model_dump(exclude_unset=True).items():
+        old_value = getattr(client, field)
+        if old_value != value:
+            changes[field] = {"old": old_value, "new": value}
         setattr(client, field, value)
+    if changes:
+        record_audit(
+            db,
+            entity_type="client",
+            entity_id=client.id,
+            user=current_user,
+            action="updated",
+            changes=changes,
+        )
     db.commit()
     db.refresh(client)
     return client
@@ -175,6 +191,53 @@ def delete_client(
     if not client:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     ensure_owner_or_admin(current_user, client.owner_user_id)
+    from app.models.appointment import Appointment
+    from app.models.quote import Quote
+
+    move_to_trash(
+        db,
+        entity_type="client",
+        entity_id=client.id,
+        label=client.name,
+        user=current_user,
+        payload={
+            "record": {
+                "owner_user_id": client.owner_user_id,
+                "name": client.name,
+                "phone": client.phone,
+                "email": client.email,
+                "instagram": client.instagram,
+                "source": client.source,
+                "status": client.status,
+                "tags": client.tags,
+                "notes": client.notes,
+                "needs_followup": client.needs_followup,
+                "followup_date": client.followup_date,
+                "last_contact_date": client.last_contact_date,
+            },
+            "interactions": [
+                {"type": row.type, "content": row.content, "date": row.date}
+                for row in client.interactions
+            ],
+            "reminders": [
+                {
+                    "type": row.type,
+                    "due_date": row.due_date,
+                    "status": row.status,
+                    "note": row.note,
+                }
+                for row in client.reminders
+            ],
+            "appointment_ids": [
+                row[0]
+                for row in db.query(Appointment.id).filter(Appointment.client_id == client.id).all()
+            ],
+            "quote_ids": [
+                row[0]
+                for row in db.query(Quote.id).filter(Quote.client_id == client.id).all()
+            ],
+        },
+    )
     db.delete(client)
     db.commit()
     return {"message": "Cliente eliminado"}
