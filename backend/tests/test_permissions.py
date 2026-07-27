@@ -66,3 +66,67 @@ def test_public_product_catalog_hides_purchase_data(client, seeded):
     assert "purchase_price_usd" not in public_response.json()[0]
     assert admin_response.status_code == 200
     assert "purchase_price_usd" in admin_response.json()[0]
+
+
+def test_admin_can_update_disable_and_reset_seller(client, seeded, db_session):
+    headers = auth_headers(seeded["admin"])
+    seller = seeded["seller_a"]
+
+    updated = client.patch(
+        f"/users/{seller.id}",
+        headers=headers,
+        json={
+            "name": "Seller Updated",
+            "email": "updated@test.com",
+            "commission_rate": 12.5,
+        },
+    )
+    assert updated.status_code == 200
+    assert updated.json()["name"] == "Seller Updated"
+    assert updated.json()["email"] == "updated@test.com"
+    assert float(updated.json()["commission_rate"]) == 12.5
+
+    reset = client.post(
+        f"/users/{seller.id}/reset-password",
+        headers=headers,
+        json={"new_password": "Temporary123$"},
+    )
+    assert reset.status_code == 200
+    db_session.refresh(seller)
+    assert seller.must_change_password is True
+
+    disabled = client.patch(
+        f"/users/{seller.id}/status",
+        headers=headers,
+        json={"is_active": False},
+    )
+    assert disabled.status_code == 200
+    assert disabled.json()["is_active"] is False
+
+
+def test_admin_cannot_deactivate_or_demote_own_account(client, seeded):
+    headers = auth_headers(seeded["admin"])
+    admin_id = seeded["admin"].id
+
+    deactivate = client.patch(
+        f"/users/{admin_id}/status",
+        headers=headers,
+        json={"is_active": False},
+    )
+    demote = client.patch(
+        f"/users/{admin_id}",
+        headers=headers,
+        json={"role": "seller"},
+    )
+
+    assert deactivate.status_code == 400
+    assert demote.status_code == 400
+
+
+def test_user_management_rejects_duplicate_email(client, seeded):
+    response = client.patch(
+        f"/users/{seeded['seller_a'].id}",
+        headers=auth_headers(seeded["admin"]),
+        json={"email": seeded["seller_b"].email.upper()},
+    )
+    assert response.status_code == 400
