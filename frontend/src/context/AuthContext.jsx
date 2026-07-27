@@ -27,6 +27,7 @@ export function AuthProvider({ children }) {
         id: data.user_id,
         name: data.user_name,
         role: data.user_role,
+        mustChangePassword: data.must_change_password,
       })
     );
 
@@ -36,7 +37,14 @@ export function AuthProvider({ children }) {
       id: data.user_id,
       name: data.user_name,
       role: data.user_role,
+      mustChangePassword: data.must_change_password,
     });
+  }
+
+  function markPasswordChanged() {
+    const nextUser = { ...user, mustChangePassword: false };
+    localStorage.setItem("xylo_user", JSON.stringify(nextUser));
+    setUser(nextUser);
   }
 
   function logout() {
@@ -47,7 +55,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, markPasswordChanged }}>
       {children}
     </AuthContext.Provider>
   );

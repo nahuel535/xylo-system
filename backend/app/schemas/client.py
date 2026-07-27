@@ -89,6 +89,7 @@ class ClientUpdate(BaseModel):
 
 class ClientResponse(BaseModel):
     id: int
+    owner_user_id: Optional[int]
     name: str
     phone: Optional[str]
     email: Optional[str]

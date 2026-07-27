@@ -8,8 +8,9 @@ from app.schemas.accessory import (
     AddStockRequest, SellRequest, AccessorySaleResponse, AccessorySaleUpdate,
     ComboCreate, ComboResponse, SellComboRequest,
 )
+from app.core.dependencies import require_admin
 
-router = APIRouter(prefix="/accessories", tags=["Accessories"])
+router = APIRouter(prefix="/accessories", tags=["Accessories"], dependencies=[Depends(require_admin)])
 
 
 # ── Accesorios ───────────────────────────────────────────────────────────────

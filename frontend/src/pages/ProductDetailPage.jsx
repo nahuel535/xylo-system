@@ -4,10 +4,13 @@ import api from "../services/api";
 import Header from "../components/Header";
 import AuditHistory from "../components/AuditHistory";
 import { Trash2 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function ProductDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [product, setProduct] = useState(null);
   const [exchange, setExchange] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -74,12 +77,12 @@ export default function ProductDetailPage() {
             <Info label="Estado funcional" value={product.functional_condition} />
             <Info label="Tipo SIM" value={product.sim_type} />
             <Info label="Condición" value={product.condition_type} />
-            <Info label="Costo USD" value={`USD ${product.purchase_price_usd}`} />
+            {isAdmin && <Info label="Costo USD" value={`USD ${product.purchase_price_usd}`} />}
             <Info label="Venta sugerida USD" value={`USD ${product.suggested_sale_price_usd}`} />
-            <Info
+            {isAdmin && <Info
               label="Costo ARS"
               value={exchange ? `ARS ${toArs(product.purchase_price_usd, exchange.buy_rate_ars)}` : "-"}
-            />
+            />}
             <Info
               label="Venta sugerida ARS"
               value={exchange ? `ARS ${toArs(product.suggested_sale_price_usd, exchange.sell_rate_ars)}` : "-"}
@@ -110,28 +113,28 @@ export default function ProductDetailPage() {
               </Link>
             )}
 
-            <a
+            {isAdmin && <a
               href={`https://xylo-system-production.up.railway.app/products/${product.id}/qr`}
               target="_blank"
               rel="noreferrer"
               className="block w-full text-center bg-base-subtle hover:bg-base-border transition text-base-text rounded-xl px-4 py-2.5 text-sm"
             >
               Ver / descargar QR
-            </a>
+            </a>}
 
-            <Link
+            {isAdmin && <Link
               to={`/products/${product.id}/label`}
               className="block w-full text-center bg-base-subtle hover:bg-base-border transition text-base-text rounded-xl px-4 py-2.5 text-sm"
             >
               Ver etiqueta imprimible
-            </Link>
+            </Link>}
 
-            <Link
+            {isAdmin && <Link
               to={`/products/${product.id}/edit`}
               className="block w-full text-center bg-base-subtle hover:bg-base-border transition text-base-text rounded-xl px-4 py-2.5 text-sm"
             >
               Editar producto
-            </Link>
+            </Link>}
 
             <Link
               to={product.status === "sold" ? "/sold-products" : "/products"}
@@ -141,7 +144,7 @@ export default function ProductDetailPage() {
             </Link>
 
             {/* Eliminar — solo para productos vendidos */}
-            {product.status === "sold" && (
+            {isAdmin && product.status === "sold" && (
               <div className="pt-2 mt-2 border-t border-base-border">
                 {confirmDelete ? (
                   <div className="bg-red-50 border border-red-100 rounded-xl p-4">
@@ -178,9 +181,9 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
-      <div className="mt-5">
+      {isAdmin && <div className="mt-5">
         <AuditHistory entityType="product" entityId={id} />
-      </div>
+      </div>}
     </div>
   );
 }

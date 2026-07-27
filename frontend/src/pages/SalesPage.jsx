@@ -3,9 +3,12 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
 import { Smartphone, Cable, Pencil, Trash2, X } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function SalesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const [iphoneSales, setIphoneSales] = useState([]);
   const [accSales, setAccSales] = useState([]);
@@ -28,9 +31,9 @@ export default function SalesPage() {
       try {
         const [salesRes, accRes, productsRes, usersRes] = await Promise.all([
           api.get("/sales/"),
-          api.get("/accessories/sales/all"),
+          isAdmin ? api.get("/accessories/sales/all") : Promise.resolve({ data: [] }),
           api.get("/products/"),
-          api.get("/users/"),
+          isAdmin ? api.get("/users/") : Promise.resolve({ data: [user] }),
         ]);
         setIphoneSales(salesRes.data);
         setAccSales(accRes.data);
@@ -47,7 +50,7 @@ export default function SalesPage() {
       }
     }
     loadData();
-  }, []);
+  }, [isAdmin, user]);
 
   const sellers = useMemo(() => Object.values(usersMap), [usersMap]);
 
@@ -62,7 +65,7 @@ export default function SalesPage() {
       client: s.client_name || "-",
       seller: usersMap[s.seller_id]?.name || `#${s.seller_id}`,
       price: Number(s.sale_price_usd),
-      profit: Number(s.gross_profit_usd),
+      profit: isAdmin ? Number(s.gross_profit_usd) : null,
       qty: null,
       payments: s.payments?.length || 0,
       clickable: true,
@@ -80,7 +83,7 @@ export default function SalesPage() {
       client: s.notes || "-",
       seller: "-",
       price: s.sale_price_usd * s.quantity_sold,
-      profit: s.gross_profit_usd,
+      profit: isAdmin ? s.gross_profit_usd : null,
       qty: s.quantity_sold,
       payments: null,
       clickable: false,
@@ -93,7 +96,7 @@ export default function SalesPage() {
       const db2 = b.date ? new Date(b.date) : new Date(0);
       return db2 - da;
     });
-  }, [iphoneSales, accSales, productsMap, usersMap]);
+  }, [iphoneSales, accSales, productsMap, usersMap, isAdmin]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -162,7 +165,7 @@ export default function SalesPage() {
             onChange={(e) => setSearch(e.target.value)}
             className={inputClass + " w-full"}
           />
-          <select
+          {isAdmin && <select
             value={sellerFilter}
             onChange={(e) => setSellerFilter(e.target.value)}
             className={inputClass + " w-full"}
@@ -171,13 +174,13 @@ export default function SalesPage() {
             {sellers.map((seller) => (
               <option key={seller.id} value={seller.id}>{seller.name}</option>
             ))}
-          </select>
+          </select>}
           <div className="flex gap-1 bg-base-subtle rounded-xl p-1 border border-base-border">
-            {[
+            {(isAdmin ? [
               { value: "all", label: "Todos" },
               { value: "iphone", label: "iPhones", Icon: Smartphone },
               { value: "accessory", label: "Accesorios", Icon: Cable },
-            ].map(({ value, label, Icon }) => (
+            ] : [{ value: "all", label: "Todas" }]).map(({ value, label, Icon }) => (
               <button
                 key={value}
                 onClick={() => setTypeFilter(value)}
@@ -210,7 +213,10 @@ export default function SalesPage() {
         <table className="w-full text-sm">
           <thead className="bg-base-subtle border-b border-base-border">
             <tr>
-              {["Tipo", "Fecha", "Producto / Accesorio", "Cliente / Nota", "Vendedor", "Venta", "Ganancia", ""].map((h) => (
+              {(isAdmin
+                ? ["Tipo", "Fecha", "Producto / Accesorio", "Cliente / Nota", "Vendedor", "Venta", "Ganancia", ""]
+                : ["Tipo", "Fecha", "Producto", "Cliente", "Venta"]
+              ).map((h) => (
                 <th key={h} className="text-left px-4 py-3.5 text-xs font-medium text-base-muted uppercase tracking-wide">
                   {h}
                 </th>
@@ -219,9 +225,9 @@ export default function SalesPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="8" className="px-5 py-6 text-base-muted text-sm">Cargando ventas...</td></tr>
+              <tr><td colSpan={isAdmin ? 8 : 5} className="px-5 py-6 text-base-muted text-sm">Cargando ventas...</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan="8" className="px-5 py-6 text-base-muted text-sm">No hay ventas que coincidan.</td></tr>
+              <tr><td colSpan={isAdmin ? 8 : 5} className="px-5 py-6 text-base-muted text-sm">No hay ventas que coincidan.</td></tr>
             ) : (
               filtered.map((row) => (
                 <tr
@@ -251,12 +257,12 @@ export default function SalesPage() {
                     {row.sub && <p className="text-xs text-base-muted font-mono">{row.sub}</p>}
                   </td>
                   <td className="px-4 py-3.5 text-base-text text-sm">{row.client}</td>
-                  <td className="px-4 py-3.5 text-base-text text-sm">{row.seller}</td>
+                  {isAdmin && <td className="px-4 py-3.5 text-base-text text-sm">{row.seller}</td>}
                   <td className="px-4 py-3.5 font-medium text-base-text">USD {row.price.toFixed(2)}</td>
-                  <td className="px-4 py-3.5">
+                  {isAdmin && <td className="px-4 py-3.5">
                     <span className="text-xylo-500 font-medium">USD {Number(row.profit).toFixed(2)}</span>
-                  </td>
-                  <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
+                  </td>}
+                  {isAdmin && <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                     {row.type === "accessory" && (
                       <div className="flex items-center gap-1">
                         <button
@@ -293,7 +299,7 @@ export default function SalesPage() {
                         )}
                       </div>
                     )}
-                  </td>
+                  </td>}
                 </tr>
               ))
             )}
@@ -338,9 +344,9 @@ export default function SalesPage() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-base-muted">{formatDate(row.date)}</span>
-                <span className="text-xs text-green-500 font-medium">+USD {Number(row.profit).toFixed(2)}</span>
+                {isAdmin && <span className="text-xs text-green-500 font-medium">+USD {Number(row.profit).toFixed(2)}</span>}
               </div>
-              {row.type === "accessory" && (
+              {isAdmin && row.type === "accessory" && (
                 <div className="flex items-center gap-2 mt-3 pt-3 border-t border-base-border" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => {
@@ -376,7 +382,7 @@ export default function SalesPage() {
       </div>
 
       {/* Modal de edición de accesorio */}
-      {editingAcc && (
+      {isAdmin && editingAcc && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
           onClick={() => setEditingAcc(null)}

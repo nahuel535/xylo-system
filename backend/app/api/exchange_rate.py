@@ -11,12 +11,18 @@ from app.schemas.exchange_rate import (
     ActiveExchangeRateResponse,
 )
 from app.services.exchange_sync import fetch_and_sync
+from app.models.user import User
+from app.core.dependencies import get_current_user, require_admin
 
 router = APIRouter(prefix="/exchange-rates", tags=["Exchange Rates"])
 
 
 @router.post("/", response_model=ExchangeRateResponse)
-def create_exchange_rate(data: ExchangeRateCreate, db: Session = Depends(get_db)):
+def create_exchange_rate(
+    data: ExchangeRateCreate,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
     if data.is_active:
         db.query(ExchangeRate).update({ExchangeRate.is_active: False})
 
@@ -28,12 +34,18 @@ def create_exchange_rate(data: ExchangeRateCreate, db: Session = Depends(get_db)
 
 
 @router.get("/", response_model=list[ExchangeRateResponse])
-def list_exchange_rates(db: Session = Depends(get_db)):
+def list_exchange_rates(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
     return db.query(ExchangeRate).order_by(ExchangeRate.updated_at.desc()).all()
 
 
 @router.get("/active", response_model=ActiveExchangeRateResponse)
-def get_active_exchange_rate(db: Session = Depends(get_db)):
+def get_active_exchange_rate(
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
     rate = (
         db.query(ExchangeRate)
         .filter(ExchangeRate.is_active == True)
@@ -63,7 +75,10 @@ def get_active_exchange_rate(db: Session = Depends(get_db)):
 
 
 @router.post("/sync", response_model=ExchangeRateResponse)
-async def sync_blue_rate(db: Session = Depends(get_db)):
+async def sync_blue_rate(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
     try:
         rate = await fetch_and_sync(db)
         return rate
@@ -72,7 +87,12 @@ async def sync_blue_rate(db: Session = Depends(get_db)):
 
 
 @router.put("/{rate_id}", response_model=ExchangeRateResponse)
-def update_exchange_rate(rate_id: int, data: ExchangeRateUpdate, db: Session = Depends(get_db)):
+def update_exchange_rate(
+    rate_id: int,
+    data: ExchangeRateUpdate,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
     rate = db.query(ExchangeRate).filter(ExchangeRate.id == rate_id).first()
 
     if not rate:

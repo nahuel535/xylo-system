@@ -1,11 +1,12 @@
 import httpx
 import base64
 from pathlib import Path
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from app.core.dependencies import require_admin
 
-router = APIRouter(prefix="/photos", tags=["Photos"])
+router = APIRouter(prefix="/photos", tags=["Photos"], dependencies=[Depends(require_admin)])
 
 FOTOS_DIR = Path(__file__).parent.parent.parent.parent / "fotos"
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".heic", ".webp"}

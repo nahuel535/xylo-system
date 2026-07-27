@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session, joinedload
 from app.db.session import get_db
 from app.models.appointment import Appointment
 from app.schemas.appointment import AppointmentCreate, AppointmentUpdate, AppointmentResponse
+from app.models.user import User
+from app.core.dependencies import ensure_owner_or_admin, get_current_user
 
 router = APIRouter(prefix="/appointments", tags=["Agenda"])
 
@@ -17,8 +19,11 @@ def list_appointments(
     month: Optional[int] = Query(None),
     year: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
+    current_user: User = Depends(get_current_user),
 ):
     q = db.query(Appointment).options(joinedload(Appointment.client))
+    if current_user.role != "admin":
+        q = q.filter(Appointment.created_by == current_user.id)
 
     if date:
         q = q.filter(Appointment.date == date)
@@ -36,8 +41,12 @@ def list_appointments(
 
 
 @router.post("", response_model=AppointmentResponse)
-def create_appointment(data: AppointmentCreate, db: Session = Depends(get_db)):
-    appt = Appointment(**data.model_dump())
+def create_appointment(
+    data: AppointmentCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    appt = Appointment(created_by=current_user.id, **data.model_dump())
     db.add(appt)
     db.commit()
     db.refresh(appt)
@@ -45,18 +54,29 @@ def create_appointment(data: AppointmentCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{appt_id}", response_model=AppointmentResponse)
-def get_appointment(appt_id: int, db: Session = Depends(get_db)):
+def get_appointment(
+    appt_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     appt = db.query(Appointment).options(joinedload(Appointment.client)).filter(Appointment.id == appt_id).first()
     if not appt:
         raise HTTPException(status_code=404, detail="Turno no encontrado")
+    ensure_owner_or_admin(current_user, appt.created_by)
     return appt
 
 
 @router.patch("/{appt_id}", response_model=AppointmentResponse)
-def update_appointment(appt_id: int, data: AppointmentUpdate, db: Session = Depends(get_db)):
+def update_appointment(
+    appt_id: int,
+    data: AppointmentUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     appt = db.query(Appointment).filter(Appointment.id == appt_id).first()
     if not appt:
         raise HTTPException(status_code=404, detail="Turno no encontrado")
+    ensure_owner_or_admin(current_user, appt.created_by)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(appt, field, value)
     db.commit()
@@ -65,10 +85,15 @@ def update_appointment(appt_id: int, data: AppointmentUpdate, db: Session = Depe
 
 
 @router.delete("/{appt_id}")
-def delete_appointment(appt_id: int, db: Session = Depends(get_db)):
+def delete_appointment(
+    appt_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     appt = db.query(Appointment).filter(Appointment.id == appt_id).first()
     if not appt:
         raise HTTPException(status_code=404, detail="Turno no encontrado")
+    ensure_owner_or_admin(current_user, appt.created_by)
     db.delete(appt)
     db.commit()
     return {"ok": True}

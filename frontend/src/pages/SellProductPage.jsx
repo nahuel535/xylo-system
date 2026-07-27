@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
 import { Plus, Minus, Trash2, Cable, ChevronDown, ChevronUp } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const METHODS = [
   { value: "transferencia", label: "Transferencia" },
@@ -15,6 +16,8 @@ const METHODS = [
 export default function SellProductPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [product, setProduct] = useState(null);
   const [exchange, setExchange] = useState(null);
   const [users, setUsers] = useState([]);
@@ -44,8 +47,8 @@ export default function SellProductPage() {
         const [productRes, exchangeRes, usersRes, accRes] = await Promise.all([
           api.get(`/products/${id}`),
           api.get("/exchange-rates/active"),
-          api.get("/users/"),
-          api.get("/accessories/").catch(() => ({ data: [] })),
+          isAdmin ? api.get("/users/") : Promise.resolve({ data: [user] }),
+          isAdmin ? api.get("/accessories/").catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
         ]);
         const productData = productRes.data;
         setProduct(productData);
@@ -56,7 +59,7 @@ export default function SellProductPage() {
         setForm((prev) => ({
           ...prev,
           sale_price_usd: suggestedPrice,
-          seller_id: usersRes.data.length > 0 ? usersRes.data[0].id : "",
+          seller_id: isAdmin && usersRes.data.length > 0 ? usersRes.data[0].id : user.id,
         }));
         setPay1((prev) => ({ ...prev, amount_usd: suggestedPrice }));
       } catch (error) {
@@ -66,7 +69,7 @@ export default function SellProductPage() {
       }
     }
     loadData();
-  }, [id]);
+  }, [id, isAdmin, user]);
 
   function handleChange(event) {
     const { name, value } = event.target;
@@ -149,7 +152,7 @@ export default function SellProductPage() {
     try {
       await api.post("/sales/", {
         product_id: Number(id),
-        seller_id: Number(form.seller_id),
+        seller_id: isAdmin ? Number(form.seller_id) : user.id,
         sale_price_usd: Number(form.sale_price_usd),
         client_name: form.client_name || null,
         notes: form.notes || null,
@@ -200,8 +203,8 @@ export default function SellProductPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
           <InfoItem label="Modelo" value={product.model} />
           <InfoItem label="IMEI" value={product.imei} mono />
-          <InfoItem label="Costo USD" value={`USD ${product.purchase_price_usd}`} />
-          <InfoItem label="Costo ARS" value={exchange ? `ARS ${toArs(product.purchase_price_usd, exchange.buy_rate_ars)}` : "-"} />
+          {isAdmin && <InfoItem label="Costo USD" value={`USD ${product.purchase_price_usd}`} />}
+          {isAdmin && <InfoItem label="Costo ARS" value={exchange ? `ARS ${toArs(product.purchase_price_usd, exchange.buy_rate_ars)}` : "-"} />}
           <InfoItem label="Precio sugerido USD" value={`USD ${product.suggested_sale_price_usd}`} />
           <InfoItem label="Precio sugerido ARS" value={exchange ? `ARS ${toArs(product.suggested_sale_price_usd, exchange.sell_rate_ars)}` : "-"} />
         </div>
@@ -211,12 +214,12 @@ export default function SellProductPage() {
         <div className="bg-base-card border border-base-border rounded-2xl p-6 space-y-5 shadow-card">
 
           {/* Vendedor */}
-          <div>
+          {isAdmin && <div>
             <p className="text-sm text-base-muted mb-2">Vendedor</p>
             <select name="seller_id" value={form.seller_id} onChange={handleChange} className={selectClass}>
               {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
-          </div>
+          </div>}
 
           {/* Precio + cliente */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -302,6 +305,7 @@ export default function SellProductPage() {
           </div>
         </div>
 
+        {isAdmin && <>
         {/* ── Accesorios ───────────────────────────────────────────────────── */}
         <div className="bg-base-card border border-base-border rounded-2xl shadow-card overflow-hidden">
           <button
@@ -410,6 +414,7 @@ export default function SellProductPage() {
             </div>
           )}
         </div>
+        </>}
 
         {message && (
           <p className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{message}</p>

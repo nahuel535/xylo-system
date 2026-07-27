@@ -28,7 +28,7 @@ export default function SaleDetailPage() {
 
         const [productRes, usersRes] = await Promise.all([
           api.get(`/products/${saleData.product_id}`),
-          api.get("/users/"),
+          user?.role === "admin" ? api.get("/users/") : Promise.resolve({ data: [user] }),
         ]);
 
         setProduct(productRes.data);
@@ -45,7 +45,7 @@ export default function SaleDetailPage() {
     }
 
     loadData();
-  }, [id]);
+  }, [id, user]);
 
   async function handleReturn() {
     setReturning(true);
@@ -79,7 +79,7 @@ export default function SaleDetailPage() {
               <RotateCcw size={14} /> Devolución
             </button>
           )}
-          {!sale.is_returned && (
+          {user?.role === "admin" && !sale.is_returned && (
             <button
               onClick={() => navigate(`/sales/${id}/edit`)}
               className="bg-base-subtle hover:bg-base-border transition text-base-text rounded-xl px-4 py-2.5 text-sm font-medium"
@@ -132,11 +132,11 @@ export default function SaleDetailPage() {
             <p><b>Cliente:</b> {sale.client_name || "-"}</p>
             <p><b>Vendedor:</b> {seller?.name || "-"}</p>
             <p><b>Precio venta:</b> USD {sale.sale_price_usd}</p>
-            <p><b>Costo equipo:</b> USD {sale.purchase_price_usd_snapshot}</p>
-            <p className="text-xylo-300 font-semibold">
+            {user?.role === "admin" && <p><b>Costo equipo:</b> USD {sale.purchase_price_usd_snapshot}</p>}
+            {user?.role === "admin" && <p className="text-xylo-300 font-semibold">
               Ganancia: USD {sale.gross_profit_usd}
-            </p>
-            {sale.commission_usd != null && Number(sale.commission_usd) > 0 && (
+            </p>}
+            {user?.role === "admin" && sale.commission_usd != null && Number(sale.commission_usd) > 0 && (
               <p className="text-amber-500 font-semibold">
                 Comisión vendedor: USD {sale.commission_usd}
               </p>
@@ -180,9 +180,9 @@ export default function SaleDetailPage() {
         </div>
       </div>
 
-      <div className="mt-5">
+      {user?.role === "admin" && <div className="mt-5">
         <AuditHistory entityType="sale" entityId={id} />
-      </div>
+      </div>}
 
       <div className="mt-5">
         <Link

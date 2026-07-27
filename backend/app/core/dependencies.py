@@ -28,6 +28,11 @@ def require_admin(current_user: User = Depends(get_current_user)):
     return current_user
 
 
+def ensure_owner_or_admin(current_user: User, owner_user_id: Optional[int]) -> None:
+    if current_user.role != "admin" and owner_user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recurso no encontrado")
+
+
 def get_optional_user_id(request: Request) -> Optional[int]:
     auth = request.headers.get("Authorization")
     if not auth or not auth.startswith("Bearer "):

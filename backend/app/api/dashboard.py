@@ -17,8 +17,13 @@ from app.models.expense import Expense
 from app.models.debtor import Debtor
 from app.models.accessory import Accessory, AccessorySale
 from app.schemas.dashboard import DashboardSummary, MonthStat
+from app.core.dependencies import require_admin
 
-router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
+router = APIRouter(
+    prefix="/dashboard",
+    tags=["Dashboard"],
+    dependencies=[Depends(require_admin)],
+)
 
 MONTHS_ES = ["", "Ene", "Feb", "Mar", "Abr", "May", "Jun",
              "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]

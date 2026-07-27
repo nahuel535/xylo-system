@@ -29,6 +29,7 @@ def create_user(
         email=user_data.email,
         password_hash=hash_password(user_data.password),
         role=user_data.role,
+        must_change_password=user_data.role == "seller",
     )
     db.add(new_user)
     db.commit()
@@ -39,7 +40,7 @@ def create_user(
 @router.get("/", response_model=list[UserResponse])
 def list_users(
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_admin),
 ):
     return db.query(User).order_by(User.id.desc()).all()
 
@@ -65,7 +66,7 @@ def get_commissions_summary(
     month: Optional[int] = Query(None),
     year: Optional[int] = Query(None),
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_admin),
 ):
     sellers = db.query(User).filter(User.is_active == True).all()
     result = []

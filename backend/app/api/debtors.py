@@ -4,8 +4,9 @@ from app.db.session import get_db
 from app.models.debtor import Debtor
 from app.schemas.debtor import DebtorCreate, DebtorUpdate, DebtorResponse
 from typing import List
+from app.core.dependencies import require_admin
 
-router = APIRouter(prefix="/debtors", tags=["Debtors"])
+router = APIRouter(prefix="/debtors", tags=["Debtors"], dependencies=[Depends(require_admin)])
 
 
 @router.get("/", response_model=List[DebtorResponse])

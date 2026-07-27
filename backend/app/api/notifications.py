@@ -5,8 +5,9 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.client import Client, ClientReminder
 from app.utils.email import is_configured, send_email, NOTIFY_EMAIL
+from app.core.dependencies import require_admin
 
-router = APIRouter(prefix="/notifications", tags=["Notificaciones"])
+router = APIRouter(prefix="/notifications", tags=["Notificaciones"], dependencies=[Depends(require_admin)])
 
 REMINDER_LABELS = {
     "followup_1week": "Seguimiento 1 semana",

@@ -1,14 +1,14 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Literal
 
 
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
     password: str
-    role: str = "seller"
+    role: Literal["admin", "seller"] = "seller"
 
 
 class UserResponse(BaseModel):
@@ -17,6 +17,7 @@ class UserResponse(BaseModel):
     email: EmailStr
     role: str
     is_active: bool
+    must_change_password: bool
     commission_rate: Decimal
     created_at: datetime
 
@@ -26,6 +27,11 @@ class UserResponse(BaseModel):
 
 class CommissionRateUpdate(BaseModel):
     commission_rate: Decimal
+
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
 
 
 class SellerCommissionSummary(BaseModel):

@@ -3,8 +3,11 @@ import { Link } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
 import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function ProductsPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [products, setProducts] = useState([]);
   const [exchange, setExchange] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -177,16 +180,16 @@ export default function ProductsPage() {
               <ThSortable field="battery_health">Batería</ThSortable>
               <ThSortable field="cosmetic_condition">Estado estético</ThSortable>
               <ThSortable field="condition_type">Condición</ThSortable>
-              <ThSortable field="purchase_price_usd">Costo USD</ThSortable>
+              {isAdmin && <ThSortable field="purchase_price_usd">Costo USD</ThSortable>}
               <ThSortable field="suggested_sale_price_usd">Venta USD</ThSortable>
               <th className="text-left px-5 py-3.5 text-xs font-medium text-base-muted uppercase tracking-wide">Venta ARS</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="10" className="px-5 py-6 text-base-muted text-sm">Cargando productos...</td></tr>
+              <tr><td colSpan={isAdmin ? 10 : 9} className="px-5 py-6 text-base-muted text-sm">Cargando productos...</td></tr>
             ) : filteredProducts.length === 0 ? (
-              <tr><td colSpan="10" className="px-5 py-6 text-base-muted text-sm">No hay productos que coincidan.</td></tr>
+              <tr><td colSpan={isAdmin ? 10 : 9} className="px-5 py-6 text-base-muted text-sm">No hay productos que coincidan.</td></tr>
             ) : (
               filteredProducts.map((product) => (
                 <tr key={product.id} className="border-t border-base-border hover:bg-base-subtle/50 transition">
@@ -215,7 +218,7 @@ export default function ProductsPage() {
                       {product.condition_type || "-"}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-base-text">USD {product.purchase_price_usd}</td>
+                  {isAdmin && <td className="px-5 py-3.5 text-base-text">USD {product.purchase_price_usd}</td>}
                   <td className="px-5 py-3.5 text-base-text font-medium">USD {product.suggested_sale_price_usd}</td>
                   <td className="px-5 py-3.5 text-base-muted">
                     {exchange ? `ARS ${toArs(product.suggested_sale_price_usd, exchange.sell_rate_ars)}` : "-"}

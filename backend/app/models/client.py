@@ -8,6 +8,7 @@ class Client(Base):
     __tablename__ = "clients"
 
     id = Column(Integer, primary_key=True, index=True)
+    owner_user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     name = Column(String, nullable=False)
     phone = Column(String, nullable=True)
     email = Column(String, nullable=True)

@@ -26,6 +26,7 @@ from app.models.accessory import Accessory, AccessorySale  # noqa: ensure tables
 from app.models.client import Client, ClientInteraction  # noqa: ensure tables are registered
 from app.models.appointment import Appointment  # noqa: ensure table is registered
 from app.models.quote import Quote  # noqa: ensure table is registered
+from app.core.dependencies import require_admin
 
 Base.metadata.create_all(bind=engine)
 
@@ -51,6 +52,17 @@ with engine.connect() as conn:
     conn.execute(text("""
         ALTER TABLE users
         ADD COLUMN IF NOT EXISTS commission_rate NUMERIC(5,2) NOT NULL DEFAULT 0
+    """))
+    conn.execute(text("""
+        ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT FALSE
+    """))
+    conn.execute(text("""
+        ALTER TABLE clients
+        ADD COLUMN IF NOT EXISTS owner_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL
+    """))
+    conn.execute(text("""
+        CREATE INDEX IF NOT EXISTS ix_clients_owner_user_id ON clients(owner_user_id)
     """))
     conn.execute(text("""
         ALTER TABLE sales
@@ -137,7 +149,10 @@ def read_root():
 
 
 @app.post("/setup")
-def setup(db: Session = Depends(get_db)):
+def setup(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
     from app.core.security import hash_password
     from app.models.user import User
     existing = db.query(User).filter(User.email == "admin@xylo.com").first()
@@ -148,9 +163,9 @@ def setup(db: Session = Depends(get_db)):
         email="admin@xylo.com",
         password_hash=hash_password("admin123"),
         role="admin",
-        is_active=True
+        is_active=True,
+        must_change_password=False,
     )
     db.add(user)
     db.commit()
     return {"message": "Admin creado"}
-

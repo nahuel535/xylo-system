@@ -6,8 +6,9 @@ from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.quote import Quote
 from app.schemas.quote import QuoteCreate, QuoteUpdate, QuoteResponse
+from app.core.dependencies import require_admin
 
-router = APIRouter(prefix="/quotes", tags=["Presupuestos"])
+router = APIRouter(prefix="/quotes", tags=["Presupuestos"], dependencies=[Depends(require_admin)])
 
 
 def _calc_totals(items, discount_usd):

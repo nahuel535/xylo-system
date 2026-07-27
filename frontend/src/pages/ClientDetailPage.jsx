@@ -537,7 +537,9 @@ export default function ClientDetailPage() {
                     </div>
                     <div className="text-right flex-shrink-0 ml-3">
                       <p className="text-sm font-semibold text-base-text">USD {s.sale_price_usd.toFixed(0)}</p>
-                      <p className="text-xs text-green-500">+{s.gross_profit_usd.toFixed(0)}</p>
+                      {s.gross_profit_usd != null && (
+                        <p className="text-xs text-green-500">+{s.gross_profit_usd.toFixed(0)}</p>
+                      )}
                     </div>
                   </div>
                 ))}

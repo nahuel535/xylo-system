@@ -9,42 +9,68 @@ from app.models.sale_payment import SalePayment
 from app.models.audit_log import AuditLog
 from app.schemas.product import ProductCreate, ProductResponse, ProductUpdate
 from app.models.user import User
-from app.core.dependencies import get_optional_user_id
+from app.core.dependencies import get_current_user, require_admin
 from app.utils.qr import generate_product_qr
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
 
+def _product_for_user(product: Product, current_user: User) -> dict:
+    data = ProductResponse.model_validate(product).model_dump()
+    if current_user.role != "admin":
+        for field in ("purchase_price_usd", "purchase_date", "supplier", "created_by"):
+            data.pop(field, None)
+    return data
+
+
 @router.post("/", response_model=ProductResponse)
-def create_product(request: Request, product_data: ProductCreate, db: Session = Depends(get_db)):
+def create_product(
+    request: Request,
+    product_data: ProductCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
     existing_product = db.query(Product).filter(Product.imei == product_data.imei).first()
     if existing_product:
         raise HTTPException(status_code=400, detail="Ya existe un producto con ese IMEI")
     new_product = Product(**product_data.model_dump())
     db.add(new_product)
     db.flush()
-    user_id = get_optional_user_id(request)
-    db.add(AuditLog(entity_type="product", entity_id=new_product.id, user_id=user_id, action="created"))
+    db.add(AuditLog(entity_type="product", entity_id=new_product.id, user_id=current_user.id, action="created"))
     db.commit()
     db.refresh(new_product)
     return new_product
 
 
-@router.get("/", response_model=list[ProductResponse])
-def list_products(db: Session = Depends(get_db)):
-    return db.query(Product).order_by(Product.id.desc()).all()
+@router.get("/")
+def list_products(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    products = db.query(Product).order_by(Product.id.desc()).all()
+    return [_product_for_user(product, current_user) for product in products]
 
 
-@router.get("/{product_id}", response_model=ProductResponse)
-def get_product(product_id: int, db: Session = Depends(get_db)):
+@router.get("/{product_id}")
+def get_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    return product
+    return _product_for_user(product, current_user)
 
 
 @router.put("/{product_id}", response_model=ProductResponse)
-def update_product(request: Request, product_id: int, product_data: ProductUpdate, db: Session = Depends(get_db)):
+def update_product(
+    request: Request,
+    product_id: int,
+    product_data: ProductUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
@@ -76,8 +102,7 @@ def update_product(request: Request, product_id: int, product_data: ProductUpdat
             sale.gross_profit_usd = float(sale.sale_price_usd) - float(new_cost)
 
     if changes:
-        user_id = get_optional_user_id(request)
-        db.add(AuditLog(entity_type="product", entity_id=product_id, user_id=user_id, action="updated", changes=changes))
+        db.add(AuditLog(entity_type="product", entity_id=product_id, user_id=current_user.id, action="updated", changes=changes))
 
     db.commit()
     db.refresh(product)
@@ -85,7 +110,11 @@ def update_product(request: Request, product_id: int, product_data: ProductUpdat
 
 
 @router.delete("/{product_id}")
-def delete_product(product_id: int, db: Session = Depends(get_db)):
+def delete_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
@@ -103,7 +132,11 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{product_id}/history")
-def get_product_history(product_id: int, db: Session = Depends(get_db)):
+def get_product_history(
+    product_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
     logs = (
         db.query(AuditLog, User)
         .outerjoin(User, AuditLog.user_id == User.id)
@@ -124,7 +157,10 @@ def get_product_history(product_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{product_id}/qr")
-def get_product_qr(product_id: int, db: Session = Depends(get_db)):
+def get_product_qr(
+    product_id: int,
+    db: Session = Depends(get_db),
+):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")

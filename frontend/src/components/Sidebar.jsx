@@ -15,58 +15,58 @@ const DESKTOP_SECTIONS = [
   {
     label: "Principal",
     links: [
-      { to: "/", label: "Dashboard", icon: Home },
+      { to: "/", label: "Dashboard", icon: Home, adminOnly: true },
       { to: "/scanner", label: "Escanear", icon: ScanLine },
       { to: "/products", label: "Stock", icon: Package },
-      { to: "/sold-products", label: "Vendidos", icon: ShoppingBag },
+      { to: "/sold-products", label: "Vendidos", icon: ShoppingBag, adminOnly: true },
       { to: "/sales", label: "Ventas", icon: ReceiptText },
     ],
   },
   {
     label: "Herramientas",
     links: [
-      { to: "/exchange", label: "Cotización", icon: TrendingUp },
-      { to: "/products/new", label: "Cargar stock", icon: PackagePlus },
-      { to: "/debtors", label: "Deudores", icon: Wallet },
-      { to: "/gastos", label: "Gastos", icon: TrendingDown },
-      { to: "/accessories", label: "Accesorios", icon: Cable },
+      { to: "/exchange", label: "Cotización", icon: TrendingUp, adminOnly: true },
+      { to: "/products/new", label: "Cargar stock", icon: PackagePlus, adminOnly: true },
+      { to: "/debtors", label: "Deudores", icon: Wallet, adminOnly: true },
+      { to: "/gastos", label: "Gastos", icon: TrendingDown, adminOnly: true },
+      { to: "/accessories", label: "Accesorios", icon: Cable, adminOnly: true },
       { to: "/crm", label: "CRM", icon: BookUser },
       { to: "/agenda", label: "Agenda", icon: CalendarDays },
-      { to: "/presupuestos", label: "Presupuestos", icon: FileText },
-      { to: "/comisiones", label: "Comisiones", icon: BadgeDollarSign },
+      { to: "/presupuestos", label: "Presupuestos", icon: FileText, adminOnly: true },
+      { to: "/comisiones", label: "Comisiones", icon: BadgeDollarSign, adminOnly: true },
     ],
   },
   {
     label: "Admin",
     links: [
-      { to: "/users", label: "Usuarios", icon: Users },
+      { to: "/users", label: "Usuarios", icon: Users, adminOnly: true },
     ],
   },
 ];
 
 const TABS = [
-  { to: "/", label: "Inicio", icon: Home },
+  { to: "/", label: "Inicio", icon: Home, adminOnly: true },
   { to: "/products", label: "Stock", icon: Package },
   { to: "/sales", label: "Ventas", icon: ReceiptText },
   { to: "/scanner", label: "Escanear", icon: ScanLine },
 ];
 
 const SHEET_LINKS = [
-  { to: "/", label: "Dashboard", icon: Home, color: "#6366f1" },
+  { to: "/", label: "Dashboard", icon: Home, color: "#6366f1", adminOnly: true },
   { to: "/products", label: "Stock", icon: Package, color: "#3b82f6" },
-  { to: "/products/new", label: "Cargar", icon: PackagePlus, color: "#10b981" },
-  { to: "/sold-products", label: "Vendidos", icon: ShoppingBag, color: "#f59e0b" },
+  { to: "/products/new", label: "Cargar", icon: PackagePlus, color: "#10b981", adminOnly: true },
+  { to: "/sold-products", label: "Vendidos", icon: ShoppingBag, color: "#f59e0b", adminOnly: true },
   { to: "/sales", label: "Ventas", icon: ReceiptText, color: "#8b5cf6" },
-  { to: "/exchange", label: "Cotización", icon: TrendingUp, color: "#0ea5e9" },
+  { to: "/exchange", label: "Cotización", icon: TrendingUp, color: "#0ea5e9", adminOnly: true },
   { to: "/scanner", label: "Escanear", icon: ScanLine, color: "#ef4444" },
-  { to: "/debtors", label: "Deudores", icon: Wallet, color: "#f43f5e" },
-  { to: "/gastos", label: "Gastos", icon: TrendingDown, color: "#ef4444" },
-  { to: "/accessories", label: "Accesorios", icon: Cable, color: "#0891b2" },
+  { to: "/debtors", label: "Deudores", icon: Wallet, color: "#f43f5e", adminOnly: true },
+  { to: "/gastos", label: "Gastos", icon: TrendingDown, color: "#ef4444", adminOnly: true },
+  { to: "/accessories", label: "Accesorios", icon: Cable, color: "#0891b2", adminOnly: true },
   { to: "/crm", label: "CRM", icon: BookUser, color: "#7c3aed" },
   { to: "/agenda", label: "Agenda", icon: CalendarDays, color: "#0ea5e9" },
-  { to: "/presupuestos", label: "Presupuestos", icon: FileText, color: "#8b5cf6" },
-  { to: "/comisiones", label: "Comisiones", icon: BadgeDollarSign, color: "#f59e0b" },
-  { to: "/users", label: "Usuarios", icon: Users, color: "#64748b" },
+  { to: "/presupuestos", label: "Presupuestos", icon: FileText, color: "#8b5cf6", adminOnly: true },
+  { to: "/comisiones", label: "Comisiones", icon: BadgeDollarSign, color: "#f59e0b", adminOnly: true },
+  { to: "/users", label: "Usuarios", icon: Users, color: "#64748b", adminOnly: true },
 ];
 
 const PAGE_TITLES = {
@@ -146,6 +146,7 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
   const { dark, toggleTheme } = useTheme();
   const { count: reminderCount } = useNotifications();
+  const canSee = (item) => !item.adminOnly || user?.role === "admin";
 
   const bg = dark ? "rgba(20,20,22,0.94)" : "rgba(252,252,253,0.94)";
   const border = dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
@@ -208,7 +209,9 @@ export default function Sidebar() {
 
         <nav className="flex-1 flex flex-col">
           <div className="flex-1 space-y-5">
-            {DESKTOP_SECTIONS.map(({ label, links }) => (
+            {DESKTOP_SECTIONS.map(({ label, links }) => ({ label, links: links.filter(canSee) }))
+              .filter(({ links }) => links.length > 0)
+              .map(({ label, links }) => (
               <div key={label}>
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-base-muted px-3 mb-1.5 opacity-50">
                   {label}
@@ -311,7 +314,7 @@ export default function Sidebar() {
         }}
       >
         <div style={{ display: "flex", alignItems: "stretch", height: 56 }}>
-          {TABS.map(({ to, label, icon: Icon }) => (
+          {TABS.filter(canSee).map(({ to, label, icon: Icon }) => (
             <TabButton key={to} to={to} label={label} icon={Icon} inactive={inactive} />
           ))}
 
@@ -426,7 +429,7 @@ export default function Sidebar() {
 
             {/* App icon grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 4, padding: "4px 12px 8px" }}>
-              {SHEET_LINKS.map(({ to, label, icon: Icon, color }) => {
+              {SHEET_LINKS.filter(canSee).map(({ to, label, icon: Icon, color }) => {
                 const isActive = to === "/"
                   ? location.pathname === "/"
                   : location.pathname.startsWith(to);

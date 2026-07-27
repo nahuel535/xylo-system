@@ -32,6 +32,7 @@ import ClientDetailPage from "./pages/ClientDetailPage";
 import AgendaPage from "./pages/AgendaPage";
 import CommissionsPage from "./pages/CommissionsPage";
 import QuotesPage from "./pages/QuotesPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 
 function Layout() {
   return (
@@ -39,14 +40,15 @@ function Layout() {
       <Sidebar />
       <main className="flex-1 p-4 md:p-8 pt-20 md:pt-8 pb-24 md:pb-8">
         <Routes>
-          <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/" element={<ProtectedRoute requireAdmin><DashboardPage /></ProtectedRoute>} />
+          <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
           <Route path="/scanner" element={<ProtectedRoute><ScannerPage /></ProtectedRoute>} />
           <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
-          <Route path="/sold-products" element={<ProtectedRoute><SoldProductsPage /></ProtectedRoute>} />
+          <Route path="/sold-products" element={<ProtectedRoute requireAdmin><SoldProductsPage /></ProtectedRoute>} />
           <Route path="/sales" element={<ProtectedRoute><SalesPage /></ProtectedRoute>} />
           <Route path="/sales/:id" element={<ProtectedRoute><SaleDetailPage /></ProtectedRoute>} />
           <Route path="/sales/:id/edit" element={<ProtectedRoute requireAdmin><EditSalePage /></ProtectedRoute>} />
-          <Route path="/exchange" element={<ProtectedRoute><ExchangePage /></ProtectedRoute>} />
+          <Route path="/exchange" element={<ProtectedRoute requireAdmin><ExchangePage /></ProtectedRoute>} />
           <Route path="/products/new" element={<ProtectedRoute requireAdmin><NewProductPage /></ProtectedRoute>} />
           <Route path="/products/:id" element={<ProtectedRoute><ProductDetailPage /></ProtectedRoute>} />
           <Route path="/products/:id/edit" element={<ProtectedRoute requireAdmin><EditProductPage /></ProtectedRoute>} />
@@ -54,15 +56,15 @@ function Layout() {
           <Route path="/products/:id/label" element={<ProtectedRoute><ProductLabelPage /></ProtectedRoute>} />
           <Route path="/scan/:id" element={<ScanRedirectPage />} />
           <Route path="/users" element={<ProtectedRoute requireAdmin><UsersPage /></ProtectedRoute>} />
-          <Route path="/debtors" element={<ProtectedRoute><DebtorsPage /></ProtectedRoute>} />
-          <Route path="/gastos" element={<ProtectedRoute><GastosPage /></ProtectedRoute>} />
-          <Route path="/accessories" element={<ProtectedRoute><AccessoriesPage /></ProtectedRoute>} />
-          <Route path="/accessories/:id/label" element={<ProtectedRoute><AccessoryLabelPage /></ProtectedRoute>} />
+          <Route path="/debtors" element={<ProtectedRoute requireAdmin><DebtorsPage /></ProtectedRoute>} />
+          <Route path="/gastos" element={<ProtectedRoute requireAdmin><GastosPage /></ProtectedRoute>} />
+          <Route path="/accessories" element={<ProtectedRoute requireAdmin><AccessoriesPage /></ProtectedRoute>} />
+          <Route path="/accessories/:id/label" element={<ProtectedRoute requireAdmin><AccessoryLabelPage /></ProtectedRoute>} />
           <Route path="/crm" element={<ProtectedRoute><CRMPage /></ProtectedRoute>} />
           <Route path="/crm/:id" element={<ProtectedRoute><ClientDetailPage /></ProtectedRoute>} />
           <Route path="/agenda" element={<ProtectedRoute><AgendaPage /></ProtectedRoute>} />
-          <Route path="/comisiones" element={<ProtectedRoute><CommissionsPage /></ProtectedRoute>} />
-          <Route path="/presupuestos" element={<ProtectedRoute><QuotesPage /></ProtectedRoute>} />
+          <Route path="/comisiones" element={<ProtectedRoute requireAdmin><CommissionsPage /></ProtectedRoute>} />
+          <Route path="/presupuestos" element={<ProtectedRoute requireAdmin><QuotesPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

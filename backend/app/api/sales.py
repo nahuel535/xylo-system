@@ -10,22 +10,43 @@ from app.models.sale import Sale
 from app.models.product import Product
 from app.models.user import User
 from app.schemas.sale import SaleCreate, SaleUpdate, SaleResponse, SaleReturnRequest
-from app.core.dependencies import get_optional_user_id
+from app.core.dependencies import ensure_owner_or_admin, get_current_user, require_admin
 from app.models.client import Client, ClientInteraction, ClientReminder
 
 router = APIRouter(prefix="/sales", tags=["Sales"])
 
 
-def _sync_crm_client(db: Session, client_name: str, sale_date: date_type) -> None:
+def _sale_for_user(sale: Sale, current_user: User) -> dict:
+    data = SaleResponse.model_validate(sale).model_dump()
+    if current_user.role != "admin":
+        for field in ("purchase_price_usd_snapshot", "gross_profit_usd", "commission_usd"):
+            data.pop(field, None)
+    return data
+
+
+def _sync_crm_client(
+    db: Session,
+    client_name: str,
+    sale_date: date_type,
+    owner_user_id: int,
+) -> None:
     """Crea o actualiza el cliente en el CRM y genera los recordatorios automáticos."""
     name = client_name.strip()
     if not name:
         return
 
-    client = db.query(Client).filter(func.lower(Client.name) == name.lower()).first()
+    client = db.query(Client).filter(
+        func.lower(Client.name) == name.lower(),
+        Client.owner_user_id == owner_user_id,
+    ).first()
 
     if not client:
-        client = Client(name=name, status="client", source="venta")
+        client = Client(
+            name=name,
+            status="client",
+            source="venta",
+            owner_user_id=owner_user_id,
+        )
         db.add(client)
         db.flush()
     else:
@@ -54,8 +75,13 @@ def _sync_crm_client(db: Session, client_name: str, sale_date: date_type) -> Non
             ))
 
 
-@router.post("/", response_model=SaleResponse)
-def create_sale(request: Request, sale_data: SaleCreate, db: Session = Depends(get_db)):
+@router.post("/")
+def create_sale(
+    request: Request,
+    sale_data: SaleCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     product = db.query(Product).filter(Product.id == sale_data.product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
@@ -63,7 +89,8 @@ def create_sale(request: Request, sale_data: SaleCreate, db: Session = Depends(g
     if product.status != "in_stock":
         raise HTTPException(status_code=400, detail="El producto no está disponible para la venta")
 
-    seller = db.query(User).filter(User.id == sale_data.seller_id).first()
+    seller_id = sale_data.seller_id if current_user.role == "admin" else current_user.id
+    seller = db.query(User).filter(User.id == seller_id, User.is_active == True).first()
     if not seller:
         raise HTTPException(status_code=404, detail="Vendedor no encontrado")
 
@@ -82,7 +109,7 @@ def create_sale(request: Request, sale_data: SaleCreate, db: Session = Depends(g
 
     new_sale = Sale(
         product_id=sale_data.product_id,
-        seller_id=sale_data.seller_id,
+        seller_id=seller_id,
         sale_price_usd=sale_price,
         purchase_price_usd_snapshot=purchase_price,
         gross_profit_usd=gross_profit,
@@ -132,20 +159,25 @@ def create_sale(request: Request, sale_data: SaleCreate, db: Session = Depends(g
                 ))
                 acc.quantity -= item.quantity
 
-    user_id = get_optional_user_id(request)
-    db.add(AuditLog(entity_type="sale", entity_id=new_sale.id, user_id=user_id, action="created"))
+    db.add(AuditLog(entity_type="sale", entity_id=new_sale.id, user_id=current_user.id, action="created"))
 
     if sale_data.client_name:
-        _sync_crm_client(db, sale_data.client_name, datetime.now().date())
+        _sync_crm_client(db, sale_data.client_name, datetime.now().date(), seller_id)
 
     db.commit()
     db.refresh(new_sale)
 
-    return new_sale
+    return _sale_for_user(new_sale, current_user)
 
 
 @router.put("/{sale_id}", response_model=SaleResponse)
-def update_sale(request: Request, sale_id: int, sale_data: SaleUpdate, db: Session = Depends(get_db)):
+def update_sale(
+    request: Request,
+    sale_id: int,
+    sale_data: SaleUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
     sale = db.query(Sale).filter(Sale.id == sale_id).first()
     if not sale:
         raise HTTPException(status_code=404, detail="Venta no encontrada")
@@ -207,8 +239,7 @@ def update_sale(request: Request, sale_id: int, sale_data: SaleUpdate, db: Sessi
             if str(old_val or "") != str(new_val or ""):
                 changes[field] = {"old": str(old_val or ""), "new": str(new_val or "")}
 
-    user_id = get_optional_user_id(request)
-    db.add(AuditLog(entity_type="sale", entity_id=sale_id, user_id=user_id, action="updated", changes=changes or None))
+    db.add(AuditLog(entity_type="sale", entity_id=sale_id, user_id=current_user.id, action="updated", changes=changes or None))
 
     db.commit()
     db.refresh(sale)
@@ -216,7 +247,15 @@ def update_sale(request: Request, sale_id: int, sale_data: SaleUpdate, db: Sessi
 
 
 @router.get("/{sale_id}/history")
-def get_sale_history(sale_id: int, db: Session = Depends(get_db)):
+def get_sale_history(
+    sale_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    sale = db.query(Sale).filter(Sale.id == sale_id).first()
+    if not sale:
+        raise HTTPException(status_code=404, detail="Venta no encontrada")
+    ensure_owner_or_admin(current_user, sale.seller_id)
     logs = (
         db.query(AuditLog, User)
         .outerjoin(User, AuditLog.user_id == User.id)
@@ -236,17 +275,28 @@ def get_sale_history(sale_id: int, db: Session = Depends(get_db)):
     ]
 
 
-@router.get("/", response_model=list[SaleResponse])
-def list_sales(db: Session = Depends(get_db)):
-    return db.query(Sale).order_by(Sale.id.desc()).all()
+@router.get("/")
+def list_sales(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    query = db.query(Sale)
+    if current_user.role != "admin":
+        query = query.filter(Sale.seller_id == current_user.id)
+    return [_sale_for_user(sale, current_user) for sale in query.order_by(Sale.id.desc()).all()]
 
 
-@router.get("/{sale_id}", response_model=SaleResponse)
-def get_sale(sale_id: int, db: Session = Depends(get_db)):
+@router.get("/{sale_id}")
+def get_sale(
+    sale_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     sale = db.query(Sale).filter(Sale.id == sale_id).first()
     if not sale:
         raise HTTPException(status_code=404, detail="Venta no encontrada")
-    return sale
+    ensure_owner_or_admin(current_user, sale.seller_id)
+    return _sale_for_user(sale, current_user)
 
 
 @router.post("/{sale_id}/return", response_model=SaleResponse)
@@ -255,6 +305,7 @@ def return_sale(
     sale_id: int,
     data: SaleReturnRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
 ):
     from datetime import date as date_type
     sale = db.query(Sale).filter(Sale.id == sale_id).first()
@@ -271,9 +322,8 @@ def return_sale(
     if product:
         product.status = "in_stock"
 
-    user_id = get_optional_user_id(request)
     db.add(AuditLog(
-        entity_type="sale", entity_id=sale_id, user_id=user_id,
+        entity_type="sale", entity_id=sale_id, user_id=current_user.id,
         action="returned", changes={"reason": data.reason},
     ))
 

@@ -5,8 +5,9 @@ from app.db.session import get_db
 from app.models.expense import Expense
 from app.schemas.expense import ExpenseCreate, ExpenseUpdate, ExpenseResponse
 from typing import List, Optional
+from app.core.dependencies import require_admin
 
-router = APIRouter(prefix="/expenses", tags=["Expenses"])
+router = APIRouter(prefix="/expenses", tags=["Expenses"], dependencies=[Depends(require_admin)])
 
 
 @router.get("/", response_model=List[ExpenseResponse])

@@ -6,6 +6,8 @@ from typing import Optional
 
 from app.db.session import get_db
 from app.models.client import Client, ClientInteraction, ClientReminder
+from app.models.user import User
+from app.core.dependencies import ensure_owner_or_admin, get_current_user
 from app.schemas.client import (
     ClientCreate, ClientUpdate, ClientResponse,
     ClientInteractionCreate, ClientInteractionResponse,
@@ -30,13 +32,18 @@ REMINDER_TEMPLATES = {
 # ── Recordatorios globales ──────────────────────────────────────────────────
 
 @router.get("/reminders/count")
-def get_reminder_count(db: Session = Depends(get_db)):
+def get_reminder_count(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     today = date.today()
-    count = (
-        db.query(ClientReminder)
-        .filter(ClientReminder.status == "pending", ClientReminder.due_date <= today)
-        .count()
-    )
+    query = db.query(ClientReminder).join(Client, ClientReminder.client_id == Client.id)
+    if current_user.role != "admin":
+        query = query.filter(Client.owner_user_id == current_user.id)
+    count = query.filter(
+        ClientReminder.status == "pending",
+        ClientReminder.due_date <= today,
+    ).count()
     return {"count": count}
 
 
@@ -44,14 +51,12 @@ def get_reminder_count(db: Session = Depends(get_db)):
 def list_reminders(
     db: Session = Depends(get_db),
     status: Optional[str] = Query("pending"),
+    current_user: User = Depends(get_current_user),
 ):
-    rows = (
-        db.query(ClientReminder, Client)
-        .join(Client, ClientReminder.client_id == Client.id)
-        .filter(ClientReminder.status == status)
-        .order_by(ClientReminder.due_date.asc())
-        .all()
-    )
+    query = db.query(ClientReminder, Client).join(Client, ClientReminder.client_id == Client.id)
+    if current_user.role != "admin":
+        query = query.filter(Client.owner_user_id == current_user.id)
+    rows = query.filter(ClientReminder.status == status).order_by(ClientReminder.due_date.asc()).all()
     return [
         ReminderWithClientResponse(
             id=r.id,
@@ -71,10 +76,17 @@ def list_reminders(
 
 
 @router.put("/reminders/{reminder_id}", response_model=ReminderResponse)
-def update_reminder(reminder_id: int, data: ReminderUpdate, db: Session = Depends(get_db)):
+def update_reminder(
+    reminder_id: int,
+    data: ReminderUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     reminder = db.query(ClientReminder).filter(ClientReminder.id == reminder_id).first()
     if not reminder:
         raise HTTPException(status_code=404, detail="Recordatorio no encontrado")
+    client = db.query(Client).filter(Client.id == reminder.client_id).first()
+    ensure_owner_or_admin(current_user, client.owner_user_id if client else None)
     reminder.status = data.status
     db.commit()
     db.refresh(reminder)
@@ -89,8 +101,11 @@ def list_clients(
     search: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     needs_followup: Optional[bool] = Query(None),
+    current_user: User = Depends(get_current_user),
 ):
     q = db.query(Client)
+    if current_user.role != "admin":
+        q = q.filter(Client.owner_user_id == current_user.id)
     if search:
         like = f"%{search}%"
         q = q.filter(or_(
@@ -107,8 +122,12 @@ def list_clients(
 
 
 @router.post("/", response_model=ClientResponse)
-def create_client(data: ClientCreate, db: Session = Depends(get_db)):
-    client = Client(**data.model_dump())
+def create_client(
+    data: ClientCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    client = Client(owner_user_id=current_user.id, **data.model_dump())
     db.add(client)
     db.commit()
     db.refresh(client)
@@ -116,18 +135,29 @@ def create_client(data: ClientCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/{client_id}", response_model=ClientResponse)
-def get_client(client_id: int, db: Session = Depends(get_db)):
+def get_client(
+    client_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    ensure_owner_or_admin(current_user, client.owner_user_id)
     return client
 
 
 @router.put("/{client_id}", response_model=ClientResponse)
-def update_client(client_id: int, data: ClientUpdate, db: Session = Depends(get_db)):
+def update_client(
+    client_id: int,
+    data: ClientUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    ensure_owner_or_admin(current_user, client.owner_user_id)
     for field, value in data.model_dump(exclude_unset=True).items():
         setattr(client, field, value)
     db.commit()
@@ -136,10 +166,15 @@ def update_client(client_id: int, data: ClientUpdate, db: Session = Depends(get_
 
 
 @router.delete("/{client_id}")
-def delete_client(client_id: int, db: Session = Depends(get_db)):
+def delete_client(
+    client_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    ensure_owner_or_admin(current_user, client.owner_user_id)
     db.delete(client)
     db.commit()
     return {"message": "Cliente eliminado"}
@@ -148,10 +183,16 @@ def delete_client(client_id: int, db: Session = Depends(get_db)):
 # ── Interacciones ───────────────────────────────────────────────────────────
 
 @router.post("/{client_id}/interactions", response_model=ClientInteractionResponse)
-def add_interaction(client_id: int, data: ClientInteractionCreate, db: Session = Depends(get_db)):
+def add_interaction(
+    client_id: int,
+    data: ClientInteractionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    ensure_owner_or_admin(current_user, client.owner_user_id)
 
     interaction = ClientInteraction(client_id=client_id, **data.model_dump())
     db.add(interaction)
@@ -184,7 +225,16 @@ def add_interaction(client_id: int, data: ClientInteractionCreate, db: Session =
 
 
 @router.delete("/{client_id}/interactions/{interaction_id}")
-def delete_interaction(client_id: int, interaction_id: int, db: Session = Depends(get_db)):
+def delete_interaction(
+    client_id: int,
+    interaction_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    ensure_owner_or_admin(current_user, client.owner_user_id)
     interaction = db.query(ClientInteraction).filter(
         ClientInteraction.id == interaction_id,
         ClientInteraction.client_id == client_id,
@@ -192,7 +242,6 @@ def delete_interaction(client_id: int, interaction_id: int, db: Session = Depend
     if not interaction:
         raise HTTPException(status_code=404, detail="Interacción no encontrada")
     db.delete(interaction)
-    client = db.query(Client).filter(Client.id == client_id).first()
     if client:
         remaining = (
             db.query(ClientInteraction)
@@ -208,13 +257,18 @@ def delete_interaction(client_id: int, interaction_id: int, db: Session = Depend
 # ── Ventas por cliente (match por nombre) ───────────────────────────────────
 
 @router.get("/{client_id}/sales")
-def get_client_sales(client_id: int, db: Session = Depends(get_db)):
+def get_client_sales(
+    client_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     from app.models.sale import Sale
     from app.models.product import Product
 
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    ensure_owner_or_admin(current_user, client.owner_user_id)
 
     rows = (
         db.query(Sale, Product)
@@ -224,6 +278,9 @@ def get_client_sales(client_id: int, db: Session = Depends(get_db)):
         .limit(20)
         .all()
     )
+
+    if current_user.role != "admin":
+        rows = [(sale, product) for sale, product in rows if sale.seller_id == current_user.id]
 
     total_usd = sum(float(s.sale_price_usd) for s, _ in rows)
 
@@ -237,7 +294,6 @@ def get_client_sales(client_id: int, db: Session = Depends(get_db)):
                 "storage": p.storage,
                 "color": p.color,
                 "sale_price_usd": float(s.sale_price_usd),
-                "gross_profit_usd": float(s.gross_profit_usd),
                 "sale_date": s.sale_date,
             }
             for s, p in rows
@@ -248,10 +304,16 @@ def get_client_sales(client_id: int, db: Session = Depends(get_db)):
 # ── Recordatorios por cliente ───────────────────────────────────────────────
 
 @router.post("/{client_id}/reminders", response_model=ReminderResponse)
-def create_reminder(client_id: int, data: ReminderCreate, db: Session = Depends(get_db)):
+def create_reminder(
+    client_id: int,
+    data: ReminderCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client:
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    ensure_owner_or_admin(current_user, client.owner_user_id)
     reminder = ClientReminder(client_id=client_id, **data.model_dump())
     db.add(reminder)
     db.commit()
