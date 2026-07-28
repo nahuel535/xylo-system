@@ -30,7 +30,7 @@ export default function ProductsPage() {
           api.get("/products/"),
           api.get("/exchange-rates/active"),
         ]);
-        setProducts(productsRes.data.filter((p) => p.status === "in_stock"));
+        setProducts(productsRes.data.filter((p) => ["in_stock", "reserved"].includes(p.status)));
         setExchange(exchangeRes.data);
       } catch (error) {
         console.error("Error cargando productos:", error);
@@ -197,6 +197,11 @@ export default function ProductsPage() {
                     <Link to={`/products/${product.id}`} className="text-xylo-500 hover:text-xylo-600 hover:underline font-medium">
                       {product.model}
                     </Link>
+                    {product.status === "reserved" && (
+                      <span className="block w-fit mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">
+                        Reservado · {product.reserved_for}
+                      </span>
+                    )}
                   </td>
                   <td className="px-5 py-3.5 text-base-text">{product.storage}</td>
                   <td className="px-5 py-3.5 text-base-text">{product.color}</td>
@@ -247,6 +252,9 @@ export default function ProductsPage() {
                 <div>
                   <p className="font-semibold text-xylo-500">{product.model}</p>
                   <p className="text-xs text-base-muted">{product.storage} · {product.color}</p>
+                  {product.status === "reserved" && (
+                    <p className="text-[10px] font-semibold text-amber-600 mt-1">Reservado · {product.reserved_for}</p>
+                  )}
                 </div>
                 {product.battery_health && (
                   <BatteryRing value={product.battery_health} />

@@ -86,7 +86,11 @@ def create_sale(
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
-    if product.status != "in_stock":
+    can_sell_reserved = (
+        product.status == "reserved"
+        and (current_user.role == "admin" or product.reserved_by == current_user.id)
+    )
+    if product.status != "in_stock" and not can_sell_reserved:
         raise HTTPException(status_code=400, detail="El producto no está disponible para la venta")
 
     seller_id = sale_data.seller_id if current_user.role == "admin" else current_user.id
@@ -140,6 +144,10 @@ def create_sale(
         db.add(new_payment)
 
     product.status = "sold"
+    product.reserved_for = None
+    product.reserved_until = None
+    product.reservation_notes = None
+    product.reserved_by = None
 
     # Accesorios opcionales incluidos en esta venta
     if sale_data.accessories:

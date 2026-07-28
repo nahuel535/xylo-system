@@ -35,6 +35,7 @@ import QuotesPage from "./pages/QuotesPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import AdminActivityPage from "./pages/AdminActivityPage";
 import PrintQuotePage from "./pages/PrintQuotePage";
+import AfterSalesPage from "./pages/AfterSalesPage";
 
 function Layout() {
   return (
@@ -69,6 +70,7 @@ function Layout() {
           <Route path="/comisiones" element={<ProtectedRoute requireAdmin><CommissionsPage /></ProtectedRoute>} />
           <Route path="/presupuestos" element={<ProtectedRoute><QuotesPage /></ProtectedRoute>} />
           <Route path="/presupuestos/:id/imprimir" element={<ProtectedRoute><PrintQuotePage /></ProtectedRoute>} />
+          <Route path="/after-sales" element={<ProtectedRoute><AfterSalesPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>

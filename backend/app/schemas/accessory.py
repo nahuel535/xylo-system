@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional, List
 from decimal import Decimal
@@ -9,6 +9,7 @@ class AccessoryCreate(BaseModel):
     category: str
     brand: Optional[str] = None
     quantity: int = 0
+    min_stock: int = Field(default=3, ge=0)
     purchase_price_usd: Decimal = Decimal("0.00")
     sale_price_usd: Decimal = Decimal("0.00")
     supplier: Optional[str] = None
@@ -19,6 +20,7 @@ class AccessoryUpdate(BaseModel):
     name: str
     category: str
     brand: Optional[str] = None
+    min_stock: int = Field(default=3, ge=0)
     purchase_price_usd: Decimal = Decimal("0.00")
     sale_price_usd: Decimal = Decimal("0.00")
     supplier: Optional[str] = None
@@ -31,6 +33,7 @@ class AccessoryResponse(BaseModel):
     category: str
     brand: Optional[str]
     quantity: int
+    min_stock: int
     purchase_price_usd: Decimal
     sale_price_usd: Decimal
     supplier: Optional[str]

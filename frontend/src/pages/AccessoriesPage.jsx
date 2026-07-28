@@ -15,15 +15,16 @@ const blankForm = {
   category: "",
   brand: "",
   quantity: "",
+  min_stock: "3",
   purchase_price_usd: "",
   sale_price_usd: "",
   supplier: "",
   notes: "",
 };
 
-function stockColor(qty) {
+function stockColor(qty, minStock) {
   if (qty === 0) return { bg: "bg-red-100 dark:bg-red-950/40", text: "text-red-600 dark:text-red-400" };
-  if (qty <= 5) return { bg: "bg-yellow-100 dark:bg-yellow-950/40", text: "text-yellow-600 dark:text-yellow-400" };
+  if (qty <= minStock) return { bg: "bg-yellow-100 dark:bg-yellow-950/40", text: "text-yellow-600 dark:text-yellow-400" };
   return { bg: "bg-emerald-100 dark:bg-emerald-950/40", text: "text-emerald-600 dark:text-emerald-400" };
 }
 
@@ -92,6 +93,7 @@ export default function AccessoriesPage() {
       category: acc.category,
       brand: acc.brand || "",
       quantity: "",
+      min_stock: String(acc.min_stock ?? 3),
       purchase_price_usd: acc.purchase_price_usd,
       sale_price_usd: acc.sale_price_usd,
       supplier: acc.supplier || "",
@@ -121,6 +123,7 @@ export default function AccessoriesPage() {
         category: form.category.trim(),
         brand: form.brand.trim() || null,
         quantity: editing ? undefined : Number(form.quantity) || 0,
+        min_stock: Number(form.min_stock) || 0,
         purchase_price_usd: Number(form.purchase_price_usd) || 0,
         sale_price_usd: Number(form.sale_price_usd) || 0,
         supplier: form.supplier.trim() || null,
@@ -272,7 +275,36 @@ export default function AccessoriesPage() {
                     />
                   </div>
                 )}
+                {editing && (
+                  <div>
+                    <label className="block text-xs font-medium text-base-muted mb-1.5">Stock mínimo</label>
+                    <input
+                      name="min_stock"
+                      value={form.min_stock}
+                      onChange={handleChange}
+                      type="number"
+                      min="0"
+                      placeholder="3"
+                      className={inputClass}
+                    />
+                  </div>
+                )}
               </div>
+
+              {!editing && (
+                <div>
+                  <label className="block text-xs font-medium text-base-muted mb-1.5">Stock mínimo para alerta</label>
+                  <input
+                    name="min_stock"
+                    value={form.min_stock}
+                    onChange={handleChange}
+                    type="number"
+                    min="0"
+                    placeholder="3"
+                    className={inputClass}
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -380,7 +412,7 @@ export default function AccessoriesPage() {
           ) : (
             <div className="space-y-3">
               {accessories.map((acc) => {
-                const sc = stockColor(acc.quantity);
+                const sc = stockColor(acc.quantity, acc.min_stock);
                 const margin = acc.sale_price_usd > 0 && acc.purchase_price_usd > 0
                   ? ((Number(acc.sale_price_usd) - Number(acc.purchase_price_usd)) / Number(acc.purchase_price_usd) * 100).toFixed(0)
                   : null;
@@ -415,6 +447,7 @@ export default function AccessoriesPage() {
                               {acc.quantity === 0 && <AlertCircle size={11} />}
                               {acc.quantity} en stock
                             </span>
+                            <span className="text-xs text-base-muted">Mínimo: {acc.min_stock}</span>
                             <span className="text-xs text-base-muted">
                               Costo: <span className="font-semibold text-base-text">USD {fmt(acc.purchase_price_usd)}</span>
                             </span>

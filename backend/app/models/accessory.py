@@ -11,6 +11,7 @@ class Accessory(Base):
     category = Column(String, nullable=False)
     brand = Column(String, nullable=True)
     quantity = Column(Integer, default=0, nullable=False)
+    min_stock = Column(Integer, default=3, nullable=False, server_default="3")
     purchase_price_usd = Column(Numeric(10, 2), default=0, nullable=False)
     sale_price_usd = Column(Numeric(10, 2), default=0, nullable=False)
     supplier = Column(String, nullable=True)

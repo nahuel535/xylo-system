@@ -75,6 +75,10 @@ class ProductResponse(BaseModel):
     supplier: Optional[str]
     notes: Optional[str]
     status: str
+    reserved_for: Optional[str]
+    reserved_until: Optional[datetime]
+    reservation_notes: Optional[str]
+    reserved_by: Optional[int]
     photo_url: Optional[str]
     gallery_urls: Optional[List[str]]
     created_by: Optional[int]

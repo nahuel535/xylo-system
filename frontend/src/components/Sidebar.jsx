@@ -2,7 +2,7 @@ import {
   Home, Package, PackagePlus, ShoppingBag,
   ReceiptText, TrendingUp, ScanLine, LogOut, Sun, Moon,
   Users, Wallet, LayoutGrid, TrendingDown, Cable, BookUser, CalendarDays,
-  BadgeDollarSign, FileText, History,
+  BadgeDollarSign, FileText, History, ShieldAlert,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -33,6 +33,7 @@ const DESKTOP_SECTIONS = [
       { to: "/crm", label: "CRM", icon: BookUser },
       { to: "/agenda", label: "Agenda", icon: CalendarDays },
       { to: "/presupuestos", label: "Presupuestos", icon: FileText },
+      { to: "/after-sales", label: "Posventa", icon: ShieldAlert },
       { to: "/comisiones", label: "Comisiones", icon: BadgeDollarSign, adminOnly: true },
     ],
   },
@@ -66,6 +67,7 @@ const SHEET_LINKS = [
   { to: "/crm", label: "CRM", icon: BookUser, color: "#7c3aed" },
   { to: "/agenda", label: "Agenda", icon: CalendarDays, color: "#0ea5e9" },
   { to: "/presupuestos", label: "Presupuestos", icon: FileText, color: "#8b5cf6" },
+  { to: "/after-sales", label: "Posventa", icon: ShieldAlert, color: "#f97316" },
   { to: "/comisiones", label: "Comisiones", icon: BadgeDollarSign, color: "#f59e0b", adminOnly: true },
   { to: "/users", label: "Usuarios", icon: Users, color: "#64748b", adminOnly: true },
   { to: "/admin/activity", label: "Auditoría", icon: History, color: "#64748b", adminOnly: true },
@@ -84,6 +86,7 @@ const PAGE_TITLES = {
   "/crm": "CRM",
   "/agenda": "Agenda",
   "/presupuestos": "Presupuestos",
+  "/after-sales": "Posventa",
   "/comisiones": "Comisiones",
   "/users": "Usuarios",
   "/admin/activity": "Auditoría",

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -11,7 +12,8 @@ from app.models.sale_payment import SalePayment
 from app.models.audit_log import AuditLog
 from app.schemas.product import ProductCreate, ProductResponse, ProductUpdate
 from app.models.user import User
-from app.core.dependencies import get_optional_user_id, require_admin
+from app.core.dependencies import get_current_user, get_optional_user_id, require_admin
+from app.schemas.after_sales import ReservationCreate
 from app.utils.qr import generate_product_qr
 
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -21,6 +23,16 @@ def _product_for_user(product: Product, current_user: Optional[User]) -> dict:
     data = ProductResponse.model_validate(product).model_dump()
     if not current_user or current_user.role != "admin":
         for field in ("purchase_price_usd", "purchase_date", "supplier", "created_by"):
+            data.pop(field, None)
+    can_see_reservation = (
+        current_user
+        and (
+            current_user.role == "admin"
+            or product.reserved_by == current_user.id
+        )
+    )
+    if not can_see_reservation:
+        for field in ("reserved_for", "reserved_until", "reservation_notes", "reserved_by"):
             data.pop(field, None)
     return data
 
@@ -118,6 +130,76 @@ def update_product(
     db.commit()
     db.refresh(product)
     return product
+
+
+@router.post("/{product_id}/reserve")
+def reserve_product(
+    product_id: int,
+    data: ReservationCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    if product.status != "in_stock":
+        raise HTTPException(status_code=400, detail="El producto no está disponible para reservar")
+    comparison_now = (
+        datetime.now(data.reserved_until.tzinfo)
+        if data.reserved_until.tzinfo
+        else datetime.now()
+    )
+    if data.reserved_until <= comparison_now:
+        raise HTTPException(status_code=400, detail="La fecha límite debe ser futura")
+
+    product.status = "reserved"
+    product.reserved_for = " ".join(data.client_name.split())
+    product.reserved_until = data.reserved_until
+    product.reservation_notes = data.notes
+    product.reserved_by = current_user.id
+    db.add(AuditLog(
+        entity_type="product",
+        entity_id=product.id,
+        user_id=current_user.id,
+        action="reserved",
+        changes={
+            "reserved_for": {"new": product.reserved_for},
+            "reserved_until": {"new": data.reserved_until.isoformat()},
+        },
+    ))
+    db.commit()
+    db.refresh(product)
+    return _product_for_user(product, current_user)
+
+
+@router.post("/{product_id}/release")
+def release_product(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    product = db.query(Product).filter(Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    if product.status != "reserved":
+        raise HTTPException(status_code=400, detail="El producto no está reservado")
+    if current_user.role != "admin" and product.reserved_by != current_user.id:
+        raise HTTPException(status_code=403, detail="Solo quien reservó el producto puede liberarlo")
+
+    product.status = "in_stock"
+    product.reserved_for = None
+    product.reserved_until = None
+    product.reservation_notes = None
+    product.reserved_by = None
+    db.add(AuditLog(
+        entity_type="product",
+        entity_id=product.id,
+        user_id=current_user.id,
+        action="reservation_released",
+    ))
+    db.commit()
+    db.refresh(product)
+    return _product_for_user(product, current_user)
 
 
 @router.delete("/{product_id}")
