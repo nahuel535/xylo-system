@@ -1946,8 +1946,10 @@ function FilterChip({ active, onClick, children }) {
 //  Product Card (grid view)
 // ─────────────────────────────────────────────────────────────────────────────
 function ProductCard({ product, exchange }) {
+  const price = Number(product.suggested_sale_price_usd);
+  const referencePrice = Math.round(price * 1.2);
   const ars = exchange
-    ? (Number(product.suggested_sale_price_usd) * Number(exchange.sell_rate_ars)).toLocaleString("es-AR", { maximumFractionDigits: 0 })
+    ? (price * Number(exchange.sell_rate_ars)).toLocaleString("es-AR", { maximumFractionDigits: 0 })
     : null;
 
   const batteryColor = !product.battery_health ? T.textMuted : product.battery_health >= 85 ? "#16a34a" : product.battery_health >= 70 ? "#d97706" : "#dc2626";
@@ -2078,12 +2080,17 @@ function ProductCard({ product, exchange }) {
           <div style={{ marginTop: "auto", paddingTop: "14px", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               {product.is_offer && (
-                <p className="product-card-original-price" style={{ fontSize: "11px", color: "#ef4444", fontWeight: 700, lineHeight: 1, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                  Beneficio estimado del {ESTIMATED_BENEFIT_PERCENT}%
-                </p>
+                <>
+                  <p className="product-card-reference-price" style={{ fontSize: "12px", color: T.textMuted, textDecoration: "line-through", lineHeight: 1, marginBottom: "5px" }}>
+                    Precio de referencia · USD {referencePrice.toLocaleString("es-AR")}
+                  </p>
+                  <p className="product-card-benefit" style={{ fontSize: "10px", color: "#ef4444", fontWeight: 700, lineHeight: 1, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    Beneficio estimado del {ESTIMATED_BENEFIT_PERCENT}%
+                  </p>
+                </>
               )}
               <p className="product-card-price" style={{ fontSize: "20px", fontWeight: 700, color: product.is_offer ? "#ef4444" : T.text, letterSpacing: "-0.04em", lineHeight: 1 }}>
-                USD {Number(product.suggested_sale_price_usd).toLocaleString("es-AR")}
+                USD {price.toLocaleString("es-AR")}
               </p>
               {ars && <p className="product-card-ars" style={{ fontSize: "12px", color: T.textMuted, marginTop: "3px" }}>ARS {ars}</p>}
             </div>
@@ -2592,6 +2599,7 @@ function Footer() {
 // ─────────────────────────────────────────────────────────────────────────────
 function OfferPopup({ product, exchange, onClose }) {
   const price = Number(product.suggested_sale_price_usd);
+  const referencePrice = Math.round(price * 1.2);
   const ars = exchange ? Math.round(price * Number(exchange.sell_rate_ars)).toLocaleString("es-AR") : null;
 
   return (
@@ -2688,6 +2696,9 @@ function OfferPopup({ product, exchange, onClose }) {
           {/* Price row */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
             <div>
+              <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", textDecoration: "line-through", lineHeight: 1, marginBottom: "6px" }}>
+                Precio de referencia · USD {referencePrice.toLocaleString("es-AR")}
+              </p>
               <p style={{ fontSize: "10px", color: ACCENT, fontWeight: 700, lineHeight: 1, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
                 Beneficio estimado del {ESTIMATED_BENEFIT_PERCENT}%
               </p>
