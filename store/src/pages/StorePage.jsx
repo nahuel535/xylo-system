@@ -9,7 +9,8 @@ const WHATSAPP = "5493518916482";
 const ACCENT = "#00C896";
 const NEW_DAYS = 7; // días para mostrar "Nuevo ingreso"
 const OFFER_POPUP_DELAY_MS = 10000;
-const OFFER_POPUP_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
+const OFFER_POPUP_SEEN_KEY = "xylo_offer_seen_once";
+const ESTIMATED_BENEFIT_PERCENT = 20;
 
 function waLink(msg = "") {
   const text = msg ? `?text=${encodeURIComponent(msg)}` : "";
@@ -2078,7 +2079,7 @@ function ProductCard({ product, exchange }) {
             <div>
               {product.is_offer && (
                 <p className="product-card-original-price" style={{ fontSize: "11px", color: "#ef4444", fontWeight: 700, lineHeight: 1, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                  Precio oportunidad
+                  Beneficio estimado del {ESTIMATED_BENEFIT_PERCENT}%
                 </p>
               )}
               <p className="product-card-price" style={{ fontSize: "20px", fontWeight: 700, color: product.is_offer ? "#ef4444" : T.text, letterSpacing: "-0.04em", lineHeight: 1 }}>
@@ -2688,10 +2689,13 @@ function OfferPopup({ product, exchange, onClose }) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
             <div>
               <p style={{ fontSize: "10px", color: ACCENT, fontWeight: 700, lineHeight: 1, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                Precio oportunidad
+                Beneficio estimado del {ESTIMATED_BENEFIT_PERCENT}%
               </p>
               <p style={{ fontSize: "32px", fontWeight: 800, color: ACCENT, letterSpacing: "-0.04em", lineHeight: 1, fontFamily: T.heading }}>
                 USD {price.toLocaleString("es-AR")}
+              </p>
+              <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.5)", marginTop: "7px" }}>
+                Referencia comercial, no precio anterior.
               </p>
               {ars && (
                 <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>
@@ -3092,8 +3096,8 @@ export default function StorePage() {
         const inStock = prodRes.data.filter((p) => p.status === "in_stock" && p.category?.toLowerCase() === "iphone");
         setProducts(inStock);
         setExchange(exRes.data);
-        const lastSeen = Number(localStorage.getItem("xylo_offer_seen_at") || 0);
-        if (Date.now() - lastSeen > OFFER_POPUP_COOLDOWN_MS) {
+        const hasSeenOffer = localStorage.getItem(OFFER_POPUP_SEEN_KEY) === "1";
+        if (!hasSeenOffer) {
           const offers = inStock.filter((p) => p.is_offer && p.photo_url);
           if (offers.length > 0) {
             const pick = offers[Math.floor(Math.random() * offers.length)];
@@ -3142,7 +3146,7 @@ export default function StorePage() {
             exchange={exchange}
             onClose={() => {
               setOfferPopup(null);
-              localStorage.setItem("xylo_offer_seen_at", String(Date.now()));
+              localStorage.setItem(OFFER_POPUP_SEEN_KEY, "1");
             }}
           />
         )}
