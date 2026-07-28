@@ -39,12 +39,21 @@ function isCrawler(ua = "") {
   );
 }
 
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 async function fetchProduct(id) {
   try {
     const res = await fetch(`${API_BASE}/products/${id}`);
     if (!res.ok) return null;
     const data = await res.json();
-    return data.status === "in_stock" ? data : null;
+    return ["in_stock", "reserved"].includes(data.status) ? data : null;
   } catch {
     return null;
   }
@@ -63,26 +72,49 @@ function buildProductHTML(product, id) {
   const description = [batteryText, price].filter(Boolean).join(" · ");
   const image = product.photo_url || `${STORE_URL}/logo.png`;
   const url = `${STORE_URL}/producto/${id}`;
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: title,
+    image: [product.photo_url, ...(product.gallery_urls || [])].filter(Boolean),
+    sku: String(product.id),
+    brand: { "@type": "Brand", name: product.brand || "Apple" },
+    itemCondition: product.condition_type?.toLowerCase().includes("nuevo")
+      ? "https://schema.org/NewCondition"
+      : "https://schema.org/UsedCondition",
+    offers: {
+      "@type": "Offer",
+      url,
+      priceCurrency: "USD",
+      price: Number(product.suggested_sale_price_usd || 0),
+      availability: product.status === "in_stock"
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    },
+  };
+  const safeSchema = JSON.stringify(schema).replaceAll("<", "\\u003c");
 
   return `<!doctype html>
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>${title} — Xylo</title>
-<meta name="description" content="${description}" />
+<title>${escapeHtml(title)} — Xylo</title>
+<meta name="description" content="${escapeHtml(description)}" />
+<link rel="canonical" href="${url}" />
 <meta property="og:type" content="product" />
 <meta property="og:url" content="${url}" />
-<meta property="og:title" content="${title} — Xylo" />
-<meta property="og:description" content="${description}" />
-<meta property="og:image" content="${image}" />
+<meta property="og:title" content="${escapeHtml(title)} — Xylo" />
+<meta property="og:description" content="${escapeHtml(description)}" />
+<meta property="og:image" content="${escapeHtml(image)}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:site_name" content="Xylo" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="${title} — Xylo" />
-<meta name="twitter:description" content="${description}" />
-<meta name="twitter:image" content="${image}" />
+<meta name="twitter:title" content="${escapeHtml(title)} — Xylo" />
+<meta name="twitter:description" content="${escapeHtml(description)}" />
+<meta name="twitter:image" content="${escapeHtml(image)}" />
+<script type="application/ld+json">${safeSchema}</script>
 </head>
 <body>
 <script>window.location.href="${url}";</script>

@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion, useInView, AnimatePresence } from "framer-motion";
-import { ChevronLeft, Smartphone } from "lucide-react";
+import { AlertCircle, Check, ChevronLeft, RefreshCw, ShieldCheck, Smartphone } from "lucide-react";
 import api from "../services/api";
 import { XyloLogo, WhatsAppIcon } from "../components/Icons";
-import { trackViewContent, trackContact } from "../utils/metaPixel";
+import { trackViewContent, trackContact, trackReservationRequest } from "../utils/metaPixel";
 
 const WHATSAPP = "5493518916482";
 const ACCENT = "#00C896";
+const GALLERY_ENABLED = false;
 
 const T = {
   heading: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -111,6 +112,10 @@ function StickyBuyBar({ product, exchange, visible }) {
           </div>
           <motion.a
             href={waLink(product)}
+            onClick={() => {
+              trackContact(product);
+              if (product.status === "in_stock") trackReservationRequest(product);
+            }}
             target="_blank" rel="noreferrer"
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
@@ -124,7 +129,7 @@ function StickyBuyBar({ product, exchange, visible }) {
             }}
           >
             <WhatsAppIcon size={15} />
-            Me interesa
+            {product.status === "reserved" ? "Consultar alternativas" : "Me interesa"}
           </motion.a>
         </motion.div>
       )}
@@ -196,15 +201,45 @@ function Reveal({ children, style }) {
 function LoadingState() {
   return (
     <div style={{ minHeight: "100vh", background: T.bg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: T.body }}>
-      <motion.p animate={{ opacity: [0.4, 0.8, 0.4] }} transition={{ duration: 1.8, repeat: Infinity }}
-        style={{ fontSize: "15px", color: T.textSec }}>
-        Cargando...
-      </motion.p>
+      <div style={{ width: "min(560px, calc(100% - 40px))" }}>
+        <motion.div
+          animate={{ opacity: [0.35, 0.75, 0.35] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+          style={{ height: "300px", borderRadius: "24px", background: T.surface, marginBottom: "28px" }}
+        />
+        <div style={{ height: "24px", width: "48%", borderRadius: "8px", background: T.surface, margin: "0 auto 12px" }} />
+        <div style={{ height: "14px", width: "32%", borderRadius: "8px", background: T.surface, margin: "0 auto" }} />
+        <p style={{ color: T.textSec, fontSize: "13px", textAlign: "center", marginTop: "28px" }}>
+          Cargando información del equipo…
+        </p>
+      </div>
     </div>
   );
 }
 
-function UnavailableState() {
+function ErrorState({ onRetry }) {
+  return (
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: T.body, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "16px", padding: "24px", textAlign: "center" }}>
+      <AlertCircle size={48} strokeWidth={1.2} color={T.textMuted} />
+      <p style={{ fontFamily: T.heading, fontSize: "24px", fontWeight: 600, color: T.text }}>
+        No pudimos cargar este equipo
+      </p>
+      <p style={{ maxWidth: "420px", fontSize: "15px", color: T.textSec, lineHeight: 1.6 }}>
+        Puede ser una demora momentánea. Volvé a intentar o consultanos directamente.
+      </p>
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
+        <button onClick={onRetry} style={{ display: "inline-flex", alignItems: "center", gap: "7px", border: 0, borderRadius: "980px", background: T.text, color: "#fff", padding: "12px 20px", cursor: "pointer", fontFamily: T.body, fontWeight: 600 }}>
+          <RefreshCw size={14} /> Reintentar
+        </button>
+        <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "7px", borderRadius: "980px", background: "#25d366", color: "#fff", padding: "12px 20px", textDecoration: "none", fontWeight: 600 }}>
+          <WhatsAppIcon size={15} /> WhatsApp
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function UnavailableState({ alternatives = [] }) {
   return (
     <div style={{ minHeight: "100vh", background: T.bg, fontFamily: T.body, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "16px", padding: "24px", textAlign: "center" }}>
       <div style={{ opacity: 0.15, marginBottom: "8px" }}>
@@ -217,8 +252,94 @@ function UnavailableState() {
       <Link to="/" style={{ marginTop: "8px", color: ACCENT, fontSize: "15px", textDecoration: "none", fontWeight: 500 }}>
         Ver stock disponible →
       </Link>
+      {alternatives.length > 0 && (
+        <div style={{ width: "min(680px, 100%)", marginTop: "28px" }}>
+          <p style={{ fontSize: "13px", color: T.textMuted, marginBottom: "12px" }}>Equipos disponibles ahora</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "10px" }}>
+            {alternatives.slice(0, 3).map((item) => (
+              <Link key={item.id} to={`/producto/${item.id}`} style={{ border: `1px solid ${T.border}`, borderRadius: "14px", padding: "14px", color: T.text, textDecoration: "none", background: T.card }}>
+                <p style={{ fontWeight: 600, fontSize: "14px" }}>{item.model}</p>
+                <p style={{ color: T.textSec, fontSize: "12px", marginTop: "3px" }}>{item.storage || "Consultar capacidad"}</p>
+                <p style={{ color: ACCENT, fontWeight: 700, fontSize: "14px", marginTop: "8px" }}>USD {Number(item.suggested_sale_price_usd).toLocaleString("es-AR")}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+function useProductSeo(product) {
+  useEffect(() => {
+    if (!product) return undefined;
+    const titleParts = [product.model, product.storage, product.color].filter(Boolean);
+    const title = `${titleParts.join(" · ")} — Xylo`;
+    const description = [
+      product.battery_health ? `Batería ${product.battery_health}%` : null,
+      product.suggested_sale_price_usd
+        ? `USD ${Number(product.suggested_sale_price_usd).toLocaleString("es-AR")}`
+        : null,
+      product.status === "reserved" ? "Reservado" : "Disponible",
+    ].filter(Boolean).join(" · ");
+    const canonicalUrl = `https://www.xylobox.store/producto/${product.id}`;
+
+    document.title = title;
+    setMeta("name", "description", description);
+    setMeta("property", "og:type", "product");
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", description);
+    setMeta("property", "og:url", canonicalUrl);
+    if (product.photo_url) setMeta("property", "og:image", product.photo_url);
+    setMeta("name", "twitter:title", title);
+    setMeta("name", "twitter:description", description);
+
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.rel = "canonical";
+      document.head.appendChild(canonical);
+    }
+    canonical.href = canonicalUrl;
+
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: titleParts.join(" · "),
+      image: [product.photo_url, ...(product.gallery_urls || [])].filter(Boolean),
+      sku: String(product.id),
+      brand: { "@type": "Brand", name: product.brand || "Apple" },
+      itemCondition: product.condition_type?.toLowerCase().includes("nuevo")
+        ? "https://schema.org/NewCondition"
+        : "https://schema.org/UsedCondition",
+      offers: {
+        "@type": "Offer",
+        url: canonicalUrl,
+        priceCurrency: "USD",
+        price: Number(product.suggested_sale_price_usd || 0),
+        availability: product.status === "in_stock"
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      },
+    };
+    const schemaNode = document.createElement("script");
+    schemaNode.type = "application/ld+json";
+    schemaNode.dataset.xyloProduct = "true";
+    schemaNode.textContent = JSON.stringify(schema);
+    document.head.appendChild(schemaNode);
+
+    return () => schemaNode.remove();
+  }, [product]);
+}
+
+function setMeta(attribute, key, content) {
+  let node = document.querySelector(`meta[${attribute}="${key}"]`);
+  if (!node) {
+    node = document.createElement("meta");
+    node.setAttribute(attribute, key);
+    document.head.appendChild(node);
+  }
+  node.content = content;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -227,8 +348,11 @@ function UnavailableState() {
 export default function StoreProductPage() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [alternatives, setAlternatives] = useState([]);
   const [exchange, setExchange] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
   const [scrolled, setScrolled] = useState(false);
   const [ctaVisible, setCtaVisible] = useState(false);
   const heroRef = useRef(null);
@@ -249,29 +373,49 @@ export default function StoreProductPage() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     async function load() {
+      setLoading(true);
+      setLoadError(false);
       try {
         const [prodRes, exRes] = await Promise.all([
-          api.get(`/products/${id}`),
+          api.get(`/products/${id}`, { timeout: 12000 }),
           api.get("/exchange-rates/active").catch(() => ({ data: null })),
         ]);
+        if (cancelled) return;
         setProduct(prodRes.data);
         setExchange(exRes.data);
+        setLoading(false);
+        // Las alternativas no bloquean la ficha principal: se cargan después.
+        api.get("/products/", { timeout: 12000 }).then((productsRes) => {
+          if (cancelled || !Array.isArray(productsRes.data)) return;
+          setAlternatives(
+            productsRes.data
+              .filter((item) => item.status === "in_stock" && String(item.id) !== String(id))
+              .sort((a, b) => Number(a.suggested_sale_price_usd) - Number(b.suggested_sale_price_usd))
+              .slice(0, 3)
+          );
+        }).catch(() => {});
         // Guardar en vistos recientemente
         try {
           const prev = JSON.parse(localStorage.getItem("xylo_recent") || "[]");
           const next = [String(prodRes.data.id), ...prev.filter((x) => x !== String(prodRes.data.id))].slice(0, 6);
           localStorage.setItem("xylo_recent", JSON.stringify(next));
         } catch {}
+      } catch {
+        if (!cancelled) setLoadError(true);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     load();
     const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [id]);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [id, retryKey]);
 
   useEffect(() => {
     if (!heroRef.current) return;
@@ -280,8 +424,11 @@ export default function StoreProductPage() {
     return () => obs.disconnect();
   }, [product]);
 
+  useProductSeo(product);
+
   if (loading) return <LoadingState />;
-  if (!product || product.status !== "in_stock") return <UnavailableState />;
+  if (loadError) return <ErrorState onRetry={() => setRetryKey((value) => value + 1)} />;
+  if (!product || !["in_stock", "reserved"].includes(product.status)) return <UnavailableState alternatives={alternatives} />;
 
   const ars = exchange
     ? (Number(product.suggested_sale_price_usd) * Number(exchange.sell_rate_ars))
@@ -302,6 +449,8 @@ export default function StoreProductPage() {
     { label: "Tipo de SIM", value: product.sim_type },
     product.battery_health ? { label: "Salud de batería", value: `${product.battery_health}%` } : null,
   ].filter(Boolean);
+  const isReserved = product.status === "reserved";
+  const media = [product.photo_url, ...(product.gallery_urls || [])].filter(Boolean);
 
   return (
     <div style={{ background: T.bg, minHeight: "100vh", color: T.text, overflowX: "hidden", fontFamily: T.body }}>
@@ -324,7 +473,7 @@ export default function StoreProductPage() {
           animation: "glow-pulse 4s ease-in-out infinite",
         }} />
 
-        {product.photo_url ? (
+        {media[0] ? (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -332,7 +481,7 @@ export default function StoreProductPage() {
             style={{ position: "relative", zIndex: 1, padding: "64px 24px 0" }}
           >
             <img
-              src={product.photo_url}
+              src={media[0]}
               alt={product.model}
               style={{
                 maxWidth: "340px", width: "60vw", maxHeight: "460px",
@@ -351,6 +500,13 @@ export default function StoreProductPage() {
             <Smartphone size={96} strokeWidth={1} color={T.text} />
           </div>
         )}
+        {GALLERY_ENABLED && media.length > 1 && (
+          <div style={{ position: "absolute", left: "50%", bottom: "20px", transform: "translateX(-50%)", display: "flex", gap: "8px", zIndex: 3 }}>
+            {media.map((source, index) => (
+              <img key={source} src={source} alt={`${product.model} ${index + 1}`} style={{ width: "48px", height: "48px", objectFit: "cover", borderRadius: "10px", border: "2px solid #fff" }} />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* ── Name + subtitle ─────────────────────────────────────────── */}
@@ -364,7 +520,7 @@ export default function StoreProductPage() {
             fontSize: "12px", fontWeight: 600, letterSpacing: "0.15em",
             textTransform: "uppercase", color: ACCENT, marginBottom: "20px",
           }}>
-            Disponible
+            {isReserved ? "Reservado" : "Disponible"}
           </p>
           <h1 style={{
             fontFamily: T.heading,
@@ -381,6 +537,35 @@ export default function StoreProductPage() {
           )}
         </motion.div>
       </section>
+
+      {/* ── Compra segura ─────────────────────────────────────────── */}
+      <Reveal style={{ borderBottom: `1px solid ${T.border}` }}>
+        <div style={{ padding: "72px clamp(20px, 6vw, 80px)", maxWidth: "760px", margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: "32px" }}>
+            <ShieldCheck size={28} color={ACCENT} />
+            <h2 style={{ fontFamily: T.heading, fontSize: "clamp(25px, 4vw, 34px)", marginTop: "12px", letterSpacing: "-0.03em" }}>Qué revisamos antes de publicarlo</h2>
+            <p style={{ color: T.textSec, fontSize: "14px", lineHeight: 1.6, marginTop: "10px" }}>
+              Control técnico del equipo y garantía de funcionamiento. Las condiciones se confirman antes de la entrega.
+            </p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "10px" }}>
+            {["Pantalla y táctil", "Cámaras y Face ID", "Batería y carga", "Botones y sonido", "Conectividad", "IMEI y funcionamiento"].map((item) => (
+              <div key={item} style={{ display: "flex", alignItems: "center", gap: "9px", background: T.surface, border: `1px solid ${T.border}`, borderRadius: "12px", padding: "13px 15px", fontSize: "13px", color: T.textSec }}>
+                <Check size={15} color={ACCENT} strokeWidth={2.5} /> {item}
+              </div>
+            ))}
+          </div>
+          {product.warranty_days ? (
+            <p style={{ textAlign: "center", color: T.text, fontWeight: 600, fontSize: "14px", marginTop: "24px" }}>
+              Garantía informada para este equipo: {product.warranty_days} días.
+            </p>
+          ) : (
+            <p style={{ textAlign: "center", color: T.textMuted, fontSize: "13px", marginTop: "24px" }}>
+              Consultá las condiciones específicas de garantía de esta unidad.
+            </p>
+          )}
+        </div>
+      </Reveal>
 
       {/* ── Battery ─────────────────────────────────────────────────── */}
       {product.battery_health && (
@@ -503,12 +688,17 @@ export default function StoreProductPage() {
             ¿Te interesa?
           </p>
           <p style={{ fontSize: "17px", color: T.textSec, marginBottom: "40px", lineHeight: 1.6 }}>
-            Escribinos y lo reservamos para vos.
+            {isReserved
+              ? "Este equipo ya está reservado. Podemos avisarte si se libera o mostrarte alternativas."
+              : "Solicitá la reserva por WhatsApp y confirmamos disponibilidad con vos."}
           </p>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
             <motion.a
               href={waLink(product)}
-              onClick={() => trackContact(product)}
+              onClick={() => {
+                trackContact(product);
+                if (!isReserved) trackReservationRequest(product);
+              }}
               target="_blank" rel="noreferrer"
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
@@ -522,7 +712,7 @@ export default function StoreProductPage() {
               }}
             >
               <WhatsAppIcon size={20} />
-              Escribinos por WhatsApp
+              {isReserved ? "Consultar alternativas" : "Solicitar reserva"}
             </motion.a>
             <Link to="/"
               style={{ fontSize: "14px", color: T.textMuted, textDecoration: "none", transition: "color 0.2s" }}

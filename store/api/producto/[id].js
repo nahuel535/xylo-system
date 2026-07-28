@@ -11,6 +11,15 @@ async function fetchProduct(id) {
   }
 }
 
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 export default async function handler(req, res) {
   const { id } = req.query;
   const product = await fetchProduct(id);
@@ -43,25 +52,50 @@ export default async function handler(req, res) {
     }
   }
 
+  const availability = product?.status === "in_stock"
+    ? "https://schema.org/InStock"
+    : "https://schema.org/OutOfStock";
+  const productSchema = product ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: [product.model, product.storage, product.color].filter(Boolean).join(" · "),
+    image: [product.photo_url, ...(product.gallery_urls || [])].filter(Boolean),
+    sku: String(product.id),
+    brand: { "@type": "Brand", name: product.brand || "Apple" },
+    itemCondition: product.condition_type?.toLowerCase().includes("nuevo")
+      ? "https://schema.org/NewCondition"
+      : "https://schema.org/UsedCondition",
+    offers: {
+      "@type": "Offer",
+      url: productUrl,
+      priceCurrency: "USD",
+      price: Number(product.suggested_sale_price_usd || 0),
+      availability,
+    },
+  } : null;
+  const safeSchema = JSON.stringify(productSchema).replaceAll("<", "\\u003c");
+
   const html = `<!doctype html>
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>${title}</title>
-<meta name="description" content="${description}" />
-<meta property="og:type" content="website" />
+<title>${escapeHtml(title)}</title>
+<meta name="description" content="${escapeHtml(description)}" />
+<link rel="canonical" href="${productUrl}" />
+<meta property="og:type" content="product" />
 <meta property="og:url" content="${productUrl}" />
-<meta property="og:title" content="${title}" />
-<meta property="og:description" content="${description}" />
-<meta property="og:image" content="${image}" />
+<meta property="og:title" content="${escapeHtml(title)}" />
+<meta property="og:description" content="${escapeHtml(description)}" />
+<meta property="og:image" content="${escapeHtml(image)}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
 <meta property="og:site_name" content="Xylo" />
 <meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="${title}" />
-<meta name="twitter:description" content="${description}" />
-<meta name="twitter:image" content="${image}" />
+<meta name="twitter:title" content="${escapeHtml(title)}" />
+<meta name="twitter:description" content="${escapeHtml(description)}" />
+<meta name="twitter:image" content="${escapeHtml(image)}" />
+${productSchema ? `<script type="application/ld+json">${safeSchema}</script>` : ""}
 </head>
 <body>
 <script>window.location.replace("${spaUrl}")</script>

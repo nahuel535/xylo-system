@@ -8,6 +8,8 @@ import { XyloLogo, WhatsAppIcon } from "../components/Icons";
 const WHATSAPP = "5493518916482";
 const ACCENT = "#00C896";
 const NEW_DAYS = 7; // días para mostrar "Nuevo ingreso"
+const OFFER_POPUP_DELAY_MS = 10000;
+const OFFER_POPUP_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000;
 
 function waLink(msg = "") {
   const text = msg ? `?text=${encodeURIComponent(msg)}` : "";
@@ -2075,8 +2077,8 @@ function ProductCard({ product, exchange }) {
           <div style={{ marginTop: "auto", paddingTop: "14px", borderTop: `1px solid ${T.border}`, display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
             <div>
               {product.is_offer && (
-                <p className="product-card-original-price" style={{ fontSize: "13px", color: T.textMuted, textDecoration: "line-through", lineHeight: 1, marginBottom: "3px" }}>
-                  USD {Math.round(Number(product.suggested_sale_price_usd) * 1.2).toLocaleString("es-AR")}
+                <p className="product-card-original-price" style={{ fontSize: "11px", color: "#ef4444", fontWeight: 700, lineHeight: 1, marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  Precio oportunidad
                 </p>
               )}
               <p className="product-card-price" style={{ fontSize: "20px", fontWeight: 700, color: product.is_offer ? "#ef4444" : T.text, letterSpacing: "-0.04em", lineHeight: 1 }}>
@@ -2589,9 +2591,7 @@ function Footer() {
 // ─────────────────────────────────────────────────────────────────────────────
 function OfferPopup({ product, exchange, onClose }) {
   const price = Number(product.suggested_sale_price_usd);
-  const originalPrice = Math.round(price * 1.2);
   const ars = exchange ? Math.round(price * Number(exchange.sell_rate_ars)).toLocaleString("es-AR") : null;
-  const discount = 17;
 
   return (
     <motion.div
@@ -2687,8 +2687,8 @@ function OfferPopup({ product, exchange, onClose }) {
           {/* Price row */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
             <div>
-              <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", textDecoration: "line-through", lineHeight: 1, marginBottom: "3px" }}>
-                USD {originalPrice.toLocaleString("es-AR")}
+              <p style={{ fontSize: "10px", color: ACCENT, fontWeight: 700, lineHeight: 1, marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+                Precio oportunidad
               </p>
               <p style={{ fontSize: "32px", fontWeight: 800, color: ACCENT, letterSpacing: "-0.04em", lineHeight: 1, fontFamily: T.heading }}>
                 USD {price.toLocaleString("es-AR")}
@@ -2698,13 +2698,6 @@ function OfferPopup({ product, exchange, onClose }) {
                   ARS {ars}
                 </p>
               )}
-            </div>
-            <div style={{
-              background: "rgba(0,200,150,0.12)", border: "1px solid rgba(0,200,150,0.25)",
-              borderRadius: "12px", padding: "8px 14px", textAlign: "center",
-            }}>
-              <p style={{ fontSize: "18px", fontWeight: 800, color: ACCENT, lineHeight: 1 }}>-{discount}%</p>
-              <p style={{ fontSize: "10px", color: "rgba(0,200,150,0.6)", marginTop: "2px", letterSpacing: "0.05em" }}>DESC.</p>
             </div>
           </div>
 
@@ -3076,6 +3069,7 @@ export default function StorePage() {
   const [products, setProducts] = useState([]);
   const [exchange, setExchange] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [search, setSearch] = useState("");
   const [modelFilter, setModelFilter] = useState("");
   const [storageFilter, setStorageFilter] = useState("");
@@ -3087,7 +3081,9 @@ export default function StorePage() {
   const stockHeaderInView = useInView(stockHeaderRef, { once: true, margin: "-60px" });
 
   useEffect(() => {
+    let offerTimer;
     async function load() {
+      setLoadError(false);
       try {
         const [prodRes, exRes] = await Promise.all([
           api.get("/products/"),
@@ -3096,14 +3092,16 @@ export default function StorePage() {
         const inStock = prodRes.data.filter((p) => p.status === "in_stock" && p.category?.toLowerCase() === "iphone");
         setProducts(inStock);
         setExchange(exRes.data);
-        // Popup oferta del día — solo 1 vez por sesión
-        if (!sessionStorage.getItem("xylo_offer_seen")) {
+        const lastSeen = Number(localStorage.getItem("xylo_offer_seen_at") || 0);
+        if (Date.now() - lastSeen > OFFER_POPUP_COOLDOWN_MS) {
           const offers = inStock.filter((p) => p.is_offer && p.photo_url);
           if (offers.length > 0) {
             const pick = offers[Math.floor(Math.random() * offers.length)];
-            setTimeout(() => setOfferPopup(pick), 1800);
+            offerTimer = window.setTimeout(() => setOfferPopup(pick), OFFER_POPUP_DELAY_MS);
           }
         }
+      } catch {
+        setLoadError(true);
       } finally {
         setLoading(false);
       }
@@ -3111,7 +3109,10 @@ export default function StorePage() {
     load();
     const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (offerTimer) window.clearTimeout(offerTimer);
+    };
   }, []);
 
   const models = useMemo(() => [...new Set(products.map((p) => p.model).filter(Boolean))].sort(), [products]);
@@ -3139,7 +3140,10 @@ export default function StorePage() {
           <OfferPopup
             product={offerPopup}
             exchange={exchange}
-            onClose={() => { setOfferPopup(null); sessionStorage.setItem("xylo_offer_seen", "1"); }}
+            onClose={() => {
+              setOfferPopup(null);
+              localStorage.setItem("xylo_offer_seen_at", String(Date.now()));
+            }}
           />
         )}
       </AnimatePresence>
@@ -3269,6 +3273,18 @@ export default function StorePage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))", gap: "20px" }}>
             {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
+        ) : loadError ? (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: "center", padding: "100px 20px" }}>
+            <div style={{ width: "56px", height: "56px", margin: "0 auto 24px", borderRadius: "50%", background: "rgba(220,38,38,0.08)", color: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: "28px", lineHeight: 1 }}>!</span>
+            </div>
+            <p style={{ fontFamily: T.heading, fontSize: "24px", fontWeight: 600, color: T.text, marginBottom: "8px" }}>No pudimos cargar el stock</p>
+            <p style={{ fontSize: "15px", color: T.textSec, margin: "0 auto 28px", maxWidth: "420px", lineHeight: 1.6 }}>Revisá tu conexión y probá de nuevo. También podés consultarnos directamente por WhatsApp.</p>
+            <div style={{ display: "flex", justifyContent: "center", gap: "10px", flexWrap: "wrap" }}>
+              <button onClick={() => window.location.reload()} style={{ background: T.text, border: "none", color: "#fff", borderRadius: "980px", padding: "11px 24px", fontSize: "14px", cursor: "pointer", fontFamily: T.body }}>Reintentar</button>
+              <a href={waLink("Hola! No puedo ver el stock de Xylo") } target="_blank" rel="noreferrer" style={{ background: "#fff", border: `1px solid ${T.border}`, color: T.text, borderRadius: "980px", padding: "10px 24px", fontSize: "14px", textDecoration: "none", fontFamily: T.body }}>Consultar por WhatsApp</a>
+            </div>
+          </motion.div>
         ) : filtered.length === 0 ? (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ textAlign: "center", padding: "100px 0" }}>
             <div style={{ opacity: 0.15, marginBottom: "24px", display: "flex", justifyContent: "center" }}>
