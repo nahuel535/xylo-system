@@ -3101,7 +3101,10 @@ export default function StorePage() {
           const offers = inStock.filter((p) => p.is_offer && p.photo_url);
           if (offers.length > 0) {
             const pick = offers[Math.floor(Math.random() * offers.length)];
-            offerTimer = window.setTimeout(() => setOfferPopup(pick), OFFER_POPUP_DELAY_MS);
+            offerTimer = window.setTimeout(() => {
+              localStorage.setItem(OFFER_POPUP_SEEN_KEY, "1");
+              setOfferPopup(pick);
+            }, OFFER_POPUP_DELAY_MS);
           }
         }
       } catch {
