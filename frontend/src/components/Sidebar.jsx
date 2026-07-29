@@ -34,7 +34,7 @@ const DESKTOP_SECTIONS = [
       { to: "/agenda", label: "Agenda", icon: CalendarDays },
       { to: "/presupuestos", label: "Presupuestos", icon: FileText },
       { to: "/after-sales", label: "Posventa", icon: ShieldAlert },
-      { to: "/comisiones", label: "Comisiones", icon: BadgeDollarSign, adminOnly: true },
+      { to: "/comisiones", label: "Ganancias", icon: BadgeDollarSign, adminOnly: true },
     ],
   },
   {
@@ -68,7 +68,7 @@ const SHEET_LINKS = [
   { to: "/agenda", label: "Agenda", icon: CalendarDays, color: "#0ea5e9" },
   { to: "/presupuestos", label: "Presupuestos", icon: FileText, color: "#8b5cf6" },
   { to: "/after-sales", label: "Posventa", icon: ShieldAlert, color: "#f97316" },
-  { to: "/comisiones", label: "Comisiones", icon: BadgeDollarSign, color: "#f59e0b", adminOnly: true },
+  { to: "/comisiones", label: "Ganancias", icon: BadgeDollarSign, color: "#f59e0b", adminOnly: true },
   { to: "/users", label: "Usuarios", icon: Users, color: "#64748b", adminOnly: true },
   { to: "/admin/activity", label: "Auditoría", icon: History, color: "#64748b", adminOnly: true },
 ];
@@ -87,7 +87,7 @@ const PAGE_TITLES = {
   "/agenda": "Agenda",
   "/presupuestos": "Presupuestos",
   "/after-sales": "Posventa",
-  "/comisiones": "Comisiones",
+  "/comisiones": "Ganancias de vendedores",
   "/users": "Usuarios",
   "/admin/activity": "Auditoría",
 };

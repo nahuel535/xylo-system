@@ -14,6 +14,7 @@ from app.core.dependencies import ensure_owner_or_admin, get_current_user, requi
 from app.models.client import Client, ClientInteraction, ClientReminder
 
 router = APIRouter(prefix="/sales", tags=["Sales"])
+BASE_SELLER_COMMISSION_USD = Decimal("10.00")
 
 
 def _sale_for_user(sale: Sale, current_user: User) -> dict:
@@ -101,7 +102,9 @@ def create_sale(
     purchase_price = Decimal(product.purchase_price_usd)
     sale_price = Decimal(sale_data.sale_price_usd)
     gross_profit = sale_price - purchase_price
-    commission_usd = (gross_profit * Decimal(str(seller.commission_rate)) / Decimal("100")).quantize(Decimal("0.01"))
+    commission_usd = BASE_SELLER_COMMISSION_USD
+    if current_user.role == "admin" and sale_data.commission_usd is not None:
+        commission_usd = Decimal(str(sale_data.commission_usd)).quantize(Decimal("0.01"))
 
     total_payments = sum(Decimal(payment.amount_usd) for payment in sale_data.payments)
 
@@ -199,11 +202,11 @@ def update_sale(
     if sale_data.sale_price_usd is not None or sale_data.seller_id is not None:
         new_price = Decimal(str(sale_data.sale_price_usd)) if sale_data.sale_price_usd is not None else Decimal(str(sale.sale_price_usd))
         new_profit = new_price - Decimal(str(sale.purchase_price_usd_snapshot))
-        seller_for_commission = db.query(User).filter(User.id == (sale_data.seller_id or sale.seller_id)).first()
-        rate = Decimal(str(seller_for_commission.commission_rate)) if seller_for_commission else Decimal("0")
         sale.sale_price_usd = new_price
         sale.gross_profit_usd = new_profit
-        sale.commission_usd = (new_profit * rate / Decimal("100")).quantize(Decimal("0.01"))
+
+    if sale_data.commission_usd is not None:
+        sale.commission_usd = Decimal(str(sale_data.commission_usd)).quantize(Decimal("0.01"))
 
     if sale_data.client_name is not None:
         sale.client_name = sale_data.client_name
@@ -236,7 +239,7 @@ def update_sale(
             ))
 
     # Detectar campos modificados para el log
-    tracked = ["sale_price_usd", "seller_id", "client_name", "notes", "status",
+    tracked = ["sale_price_usd", "seller_id", "commission_usd", "client_name", "notes", "status",
                "has_trade_in", "trade_in_value_usd", "has_deposit",
                "deposit_amount_usd", "remaining_balance_usd"]
     changes = {}

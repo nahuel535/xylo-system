@@ -38,6 +38,7 @@ export default function EditSalePage() {
 
         setForm({
           sale_price_usd: String(saleData.sale_price_usd),
+          commission_usd: String(saleData.commission_usd ?? 10),
           seller_id: String(saleData.seller_id),
           client_name: saleData.client_name || "",
           notes: saleData.notes || "",
@@ -92,6 +93,7 @@ export default function EditSalePage() {
     try {
       await api.put(`/sales/${id}`, {
         sale_price_usd: Number(form.sale_price_usd),
+        commission_usd: Number(form.commission_usd),
         seller_id: Number(form.seller_id),
         client_name: form.client_name || null,
         notes: form.notes || null,
@@ -149,6 +151,21 @@ export default function EditSalePage() {
               <select name="seller_id" value={form.seller_id} onChange={handleChange} className={inputClass} required>
                 {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
               </select>
+            </div>
+            <div>
+              <p className="text-sm text-base-muted mb-2">Ganancia del vendedor (USD)</p>
+              <input
+                name="commission_usd"
+                value={form.commission_usd}
+                onChange={handleChange}
+                type="number"
+                min="0"
+                max="10"
+                step="0.01"
+                className={inputClass}
+                required
+              />
+              <p className="text-xs text-base-muted mt-1.5">Base: USD 10. Usá un monto menor para una venta compartida.</p>
             </div>
             <div>
               <p className="text-sm text-base-muted mb-2">Cliente</p>

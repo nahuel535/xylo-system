@@ -136,9 +136,9 @@ export default function SaleDetailPage() {
             {user?.role === "admin" && <p className="text-xylo-300 font-semibold">
               Ganancia: USD {sale.gross_profit_usd}
             </p>}
-            {user?.role === "admin" && sale.commission_usd != null && Number(sale.commission_usd) > 0 && (
+            {user?.role === "admin" && sale.commission_usd != null && (
               <p className="text-amber-500 font-semibold">
-                Comisión vendedor: USD {sale.commission_usd}
+                Ganancia vendedor: USD {sale.commission_usd}
               </p>
             )}
           </div>

@@ -28,6 +28,7 @@ export default function SellProductPage() {
   const [form, setForm] = useState({
     seller_id: "",
     sale_price_usd: "",
+    commission_usd: "10",
     client_name: "",
     notes: "",
     status: "completed",
@@ -154,6 +155,7 @@ export default function SellProductPage() {
         product_id: Number(id),
         seller_id: isAdmin ? Number(form.seller_id) : user.id,
         sale_price_usd: Number(form.sale_price_usd),
+        commission_usd: isAdmin ? Number(form.commission_usd) : null,
         client_name: form.client_name || null,
         notes: form.notes || null,
         has_trade_in: false,
@@ -220,6 +222,24 @@ export default function SellProductPage() {
               {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
           </div>}
+
+          {isAdmin && (
+            <div>
+              <p className="text-sm text-base-muted mb-2">Ganancia del vendedor (USD)</p>
+              <input
+                name="commission_usd"
+                value={form.commission_usd}
+                onChange={handleChange}
+                className={inputClass}
+                type="number"
+                min="0"
+                max="10"
+                step="0.01"
+                required
+              />
+              <p className="text-xs text-base-muted mt-1.5">Base: USD 10. Ingresá un monto menor si la venta fue compartida.</p>
+            </div>
+          )}
 
           {/* Precio + cliente */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

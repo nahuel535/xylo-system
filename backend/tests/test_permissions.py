@@ -1,5 +1,8 @@
 from datetime import date, timedelta
+from decimal import Decimal
 
+from app.models.product import Product
+from app.models.sale import Sale
 from tests.conftest import auth_headers
 
 
@@ -53,6 +56,83 @@ def test_admin_can_read_all_records_and_financial_fields(client, seeded):
     sale = client.get(f"/sales/{seeded['sale_a'].id}", headers=headers)
     assert sale.status_code == 200
     assert float(sale.json()["gross_profit_usd"]) == 100.0
+
+
+def test_sales_use_fixed_ten_dollar_seller_earning_with_admin_override(client, seeded, db_session):
+    products = [
+        Product(
+            category="phone",
+            brand="Apple",
+            model=f"Commission Test {suffix}",
+            imei=f"COMMISSION-{suffix}",
+            purchase_price_usd=Decimal("100"),
+            suggested_sale_price_usd=Decimal("200"),
+            status="in_stock",
+        )
+        for suffix in ("DEFAULT", "SHARED", "SELLER")
+    ]
+    db_session.add_all(products)
+    db_session.commit()
+
+    default_sale = client.post(
+        "/sales/",
+        headers=auth_headers(seeded["admin"]),
+        json={
+            "product_id": products[0].id,
+            "seller_id": seeded["seller_a"].id,
+            "sale_price_usd": 200,
+        },
+    )
+    shared_sale = client.post(
+        "/sales/",
+        headers=auth_headers(seeded["admin"]),
+        json={
+            "product_id": products[1].id,
+            "seller_id": seeded["seller_a"].id,
+            "sale_price_usd": 200,
+            "commission_usd": 4,
+        },
+    )
+    seller_attempt = client.post(
+        "/sales/",
+        headers=auth_headers(seeded["seller_a"]),
+        json={
+            "product_id": products[2].id,
+            "seller_id": seeded["seller_b"].id,
+            "sale_price_usd": 200,
+            "commission_usd": 1,
+        },
+    )
+
+    assert default_sale.status_code == 200
+    assert float(default_sale.json()["commission_usd"]) == 10.0
+    assert shared_sale.status_code == 200
+    assert float(shared_sale.json()["commission_usd"]) == 4.0
+    assert seller_attempt.status_code == 200
+
+    seller_sale = db_session.query(Sale).filter(Sale.product_id == products[2].id).one()
+    assert seller_sale.seller_id == seeded["seller_a"].id
+    assert float(seller_sale.commission_usd) == 10.0
+
+
+def test_admin_can_reduce_existing_sale_earning_but_not_exceed_base(client, seeded):
+    headers = auth_headers(seeded["admin"])
+    sale_id = seeded["sale_a"].id
+
+    updated = client.put(
+        f"/sales/{sale_id}",
+        headers=headers,
+        json={"commission_usd": 5},
+    )
+    rejected = client.put(
+        f"/sales/{sale_id}",
+        headers=headers,
+        json={"commission_usd": 11},
+    )
+
+    assert updated.status_code == 200
+    assert float(updated.json()["commission_usd"]) == 5.0
+    assert rejected.status_code == 422
 
 
 def test_seller_cannot_list_users(client, seeded):

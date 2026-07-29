@@ -17,7 +17,6 @@ const initialCreateForm = {
   email: "",
   password: "",
   role: "seller",
-  commission_rate: "0",
 };
 
 export default function UsersPage() {
@@ -65,7 +64,6 @@ export default function UsersPage() {
       name: user.name,
       email: user.email,
       role: user.role,
-      commission_rate: String(user.commission_rate ?? 0),
     });
     setError("");
   }
@@ -90,17 +88,13 @@ export default function UsersPage() {
     setSaving(true);
     try {
       if (panel === "create") {
-        await api.post("/users/", {
-          ...form,
-          commission_rate: Number(form.commission_rate || 0),
-        });
+        await api.post("/users/", form);
         setMessage(`Usuario ${form.name} creado correctamente.`);
       } else {
         await api.patch(`/users/${selectedUser.id}`, {
           name: form.name,
           email: form.email,
           role: form.role,
-          commission_rate: Number(form.commission_rate || 0),
         });
         setMessage(`Datos de ${form.name} actualizados.`);
       }
@@ -160,7 +154,7 @@ export default function UsersPage() {
 
       <div className="flex items-center justify-between mb-5">
         <p className="text-sm text-base-muted">
-          Administrá accesos, roles, comisiones y contraseñas.
+          Administrá accesos, roles y contraseñas. La ganancia base es de USD 10 por venta.
         </p>
         <button
           onClick={openCreate}
@@ -258,18 +252,6 @@ export default function UsersPage() {
                     <option value="admin">Administrador</option>
                   </select>
                 </Field>
-                <Field label="Comisión sobre ganancia (%)">
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={form.commission_rate}
-                    onChange={(event) => setForm((current) => ({ ...current, commission_rate: event.target.value }))}
-                    required
-                    className={inputClass}
-                  />
-                </Field>
               </div>
               {error && <InlineError>{error}</InlineError>}
               <FormActions
@@ -286,7 +268,7 @@ export default function UsersPage() {
         <table className="w-full text-sm">
           <thead className="bg-base-subtle border-b border-base-border">
             <tr>
-              {["Usuario", "Rol", "Comisión", "Estado", "Creado", "Acciones"].map((heading) => (
+              {["Usuario", "Rol", "Estado", "Creado", "Acciones"].map((heading) => (
                 <th key={heading} className="text-left px-5 py-3.5 text-xs font-medium text-base-muted uppercase tracking-wide">
                   {heading}
                 </th>
@@ -295,9 +277,9 @@ export default function UsersPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="6" className="px-5 py-6 text-base-muted">Cargando usuarios...</td></tr>
+              <tr><td colSpan="5" className="px-5 py-6 text-base-muted">Cargando usuarios...</td></tr>
             ) : users.length === 0 ? (
-              <tr><td colSpan="6" className="px-5 py-6 text-base-muted">No hay usuarios registrados.</td></tr>
+              <tr><td colSpan="5" className="px-5 py-6 text-base-muted">No hay usuarios registrados.</td></tr>
             ) : users.map((user) => (
               <tr key={user.id} className="border-t border-base-border hover:bg-base-subtle/50 transition">
                 <td className="px-5 py-3.5">
@@ -305,7 +287,6 @@ export default function UsersPage() {
                   <p className="text-xs text-base-muted mt-0.5">{user.email}</p>
                 </td>
                 <td className="px-5 py-3.5"><RoleBadge role={user.role} /></td>
-                <td className="px-5 py-3.5 text-base-text">{Number(user.commission_rate || 0).toFixed(2)}%</td>
                 <td className="px-5 py-3.5"><StatusBadge active={user.is_active} /></td>
                 <td className="px-5 py-3.5 text-base-muted text-xs">{formatDate(user.created_at)}</td>
                 <td className="px-5 py-3.5">
@@ -341,7 +322,7 @@ export default function UsersPage() {
             </div>
             <div className="flex items-center justify-between py-3 border-y border-base-border mb-3">
               <RoleBadge role={user.role} />
-              <span className="text-xs text-base-muted">Comisión {Number(user.commission_rate || 0).toFixed(2)}%</span>
+              <span className="text-xs text-base-muted">USD 10 por venta</span>
             </div>
             <UserActions
               user={user}

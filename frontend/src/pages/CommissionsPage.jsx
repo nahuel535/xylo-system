@@ -16,9 +16,6 @@ export default function CommissionsPage() {
   const [data, setData]   = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading]   = useState(true);
-  const [editingId, setEditingId] = useState(null);
-  const [editRate, setEditRate]   = useState("");
-  const [saving, setSaving]       = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [sellerSales, setSellerSales] = useState({});
 
@@ -37,17 +34,6 @@ export default function CommissionsPage() {
   }, [month, year]);
 
   useEffect(() => { load(); }, [load]);
-
-  async function saveRate(userId) {
-    setSaving(true);
-    try {
-      await api.patch(`/users/${userId}/commission-rate`, { commission_rate: parseFloat(editRate) });
-      setEditingId(null);
-      load();
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function toggleExpand(sellerId) {
     if (expandedId === sellerId) { setExpandedId(null); return; }
@@ -72,7 +58,7 @@ export default function CommissionsPage() {
 
   return (
     <div>
-      <Header title="Comisiones" subtitle="Desglose por vendedor" />
+      <Header title="Ganancias de vendedores" subtitle="Base de USD 10 por venta, ajustable cuando la operación es compartida" />
 
       {/* Filtros */}
       <div className="flex gap-3 mb-6 flex-wrap">
@@ -97,7 +83,7 @@ export default function CommissionsPage() {
         {[
           { label: "Ventas", value: totals.sales, suffix: "", icon: TrendingUp, color: "#3b82f6" },
           { label: "Ganancia bruta", value: `USD ${fmt(totals.profit)}`, suffix: "", icon: DollarSign, color: "#10b981" },
-          { label: "Total comisiones", value: `USD ${fmt(totals.commission)}`, suffix: "", icon: Users, color: "#f59e0b" },
+          { label: "Total vendedores", value: `USD ${fmt(totals.commission)}`, suffix: "", icon: Users, color: "#f59e0b" },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-base-card border border-base-border rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -114,7 +100,7 @@ export default function CommissionsPage() {
       {/* Tabla */}
       <div className="bg-base-card border border-base-border rounded-2xl overflow-hidden">
         <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] px-5 py-3 border-b border-base-border bg-base-subtle">
-          {["Vendedor", "% Comisión", "Ventas", "Facturación", "Ganancia bruta", "Comisión ganada"].map((h) => (
+          {["Vendedor", "Regla", "Ventas", "Facturación", "Ganancia bruta", "Ganancia vendedor"].map((h) => (
             <span key={h} className="text-xs font-semibold text-base-muted uppercase tracking-wide">{h}</span>
           ))}
         </div>
@@ -126,7 +112,6 @@ export default function CommissionsPage() {
         ) : data.map((row) => {
           const user = userMap[row.seller_id];
           const isExpanded = expandedId === row.seller_id;
-          const isEditing = editingId === row.seller_id;
           const sales = sellerSales[row.seller_id] || [];
 
           return (
@@ -150,33 +135,9 @@ export default function CommissionsPage() {
                   {isExpanded ? <ChevronUp size={14} className="text-base-muted ml-2" /> : <ChevronDown size={14} className="text-base-muted ml-2" />}
                 </div>
 
-                {/* % comisión — editable */}
-                <div onClick={(e) => e.stopPropagation()}>
-                  {isEditing ? (
-                    <div className="flex items-center gap-1">
-                      <input
-                        type="number" min="0" max="100" step="0.5"
-                        value={editRate}
-                        onChange={(e) => setEditRate(e.target.value)}
-                        className="w-16 bg-base-subtle border border-base-border rounded-lg px-2 py-1 text-sm text-base-text outline-none"
-                        autoFocus
-                      />
-                      <span className="text-xs text-base-muted">%</span>
-                      <button onClick={() => saveRate(row.seller_id)} disabled={saving}
-                        className="text-xs bg-xylo-500 text-white rounded-lg px-2 py-1 ml-1 font-medium">
-                        {saving ? "..." : "OK"}
-                      </button>
-                      <button onClick={() => setEditingId(null)} className="text-xs text-base-muted ml-1">✕</button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => { setEditingId(row.seller_id); setEditRate(String(row.commission_rate)); }}
-                      className="flex items-center gap-1 text-sm font-semibold text-base-text hover:text-xylo-500 transition"
-                    >
-                      {Number(row.commission_rate).toFixed(1)}%
-                      <span className="text-[10px] text-base-muted">(editar)</span>
-                    </button>
-                  )}
+                <div>
+                  <p className="text-sm font-semibold text-base-text">USD 10</p>
+                  <p className="text-[10px] text-base-muted">por venta</p>
                 </div>
 
                 <span className="text-sm text-base-text">{row.sales_count}</span>
@@ -196,7 +157,7 @@ export default function CommissionsPage() {
                     <table className="w-full text-xs mt-2">
                       <thead>
                         <tr className="text-base-muted">
-                          {["#", "Fecha", "Cliente", "Precio", "Ganancia", "Comisión"].map((h) => (
+                          {["#", "Fecha", "Cliente", "Precio", "Ganancia bruta", "Ganancia vendedor"].map((h) => (
                             <th key={h} className="text-left py-1.5 pr-4 font-medium">{h}</th>
                           ))}
                         </tr>
