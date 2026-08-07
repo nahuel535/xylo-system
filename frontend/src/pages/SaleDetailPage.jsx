@@ -4,7 +4,7 @@ import api from "../services/api";
 import Header from "../components/Header";
 import AuditHistory from "../components/AuditHistory";
 import { useAuth } from "../context/AuthContext";
-import { RotateCcw, AlertTriangle } from "lucide-react";
+import { RotateCcw, AlertTriangle, Trash2 } from "lucide-react";
 
 export default function SaleDetailPage() {
   const { id } = useParams();
@@ -18,6 +18,8 @@ export default function SaleDetailPage() {
   const [returnModal, setReturnModal] = useState(false);
   const [returnReason, setReturnReason] = useState("");
   const [returning, setReturning] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -60,6 +62,17 @@ export default function SaleDetailPage() {
     }
   }
 
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await api.delete(`/sales/${id}`);
+      navigate("/sales");
+    } catch (error) {
+      alert(error?.response?.data?.detail || "No se pudo eliminar la venta");
+      setDeleting(false);
+    }
+  }
+
   if (loading) return <p className="text-base-muted">Cargando venta...</p>;
   if (!sale) return <p className="text-base-muted">Venta no encontrada.</p>;
 
@@ -85,6 +98,14 @@ export default function SaleDetailPage() {
               className="bg-base-subtle hover:bg-base-border transition text-base-text rounded-xl px-4 py-2.5 text-sm font-medium"
             >
               Editar
+            </button>
+          )}
+          {user?.role === "admin" && (
+            <button
+              onClick={() => setDeleteModal(true)}
+              className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white rounded-xl px-4 py-2.5 text-sm font-medium transition"
+            >
+              <Trash2 size={14} /> Eliminar
             </button>
           )}
         </div>
@@ -220,6 +241,31 @@ export default function SaleDetailPage() {
               <button onClick={() => setReturnModal(false)} className="flex-1 bg-base-subtle text-base-muted rounded-xl py-2.5 text-sm font-medium">Cancelar</button>
               <button onClick={handleReturn} disabled={returning} className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white rounded-xl py-2.5 text-sm font-bold transition">
                 {returning ? "Procesando..." : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)" }}>
+          <div className="bg-base-card border border-base-border rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                <Trash2 size={18} className="text-red-500" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-base-text">Eliminar venta #{sale.id}</h3>
+                <p className="text-xs text-base-muted">Esta acción borra la operación y sus pagos.</p>
+              </div>
+            </div>
+            <p className="text-sm text-base-muted mb-5">
+              Si es la única venta activa del equipo, el dispositivo volverá a stock.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteModal(false)} disabled={deleting} className="flex-1 bg-base-subtle text-base-muted rounded-xl py-2.5 text-sm font-medium disabled:opacity-60">Cancelar</button>
+              <button onClick={handleDelete} disabled={deleting} className="flex-1 bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white rounded-xl py-2.5 text-sm font-bold transition">
+                {deleting ? "Eliminando..." : "Eliminar venta"}
               </button>
             </div>
           </div>

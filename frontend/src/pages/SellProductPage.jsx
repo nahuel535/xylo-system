@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
@@ -24,6 +24,8 @@ export default function SellProductPage() {
   const [allAccessories, setAllAccessories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const submitLock = useRef(false);
 
   const [form, setForm] = useState({
     seller_id: "",
@@ -120,6 +122,9 @@ export default function SellProductPage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+    if (submitLock.current) return;
+    submitLock.current = true;
+    setSubmitting(true);
     setMessage("");
 
     const payments = [
@@ -170,6 +175,8 @@ export default function SellProductPage() {
       navigate("/products");
     } catch (error) {
       setMessage(error?.response?.data?.detail || "Error al registrar la venta.");
+      submitLock.current = false;
+      setSubmitting(false);
     }
   }
 
@@ -441,8 +448,8 @@ export default function SellProductPage() {
         )}
 
         <div className="flex gap-3">
-          <button type="submit" className="bg-xylo-500 hover:bg-xylo-600 transition text-white rounded-xl px-6 py-3 font-medium shadow-sm">
-            Confirmar venta
+          <button type="submit" disabled={submitting} className="bg-xylo-500 hover:bg-xylo-600 disabled:opacity-60 disabled:cursor-not-allowed transition text-white rounded-xl px-6 py-3 font-medium shadow-sm">
+            {submitting ? "Registrando..." : "Confirmar venta"}
           </button>
           <button type="button" onClick={() => navigate(-1)} className="bg-base-subtle hover:bg-base-border transition text-base-muted rounded-xl px-6 py-3 text-sm">
             Cancelar

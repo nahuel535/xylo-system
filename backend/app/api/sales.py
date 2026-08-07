@@ -1,6 +1,6 @@
 from datetime import date as date_type, timedelta, datetime
 from decimal import Decimal
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.models.sale_payment import SalePayment
@@ -83,7 +83,12 @@ def create_sale(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    product = db.query(Product).filter(Product.id == sale_data.product_id).first()
+    product = (
+        db.query(Product)
+        .filter(Product.id == sale_data.product_id)
+        .with_for_update()
+        .first()
+    )
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
 
@@ -288,13 +293,69 @@ def get_sale_history(
 
 @router.get("/")
 def list_sales(
+    seller_id: int | None = Query(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     query = db.query(Sale)
     if current_user.role != "admin":
         query = query.filter(Sale.seller_id == current_user.id)
+    elif seller_id is not None:
+        query = query.filter(Sale.seller_id == seller_id)
     return [_sale_for_user(sale, current_user) for sale in query.order_by(Sale.id.desc()).all()]
+
+
+@router.delete("/{sale_id}")
+def delete_sale(
+    sale_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+):
+    from app.models.accessory import Accessory, AccessorySale
+    from app.models.service_claim import ServiceClaim
+
+    sale = db.query(Sale).filter(Sale.id == sale_id).first()
+    if not sale:
+        raise HTTPException(status_code=404, detail="Venta no encontrada")
+
+    if db.query(ServiceClaim.id).filter(ServiceClaim.sale_id == sale_id).first():
+        raise HTTPException(
+            status_code=409,
+            detail="No se puede eliminar una venta con reclamos de posventa asociados",
+        )
+
+    linked_accessories = db.query(AccessorySale).filter(AccessorySale.sale_id == sale_id).all()
+    for accessory_sale in linked_accessories:
+        accessory = db.query(Accessory).filter(Accessory.id == accessory_sale.accessory_id).first()
+        if accessory:
+            accessory.quantity += accessory_sale.quantity_sold
+        db.delete(accessory_sale)
+
+    db.query(SalePayment).filter(SalePayment.sale_id == sale_id).delete()
+
+    product = db.query(Product).filter(Product.id == sale.product_id).first()
+    remaining_active_sale = db.query(Sale.id).filter(
+        Sale.product_id == sale.product_id,
+        Sale.id != sale.id,
+        Sale.is_returned == False,
+    ).first()
+    if product and not remaining_active_sale:
+        product.status = "in_stock"
+
+    db.add(AuditLog(
+        entity_type="sale",
+        entity_id=sale.id,
+        user_id=current_user.id,
+        action="deleted",
+        changes={
+            "product_id": sale.product_id,
+            "seller_id": sale.seller_id,
+            "sale_price_usd": str(sale.sale_price_usd),
+        },
+    ))
+    db.delete(sale)
+    db.commit()
+    return {"message": "Venta eliminada correctamente"}
 
 
 @router.get("/{sale_id}")

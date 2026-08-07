@@ -58,6 +58,60 @@ def test_admin_can_read_all_records_and_financial_fields(client, seeded):
     assert float(sale.json()["gross_profit_usd"]) == 100.0
 
 
+def test_admin_can_filter_sales_by_seller_and_seller_cannot_bypass_scope(client, seeded):
+    admin_response = client.get(
+        f"/sales/?seller_id={seeded['seller_a'].id}",
+        headers=auth_headers(seeded["admin"]),
+    )
+    seller_response = client.get(
+        f"/sales/?seller_id={seeded['seller_b'].id}",
+        headers=auth_headers(seeded["seller_a"]),
+    )
+
+    assert admin_response.status_code == 200
+    assert [sale["id"] for sale in admin_response.json()] == [seeded["sale_a"].id]
+    assert seller_response.status_code == 200
+    assert [sale["id"] for sale in seller_response.json()] == [seeded["sale_a"].id]
+
+
+def test_only_admin_can_delete_sales_and_product_returns_to_stock_after_last_sale(client, seeded, db_session):
+    duplicate = Sale(
+        product_id=seeded["product_a"].id,
+        seller_id=seeded["seller_b"].id,
+        client_name="Duplicated sale",
+        sale_price_usd=Decimal("200"),
+        purchase_price_usd_snapshot=Decimal("100"),
+        gross_profit_usd=Decimal("100"),
+        commission_usd=Decimal("10"),
+        status="completed",
+    )
+    db_session.add(duplicate)
+    db_session.commit()
+
+    forbidden = client.delete(
+        f"/sales/{seeded['sale_a'].id}",
+        headers=auth_headers(seeded["seller_a"]),
+    )
+    first_delete = client.delete(
+        f"/sales/{seeded['sale_a'].id}",
+        headers=auth_headers(seeded["admin"]),
+    )
+    db_session.refresh(seeded["product_a"])
+
+    assert forbidden.status_code == 403
+    assert first_delete.status_code == 200
+    assert seeded["product_a"].status == "sold"
+
+    second_delete = client.delete(
+        f"/sales/{duplicate.id}",
+        headers=auth_headers(seeded["admin"]),
+    )
+    db_session.refresh(seeded["product_a"])
+
+    assert second_delete.status_code == 200
+    assert seeded["product_a"].status == "in_stock"
+
+
 def test_sales_use_fixed_ten_dollar_seller_earning_with_admin_override(client, seeded, db_session):
     products = [
         Product(

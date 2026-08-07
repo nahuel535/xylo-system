@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
-import { TrendingUp, DollarSign, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { createElement, useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { TrendingUp, DollarSign, Users, ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
 import api from "../services/api";
 import Header from "../components/Header";
 
@@ -10,6 +11,7 @@ function fmt(val) {
 }
 
 export default function CommissionsPage() {
+  const navigate = useNavigate();
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear]   = useState(now.getFullYear());
@@ -18,6 +20,8 @@ export default function CommissionsPage() {
   const [loading, setLoading]   = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [sellerSales, setSellerSales] = useState({});
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -33,7 +37,11 @@ export default function CommissionsPage() {
     }
   }, [month, year]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    setExpandedId(null);
+    setSellerSales({});
+    load();
+  }, [load]);
 
   async function toggleExpand(sellerId) {
     if (expandedId === sellerId) { setExpandedId(null); return; }
@@ -42,9 +50,27 @@ export default function CommissionsPage() {
       const res = await api.get(`/sales/?seller_id=${sellerId}`).catch(() => ({ data: [] }));
       const filtered = res.data.filter((s) => {
         const d = new Date(s.sale_date);
-        return d.getMonth() + 1 === month && d.getFullYear() === year && !s.is_returned;
+        return Number(s.seller_id) === Number(sellerId)
+          && d.getMonth() + 1 === month
+          && d.getFullYear() === year
+          && !s.is_returned;
       });
       setSellerSales((p) => ({ ...p, [sellerId]: filtered }));
+    }
+  }
+
+  async function deleteSale(sellerId, saleId) {
+    setDeleteError("");
+    try {
+      await api.delete(`/sales/${saleId}`);
+      setSellerSales((current) => ({
+        ...current,
+        [sellerId]: (current[sellerId] || []).filter((sale) => sale.id !== saleId),
+      }));
+      setConfirmDeleteId(null);
+      await load();
+    } catch (error) {
+      setDeleteError(error?.response?.data?.detail || "No se pudo eliminar la venta.");
     }
   }
 
@@ -59,6 +85,10 @@ export default function CommissionsPage() {
   return (
     <div>
       <Header title="Ganancias de vendedores" subtitle="Base de USD 10 por venta, ajustable cuando la operación es compartida" />
+
+      {deleteError && (
+        <div className="mb-4 bg-red-50 border border-red-100 text-red-600 rounded-xl px-4 py-3 text-sm">{deleteError}</div>
+      )}
 
       {/* Filtros */}
       <div className="flex gap-3 mb-6 flex-wrap">
@@ -84,11 +114,11 @@ export default function CommissionsPage() {
           { label: "Ventas", value: totals.sales, suffix: "", icon: TrendingUp, color: "#3b82f6" },
           { label: "Ganancia bruta", value: `USD ${fmt(totals.profit)}`, suffix: "", icon: DollarSign, color: "#10b981" },
           { label: "Total vendedores", value: `USD ${fmt(totals.commission)}`, suffix: "", icon: Users, color: "#f59e0b" },
-        ].map(({ label, value, icon: Icon, color }) => (
+        ].map(({ label, value, icon, color }) => (
           <div key={label} className="bg-base-card border border-base-border rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <div style={{ background: `${color}18`, borderRadius: 8, padding: 6 }}>
-                <Icon size={14} style={{ color }} />
+                {createElement(icon, { size: 14, style: { color } })}
               </div>
               <span className="text-xs text-base-muted">{label}</span>
             </div>
@@ -157,7 +187,7 @@ export default function CommissionsPage() {
                     <table className="w-full text-xs mt-2">
                       <thead>
                         <tr className="text-base-muted">
-                          {["#", "Fecha", "Cliente", "Precio", "Ganancia bruta", "Ganancia vendedor"].map((h) => (
+                          {["#", "Fecha", "Cliente", "Precio", "Ganancia bruta", "Ganancia vendedor", "Acciones"].map((h) => (
                             <th key={h} className="text-left py-1.5 pr-4 font-medium">{h}</th>
                           ))}
                         </tr>
@@ -172,6 +202,45 @@ export default function CommissionsPage() {
                             <td className="py-1.5 pr-4 text-green-500">USD {fmt(s.gross_profit_usd)}</td>
                             <td className="py-1.5 font-semibold" style={{ color: "#f59e0b" }}>
                               USD {fmt(s.commission_usd)}
+                            </td>
+                            <td className="py-1.5">
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/sales/${s.id}/edit`)}
+                                  className="p-1.5 rounded-lg text-base-muted hover:text-base-text hover:bg-base-subtle transition"
+                                  aria-label={`Editar venta ${s.id}`}
+                                >
+                                  <Pencil size={12} />
+                                </button>
+                                {confirmDeleteId === s.id ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => deleteSale(row.seller_id, s.id)}
+                                      className="text-[10px] font-semibold bg-red-500 text-white rounded-md px-2 py-1"
+                                    >
+                                      Confirmar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setConfirmDeleteId(null)}
+                                      className="text-[10px] text-base-muted rounded-md px-1.5 py-1"
+                                    >
+                                      No
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setConfirmDeleteId(s.id)}
+                                    className="p-1.5 rounded-lg text-base-muted hover:text-red-500 hover:bg-red-50 transition"
+                                    aria-label={`Eliminar venta ${s.id}`}
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}

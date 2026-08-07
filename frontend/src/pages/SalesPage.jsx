@@ -25,6 +25,9 @@ export default function SalesPage() {
   const [savingAcc, setSavingAcc] = useState(false);
   const [accEditError, setAccEditError] = useState("");
   const [confirmDeleteAcc, setConfirmDeleteAcc] = useState(null); // id
+  const [confirmDeleteSale, setConfirmDeleteSale] = useState(null); // id
+  const [deletingSale, setDeletingSale] = useState(false);
+  const [salesError, setSalesError] = useState("");
 
   useEffect(() => {
     async function loadData() {
@@ -148,12 +151,33 @@ export default function SalesPage() {
     }
   }
 
+  async function deleteIphoneSale(id) {
+    setDeletingSale(true);
+    setSalesError("");
+    try {
+      await api.delete(`/sales/${id}`);
+      setIphoneSales((prev) => prev.filter((sale) => sale.id !== id));
+      setConfirmDeleteSale(null);
+    } catch (error) {
+      setSalesError(error?.response?.data?.detail || "No se pudo eliminar la venta.");
+    } finally {
+      setDeletingSale(false);
+    }
+  }
+
   const inputClass = "bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition";
   const modalInputClass = "w-full bg-base-subtle border border-base-border rounded-xl px-4 py-2.5 text-base-text text-sm outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition";
 
   return (
     <div>
       <Header title="Ventas" subtitle="Historial de operaciones realizadas" />
+
+      {salesError && (
+        <div className="mb-4 flex items-center justify-between gap-3 bg-red-50 border border-red-100 text-red-600 rounded-xl px-4 py-3 text-sm">
+          <span>{salesError}</span>
+          <button type="button" onClick={() => setSalesError("")} className="text-red-500 hover:text-red-700">×</button>
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="bg-base-card border border-base-border rounded-2xl p-5 mb-5 shadow-card">
@@ -263,7 +287,43 @@ export default function SalesPage() {
                     <span className="text-xylo-500 font-medium">USD {Number(row.profit).toFixed(2)}</span>
                   </td>}
                   {isAdmin && <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
-                    {row.type === "accessory" && (
+                    {row.type === "iphone" ? (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => navigate(`/sales/${row.id}/edit`)}
+                          className="p-1.5 rounded-lg hover:bg-base-subtle text-base-muted hover:text-base-text transition"
+                          aria-label={`Editar venta ${row.id}`}
+                        >
+                          <Pencil size={13} />
+                        </button>
+                        {confirmDeleteSale === row.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => deleteIphoneSale(row.id)}
+                              disabled={deletingSale}
+                              className="text-[11px] font-semibold px-2 py-1 rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-60 transition"
+                            >
+                              {deletingSale ? "..." : "Eliminar"}
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteSale(null)}
+                              disabled={deletingSale}
+                              className="text-[11px] px-2 py-1 rounded-lg border border-base-border text-base-muted hover:bg-base-subtle transition"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteSale(row.id)}
+                            className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-base-muted hover:text-red-500 transition"
+                            aria-label={`Eliminar venta ${row.id}`}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </div>
+                    ) : (
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => {
@@ -369,6 +429,41 @@ export default function SalesPage() {
                   ) : (
                     <button
                       onClick={() => setConfirmDeleteAcc(row.id)}
+                      className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-base-border text-base-muted hover:text-red-500 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+                    >
+                      <Trash2 size={11} /> Eliminar
+                    </button>
+                  )}
+                </div>
+              )}
+              {isAdmin && row.type === "iphone" && (
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-base-border" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => navigate(`/sales/${row.id}/edit`)}
+                    className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-base-border text-base-muted hover:text-base-text hover:bg-base-subtle transition"
+                  >
+                    <Pencil size={11} /> Editar
+                  </button>
+                  {confirmDeleteSale === row.id ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => deleteIphoneSale(row.id)}
+                        disabled={deletingSale}
+                        className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-60 transition"
+                      >
+                        {deletingSale ? "Eliminando..." : "Confirmar"}
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteSale(null)}
+                        disabled={deletingSale}
+                        className="text-xs px-3 py-1.5 rounded-lg border border-base-border text-base-muted hover:bg-base-subtle transition"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDeleteSale(row.id)}
                       className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-base-border text-base-muted hover:text-red-500 hover:border-red-200 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
                     >
                       <Trash2 size={11} /> Eliminar
