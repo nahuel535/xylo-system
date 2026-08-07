@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from app.models.product import Product
 from app.models.sale import Sale
+from app.models.accessory import Accessory, AccessorySale
 from tests.conftest import auth_headers
 
 
@@ -56,6 +57,37 @@ def test_admin_can_read_all_records_and_financial_fields(client, seeded):
     sale = client.get(f"/sales/{seeded['sale_a'].id}", headers=headers)
     assert sale.status_code == 200
     assert float(sale.json()["gross_profit_usd"]) == 100.0
+
+
+def test_dashboard_reports_iphone_profit_without_accessories(client, seeded, db_session):
+    accessory = Accessory(
+        name="Case test",
+        category="case",
+        quantity=5,
+        purchase_price_usd=Decimal("10"),
+        sale_price_usd=Decimal("40"),
+    )
+    db_session.add(accessory)
+    db_session.flush()
+    db_session.add(AccessorySale(
+        accessory_id=accessory.id,
+        quantity_sold=1,
+        sale_price_usd=Decimal("40"),
+        purchase_price_usd=Decimal("10"),
+        gross_profit_usd=Decimal("30"),
+    ))
+    db_session.commit()
+
+    response = client.get(
+        "/dashboard/summary",
+        headers=auth_headers(seeded["admin"]),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert float(payload["iphone_profit_this_month_usd"]) == 200.0
+    assert float(payload["iphone_total_gross_profit_usd"]) == 200.0
+    assert float(payload["profit_this_month_usd"]) == 230.0
 
 
 def test_admin_can_filter_sales_by_seller_and_seller_cannot_bypass_scope(client, seeded):

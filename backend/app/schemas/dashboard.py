@@ -13,6 +13,9 @@ class DashboardSummary(BaseModel):
     sales_this_month_count: int
     sales_this_month_value_usd: Decimal
     profit_this_month_usd: Decimal
+    iphone_profit_this_month_usd: Decimal
+    iphone_profit_last_month_usd: Decimal
+    iphone_total_gross_profit_usd: Decimal
     cost_this_month_usd: Decimal
     sales_last_month_count: int
     sales_last_month_value_usd: Decimal

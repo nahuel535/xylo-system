@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../services/api";
 import Header from "../components/Header";
 import UsdtCard from "../components/UsdtCard";
-import { Package, TrendingUp, TrendingDown, DollarSign, ShoppingBag, BarChart2, CreditCard, Minus, Clock, ChevronLeft, ChevronRight, Download, Users, AlertCircle } from "lucide-react";
+import { Package, TrendingUp, TrendingDown, DollarSign, ShoppingBag, BarChart2, CreditCard, Minus, Clock, ChevronLeft, ChevronRight, Download, Users, AlertCircle, Smartphone } from "lucide-react";
 
 const MONTHS_ES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
@@ -11,7 +11,6 @@ export default function DashboardPage() {
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
   const [summary, setSummary] = useState(null);
-  const [exchange, setExchange] = useState(null);
   const [topModels, setTopModels] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [monthlyStats, setMonthlyStats] = useState([]);
@@ -49,16 +48,14 @@ export default function DashboardPage() {
     async function loadDashboard() {
       setLoading(true);
       try {
-        const [summaryRes, exchangeRes, topModelsRes, paymentRes, monthlyRes, recentRes] = await Promise.all([
+        const [summaryRes, topModelsRes, paymentRes, monthlyRes, recentRes] = await Promise.all([
           api.get(`/dashboard/summary?year=${selectedYear}&month=${selectedMonth}`),
-          api.get("/exchange-rates/active"),
           api.get("/dashboard/top-models"),
           api.get("/dashboard/payment-methods"),
           api.get("/dashboard/monthly-stats"),
           api.get("/dashboard/recent-sales"),
         ]);
         setSummary(summaryRes.data);
-        setExchange(exchangeRes.data);
         setTopModels(topModelsRes.data);
         setPaymentMethods(paymentRes.data);
         setMonthlyStats(monthlyRes.data.slice(-6));
@@ -78,7 +75,7 @@ export default function DashboardPage() {
   // Deltas mes vs mes anterior
   const deltaRevenue = delta(summary.sales_this_month_value_usd, summary.sales_last_month_value_usd);
   const deltaProfit = delta(summary.profit_this_month_usd, summary.profit_last_month_usd);
-  const deltaSales = delta(summary.sales_this_month_count, summary.sales_last_month_count);
+  const deltaIphoneProfit = delta(summary.iphone_profit_this_month_usd, summary.iphone_profit_last_month_usd);
 
   // Margen este mes
   const margin = summary.sales_this_month_value_usd > 0
@@ -115,7 +112,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── KPI cards principales ── */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
         <KpiCard
           label={`Ventas — ${MONTHS_ES[selectedMonth - 1]}`}
           value={`USD ${fmt(summary.sales_this_month_value_usd)}`}
@@ -133,6 +130,15 @@ export default function DashboardPage() {
           deltaLabel="vs mes anterior"
           icon={<TrendingUp size={16} />}
           accent="green"
+        />
+        <KpiCard
+          label={`Ganancia iPhones — ${MONTHS_ES[selectedMonth - 1]}`}
+          value={`USD ${fmt(summary.iphone_profit_this_month_usd)}`}
+          sub={`Sin accesorios · Acumulada USD ${fmt(summary.iphone_total_gross_profit_usd)}`}
+          delta={deltaIphoneProfit}
+          deltaLabel="vs mes anterior"
+          icon={<Smartphone size={16} />}
+          accent="blue"
         />
         <KpiCard
           label="Stock en inventario"

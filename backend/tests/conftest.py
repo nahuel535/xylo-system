@@ -19,6 +19,7 @@ from app.api.appointments import router as appointments_router
 from app.api.admin_activity import router as admin_activity_router
 from app.api.after_sales import router as after_sales_router
 from app.api.clients import router as clients_router
+from app.api.dashboard import router as dashboard_router
 from app.api.products import router as products_router
 from app.api.quotes import router as quotes_router
 from app.api.sales import router as sales_router
@@ -171,6 +172,7 @@ def app(db_session):
         admin_activity_router,
         after_sales_router,
         clients_router,
+        dashboard_router,
         products_router,
         quotes_router,
         sales_router,
