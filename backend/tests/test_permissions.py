@@ -89,6 +89,8 @@ def test_dashboard_reports_iphone_profit_without_accessories(client, seeded, db_
     assert float(payload["iphone_profit_this_month_usd"]) == 200.0
     assert float(payload["iphone_total_gross_profit_usd"]) == 200.0
     assert float(payload["profit_this_month_usd"]) == 230.0
+    assert float(payload["seller_commissions_this_month_usd"]) == 20.0
+    assert float(payload["net_profit_this_month_usd"]) == 210.0
 
 
 def test_dashboard_reports_iphone_operations_separately(client, seeded, db_session):
@@ -192,6 +194,8 @@ def test_returned_sales_are_excluded_from_admin_metrics_and_reports(client, seed
 
     assert float(summary["iphone_profit_this_month_usd"]) == 100.0
     assert float(summary["profit_this_month_usd"]) == 120.0
+    assert float(summary["seller_commissions_this_month_usd"]) == 10.0
+    assert float(summary["net_profit_this_month_usd"]) == 110.0
     assert summary["total_sales_count"] == 2
 
     current_month = next(

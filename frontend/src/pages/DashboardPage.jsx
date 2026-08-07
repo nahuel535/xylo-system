@@ -157,7 +157,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── KPI cards secundarias ── */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
         <KpiCard
           label={`Gastos — ${MONTHS_ES[selectedMonth - 1]}`}
           value={`USD ${fmt(summary.expenses_this_month_usd)}`}
@@ -166,9 +166,16 @@ export default function DashboardPage() {
           accent="red"
         />
         <KpiCard
+          label={`Pago a vendedores — ${MONTHS_ES[selectedMonth - 1]}`}
+          value={`USD ${fmt(summary.seller_commissions_this_month_usd)}`}
+          sub="Comisiones de ventas activas"
+          icon={<Users size={16} />}
+          accent="orange"
+        />
+        <KpiCard
           label={`Ganancia neta — ${MONTHS_ES[selectedMonth - 1]}`}
           value={`USD ${fmt(summary.net_profit_this_month_usd)}`}
-          sub="Bruta menos gastos"
+          sub="Bruta menos gastos y vendedores"
           icon={<DollarSign size={16} />}
           accent={Number(summary.net_profit_this_month_usd) >= 0 ? "green" : "red"}
         />

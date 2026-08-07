@@ -123,12 +123,24 @@ def get_dashboard_summary(
         extract("month", Expense.date) == target_month,
     ).scalar()
 
+    seller_commissions_this_month_usd = db.query(
+        func.coalesce(func.sum(Sale.commission_usd), 0)
+    ).filter(
+        Sale.is_returned.is_(False),
+        Sale.sale_date >= month_start,
+        Sale.sale_date < month_end,
+    ).scalar()
+
     active_debtors_count = db.query(Debtor).filter(Debtor.paid == False).count()
     total_active_debt_usd = db.query(func.coalesce(func.sum(Debtor.amount_usd), 0)).filter(Debtor.paid == False).scalar()
 
     # ── Totales combinados ───────────────────────────────────────────────────
     profit_this_month = _d(iphone_month_profit) + _d(acc_month_profit)
-    net_profit_this_month_usd = profit_this_month - _d(expenses_this_month_usd)
+    net_profit_this_month_usd = (
+        profit_this_month
+        - _d(expenses_this_month_usd)
+        - _d(seller_commissions_this_month_usd)
+    )
 
     return DashboardSummary(
         total_products_in_stock=total_products_in_stock,
@@ -151,6 +163,7 @@ def get_dashboard_summary(
         sales_last_month_value_usd=_d(iphone_last_value) + _d(acc_last_value),
         profit_last_month_usd=_d(iphone_last_profit) + _d(acc_last_profit),
         expenses_this_month_usd=_d(expenses_this_month_usd),
+        seller_commissions_this_month_usd=_d(seller_commissions_this_month_usd),
         net_profit_this_month_usd=net_profit_this_month_usd,
         active_debtors_count=active_debtors_count,
         total_active_debt_usd=_d(total_active_debt_usd),
