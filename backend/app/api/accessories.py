@@ -1,3 +1,6 @@
+from collections import defaultdict
+from decimal import Decimal, ROUND_FLOOR, ROUND_HALF_UP
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -11,6 +14,45 @@ from app.schemas.accessory import (
 from app.core.dependencies import require_admin
 
 router = APIRouter(prefix="/accessories", tags=["Accessories"], dependencies=[Depends(require_admin)])
+
+
+def _allocate_combo_unit_prices(accessories_by_item, target_total: Decimal):
+    units = [
+        (accessory, Decimal(str(accessory.sale_price_usd)))
+        for accessory, quantity in accessories_by_item
+        for _ in range(quantity)
+    ]
+    if not units:
+        return []
+
+    target_cents = int(
+        (target_total * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    )
+    total_weight = sum((weight for _, weight in units), Decimal("0"))
+    if total_weight > 0:
+        raw_allocations = [
+            Decimal(target_cents) * weight / total_weight
+            for _, weight in units
+        ]
+    else:
+        raw_allocations = [Decimal(target_cents) / len(units) for _ in units]
+
+    allocated_cents = [
+        int(value.to_integral_value(rounding=ROUND_FLOOR))
+        for value in raw_allocations
+    ]
+    remainder_order = sorted(
+        range(len(units)),
+        key=lambda index: raw_allocations[index] - allocated_cents[index],
+        reverse=True,
+    )
+    for index in remainder_order[:target_cents - sum(allocated_cents)]:
+        allocated_cents[index] += 1
+
+    grouped = defaultdict(int)
+    for (accessory, _), cents in zip(units, allocated_cents):
+        grouped[(accessory.id, cents)] += 1
+    return grouped
 
 
 # ── Accesorios ───────────────────────────────────────────────────────────────
@@ -220,47 +262,67 @@ def sell_combo(combo_id: int, data: SellComboRequest, db: Session = Depends(get_
     if not items:
         raise HTTPException(status_code=400, detail="El combo no tiene artículos")
 
-    # Validate stock first
+    required_by_accessory = defaultdict(int)
     for item in items:
-        acc = db.query(Accessory).filter(Accessory.id == item.accessory_id).first()
-        if not acc or acc.quantity < item.quantity:
-            name = acc.name if acc else f"ID {item.accessory_id}"
+        if item.quantity <= 0:
+            raise HTTPException(status_code=400, detail="El combo contiene una cantidad inválida")
+        required_by_accessory[item.accessory_id] += item.quantity
+
+    accessories_by_item = []
+    for accessory_id, required_quantity in required_by_accessory.items():
+        acc = (
+            db.query(Accessory)
+            .filter(Accessory.id == accessory_id)
+            .with_for_update()
+            .first()
+        )
+        if not acc or acc.quantity < required_quantity:
+            name = acc.name if acc else f"ID {accessory_id}"
             raise HTTPException(status_code=400, detail=f"Stock insuficiente para: {name}")
+        accessories_by_item.append((acc, required_quantity))
 
-    # Calculate total price
-    total_cost = sum(
-        float(db.query(Accessory).filter(Accessory.id == item.accessory_id).first().purchase_price_usd) * item.quantity
-        for item in items
+    target_total = sum(
+        (
+            Decimal(str(accessory.sale_price_usd)) * quantity
+            for accessory, quantity in accessories_by_item
+        ),
+        Decimal("0"),
     )
-    override_price = data.override_price_usd
-    natural_price = sum(
-        float(db.query(Accessory).filter(Accessory.id == item.accessory_id).first().sale_price_usd) * item.quantity
-        for item in items
-    )
-    if combo.sale_price_usd:
-        natural_price = float(combo.sale_price_usd)
-    if override_price:
-        natural_price = float(override_price)
+    if combo.sale_price_usd is not None:
+        target_total = Decimal(str(combo.sale_price_usd))
+    if data.override_price_usd is not None:
+        target_total = Decimal(str(data.override_price_usd))
+    target_total = target_total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    if target_total < 0:
+        raise HTTPException(status_code=400, detail="El precio del combo no puede ser negativo")
 
-    # Distribute discount proportionally across items
+    grouped_prices = _allocate_combo_unit_prices(accessories_by_item, target_total)
+    accessories_by_id = {accessory.id: accessory for accessory, _ in accessories_by_item}
     created = []
-    for item in items:
-        acc = db.query(Accessory).filter(Accessory.id == item.accessory_id).with_for_update().first()
-        unit_price = float(acc.sale_price_usd)
-        # use natural price as-is per item (combo discount already reflected in total)
-        profit = (unit_price - float(acc.purchase_price_usd)) * item.quantity
+    quantities_sold = defaultdict(int)
+    for (accessory_id, unit_price_cents), quantity in grouped_prices.items():
+        acc = accessories_by_id[accessory_id]
+        unit_price = Decimal(unit_price_cents) / Decimal("100")
+        profit = (unit_price - Decimal(str(acc.purchase_price_usd))) * quantity
         acc_sale = AccessorySale(
             accessory_id=acc.id,
             sale_id=data.sale_id,
-            quantity_sold=item.quantity,
+            quantity_sold=quantity,
             sale_price_usd=unit_price,
             purchase_price_usd=acc.purchase_price_usd,
             gross_profit_usd=profit,
             notes=f"Combo: {combo.name}" + (f" — {data.notes}" if data.notes else ""),
         )
-        acc.quantity -= item.quantity
         db.add(acc_sale)
         created.append(acc_sale)
+        quantities_sold[acc.id] += quantity
+
+    for accessory_id, quantity in quantities_sold.items():
+        accessories_by_id[accessory_id].quantity -= quantity
 
     db.commit()
-    return {"message": f"Combo '{combo.name}' vendido", "sales_created": len(created), "total_price_usd": natural_price}
+    return {
+        "message": f"Combo '{combo.name}' vendido",
+        "sales_created": len(created),
+        "total_price_usd": float(target_total),
+    }

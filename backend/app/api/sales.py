@@ -25,6 +25,23 @@ def _sale_for_user(sale: Sale, current_user: User) -> dict:
     return data
 
 
+def _validate_payment_total(payments, sale_price: Decimal) -> None:
+    if not payments:
+        return
+    total_payments = sum(
+        (Decimal(str(payment.amount_usd)) for payment in payments),
+        Decimal("0"),
+    )
+    if total_payments != sale_price:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"La suma de los pagos ({total_payments}) no coincide "
+                f"con el precio de venta ({sale_price})"
+            ),
+        )
+
+
 def _sync_crm_client(
     db: Session,
     client_name: str,
@@ -111,13 +128,7 @@ def create_sale(
     if current_user.role == "admin" and sale_data.commission_usd is not None:
         commission_usd = Decimal(str(sale_data.commission_usd)).quantize(Decimal("0.01"))
 
-    total_payments = sum(Decimal(payment.amount_usd) for payment in sale_data.payments)
-
-    if sale_data.payments and total_payments != sale_price:
-        raise HTTPException(
-            status_code=400,
-            detail=f"La suma de los pagos ({total_payments}) no coincide con el precio de venta ({sale_price})"
-        )
+    _validate_payment_total(sale_data.payments, sale_price)
 
     new_sale = Sale(
         product_id=sale_data.product_id,
@@ -198,6 +209,19 @@ def update_sale(
     if not sale:
         raise HTTPException(status_code=404, detail="Venta no encontrada")
 
+    effective_sale_price = (
+        Decimal(str(sale_data.sale_price_usd))
+        if sale_data.sale_price_usd is not None
+        else Decimal(str(sale.sale_price_usd))
+    )
+    if sale_data.payments is not None:
+        _validate_payment_total(sale_data.payments, effective_sale_price)
+    elif sale_data.sale_price_usd is not None:
+        existing_payments = db.query(SalePayment).filter(
+            SalePayment.sale_id == sale_id
+        ).all()
+        _validate_payment_total(existing_payments, effective_sale_price)
+
     if sale_data.seller_id is not None:
         seller = db.query(User).filter(User.id == sale_data.seller_id).first()
         if not seller:
@@ -205,7 +229,7 @@ def update_sale(
         sale.seller_id = sale_data.seller_id
 
     if sale_data.sale_price_usd is not None or sale_data.seller_id is not None:
-        new_price = Decimal(str(sale_data.sale_price_usd)) if sale_data.sale_price_usd is not None else Decimal(str(sale.sale_price_usd))
+        new_price = effective_sale_price
         new_profit = new_price - Decimal(str(sale.purchase_price_usd_snapshot))
         sale.sale_price_usd = new_price
         sale.gross_profit_usd = new_profit

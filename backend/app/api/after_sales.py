@@ -35,7 +35,11 @@ def get_after_sales_overview(
     sale_query = (
         db.query(Sale, Product)
         .join(Product, Sale.product_id == Product.id)
-        .filter(Product.warranty_days.isnot(None), Product.warranty_days > 0)
+        .filter(
+            Sale.is_returned.is_(False),
+            Product.warranty_days.isnot(None),
+            Product.warranty_days > 0,
+        )
     )
     if current_user.role != "admin":
         sale_query = sale_query.filter(Sale.seller_id == current_user.id)

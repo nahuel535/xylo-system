@@ -3,7 +3,8 @@ from decimal import Decimal
 
 from app.models.product import Product
 from app.models.sale import Sale
-from app.models.accessory import Accessory, AccessorySale
+from app.models.accessory import Accessory, AccessorySale, Combo, ComboItem
+from app.models.sale_payment import SalePayment
 from tests.conftest import auth_headers
 
 
@@ -88,6 +89,190 @@ def test_dashboard_reports_iphone_profit_without_accessories(client, seeded, db_
     assert float(payload["iphone_profit_this_month_usd"]) == 200.0
     assert float(payload["iphone_total_gross_profit_usd"]) == 200.0
     assert float(payload["profit_this_month_usd"]) == 230.0
+
+
+def test_returned_sales_are_excluded_from_admin_metrics_and_reports(client, seeded, db_session):
+    returned_accessory = Accessory(
+        name="Case returned",
+        category="case",
+        quantity=5,
+        purchase_price_usd=Decimal("10"),
+        sale_price_usd=Decimal("40"),
+    )
+    standalone_accessory = Accessory(
+        name="Cable active",
+        category="cable",
+        quantity=5,
+        purchase_price_usd=Decimal("5"),
+        sale_price_usd=Decimal("25"),
+    )
+    db_session.add_all([returned_accessory, standalone_accessory])
+    db_session.flush()
+    db_session.add_all([
+        SalePayment(
+            sale_id=seeded["sale_a"].id,
+            method="efectivo",
+            amount_usd=Decimal("200"),
+        ),
+        SalePayment(
+            sale_id=seeded["sale_b"].id,
+            method="transferencia",
+            amount_usd=Decimal("250"),
+        ),
+        AccessorySale(
+            accessory_id=returned_accessory.id,
+            sale_id=seeded["sale_a"].id,
+            quantity_sold=1,
+            sale_price_usd=Decimal("40"),
+            purchase_price_usd=Decimal("10"),
+            gross_profit_usd=Decimal("30"),
+        ),
+        AccessorySale(
+            accessory_id=standalone_accessory.id,
+            quantity_sold=1,
+            sale_price_usd=Decimal("25"),
+            purchase_price_usd=Decimal("5"),
+            gross_profit_usd=Decimal("20"),
+        ),
+    ])
+    db_session.commit()
+
+    returned = client.post(
+        f"/sales/{seeded['sale_a'].id}/return",
+        headers=auth_headers(seeded["admin"]),
+        json={"reason": "Prueba de devolución"},
+    )
+    assert returned.status_code == 200
+
+    headers = auth_headers(seeded["admin"])
+    summary = client.get("/dashboard/summary", headers=headers).json()
+    monthly = client.get("/dashboard/monthly-stats", headers=headers).json()
+    methods = client.get("/dashboard/payment-methods", headers=headers).json()
+    recent = client.get("/dashboard/recent-sales", headers=headers).json()
+    top_models = client.get("/dashboard/top-models", headers=headers).json()
+    report = client.get(
+        f"/dashboard/report?year={date.today().year}&month={date.today().month}",
+        headers=headers,
+    )
+
+    assert float(summary["iphone_profit_this_month_usd"]) == 100.0
+    assert float(summary["profit_this_month_usd"]) == 120.0
+    assert summary["total_sales_count"] == 2
+
+    current_month = next(
+        row for row in monthly
+        if row["year"] == date.today().year and row["month"] == date.today().month
+    )
+    assert current_month["sales_count"] == 2
+    assert float(current_month["revenue_usd"]) == 275.0
+    assert methods == [{"method": "transferencia", "count": 1, "total_usd": 250.0}]
+    assert not any(item["type"] == "iphone" and item["id"] == seeded["sale_a"].id for item in recent)
+    assert not any(item["type"] == "accessory" and item["model"].startswith("Case returned") for item in recent)
+    assert [item["model"] for item in top_models] == [seeded["product_b"].model]
+
+    csv_text = report.content.decode("utf-8-sig")
+    assert report.status_code == 200
+    assert seeded["product_a"].model not in csv_text
+    assert "Case returned" not in csv_text
+    assert seeded["product_b"].model in csv_text
+    assert "Cable active" in csv_text
+
+
+def test_edit_sale_rejects_payment_totals_that_do_not_match_price(client, seeded, db_session):
+    db_session.add(SalePayment(
+        sale_id=seeded["sale_a"].id,
+        method="efectivo",
+        amount_usd=Decimal("200"),
+    ))
+    db_session.commit()
+    headers = auth_headers(seeded["admin"])
+
+    price_only = client.put(
+        f"/sales/{seeded['sale_a'].id}",
+        headers=headers,
+        json={"sale_price_usd": 250},
+    )
+    mismatched_payments = client.put(
+        f"/sales/{seeded['sale_a'].id}",
+        headers=headers,
+        json={
+            "sale_price_usd": 250,
+            "payments": [{"method": "efectivo", "amount_usd": 200}],
+        },
+    )
+
+    assert price_only.status_code == 400
+    assert mismatched_payments.status_code == 400
+    db_session.refresh(seeded["sale_a"])
+    assert Decimal(seeded["sale_a"].sale_price_usd) == Decimal("200")
+    stored_payments = db_session.query(SalePayment).filter(
+        SalePayment.sale_id == seeded["sale_a"].id
+    ).all()
+    assert [Decimal(payment.amount_usd) for payment in stored_payments] == [Decimal("200")]
+
+    valid = client.put(
+        f"/sales/{seeded['sale_a'].id}",
+        headers=headers,
+        json={
+            "sale_price_usd": 250,
+            "payments": [
+                {"method": "efectivo", "amount_usd": 100},
+                {"method": "transferencia", "amount_usd": 150},
+            ],
+        },
+    )
+    assert valid.status_code == 200
+    assert float(valid.json()["sale_price_usd"]) == 250.0
+    assert sum(float(payment["amount_usd"]) for payment in valid.json()["payments"]) == 250.0
+
+
+def test_combo_override_price_is_persisted_in_accessory_sales(client, seeded, db_session):
+    case = Accessory(
+        name="Case combo",
+        category="case",
+        quantity=5,
+        purchase_price_usd=Decimal("4"),
+        sale_price_usd=Decimal("9"),
+    )
+    charger = Accessory(
+        name="Charger combo",
+        category="charger",
+        quantity=5,
+        purchase_price_usd=Decimal("8"),
+        sale_price_usd=Decimal("17"),
+    )
+    db_session.add_all([case, charger])
+    db_session.flush()
+    combo = Combo(name="Kit prueba", sale_price_usd=Decimal("40"))
+    db_session.add(combo)
+    db_session.flush()
+    db_session.add_all([
+        ComboItem(combo_id=combo.id, accessory_id=case.id, quantity=3),
+        ComboItem(combo_id=combo.id, accessory_id=charger.id, quantity=1),
+    ])
+    db_session.commit()
+
+    response = client.post(
+        f"/accessories/combos/{combo.id}/sell",
+        headers=auth_headers(seeded["admin"]),
+        json={"override_price_usd": 23},
+    )
+
+    assert response.status_code == 200
+    assert float(response.json()["total_price_usd"]) == 23.0
+    rows = db_session.query(AccessorySale).filter(
+        AccessorySale.notes.like("Combo: Kit prueba%")
+    ).all()
+    persisted_revenue = sum(
+        Decimal(row.sale_price_usd) * row.quantity_sold for row in rows
+    )
+    persisted_profit = sum(Decimal(row.gross_profit_usd) for row in rows)
+    assert persisted_revenue == Decimal("23")
+    assert persisted_profit == Decimal("3")
+    db_session.refresh(case)
+    db_session.refresh(charger)
+    assert case.quantity == 2
+    assert charger.quantity == 4
 
 
 def test_admin_can_filter_sales_by_seller_and_seller_cannot_bypass_scope(client, seeded):

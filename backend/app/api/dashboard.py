@@ -6,7 +6,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
-from sqlalchemy import extract, func
+from sqlalchemy import extract, func, or_
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -60,41 +60,47 @@ def get_dashboard_summary(
         last_month_start = datetime(target_year, target_month - 1, 1)
         last_month_end = month_start
 
+    active_sale_ids = db.query(Sale.id).filter(Sale.is_returned.is_(False))
+    active_accessory_sale = or_(
+        AccessorySale.sale_id.is_(None),
+        AccessorySale.sale_id.in_(active_sale_ids),
+    )
+
     # ── iPhones ──────────────────────────────────────────────────────────────
     total_products_in_stock = db.query(Product).filter(Product.status == "in_stock").count()
     total_stock_value_usd = db.query(func.coalesce(func.sum(Product.purchase_price_usd), 0)).filter(Product.status == "in_stock").scalar()
 
-    iphone_total_count = db.query(Sale).count()
-    iphone_total_value = db.query(func.coalesce(func.sum(Sale.sale_price_usd), 0)).scalar()
-    iphone_total_profit = db.query(func.coalesce(func.sum(Sale.gross_profit_usd), 0)).scalar()
+    iphone_total_count = db.query(Sale).filter(Sale.is_returned.is_(False)).count()
+    iphone_total_value = db.query(func.coalesce(func.sum(Sale.sale_price_usd), 0)).filter(Sale.is_returned.is_(False)).scalar()
+    iphone_total_profit = db.query(func.coalesce(func.sum(Sale.gross_profit_usd), 0)).filter(Sale.is_returned.is_(False)).scalar()
 
-    iphone_today_count = db.query(Sale).filter(func.date(Sale.sale_date) == today).count()
-    iphone_today_value = db.query(func.coalesce(func.sum(Sale.sale_price_usd), 0)).filter(func.date(Sale.sale_date) == today).scalar()
+    iphone_today_count = db.query(Sale).filter(Sale.is_returned.is_(False), func.date(Sale.sale_date) == today).count()
+    iphone_today_value = db.query(func.coalesce(func.sum(Sale.sale_price_usd), 0)).filter(Sale.is_returned.is_(False), func.date(Sale.sale_date) == today).scalar()
 
-    iphone_month_count = db.query(Sale).filter(Sale.sale_date >= month_start, Sale.sale_date < month_end).count()
-    iphone_month_value = db.query(func.coalesce(func.sum(Sale.sale_price_usd), 0)).filter(Sale.sale_date >= month_start, Sale.sale_date < month_end).scalar()
-    iphone_month_profit = db.query(func.coalesce(func.sum(Sale.gross_profit_usd), 0)).filter(Sale.sale_date >= month_start, Sale.sale_date < month_end).scalar()
-    cost_this_month_usd = db.query(func.coalesce(func.sum(Sale.purchase_price_usd_snapshot), 0)).filter(Sale.sale_date >= month_start, Sale.sale_date < month_end).scalar()
+    iphone_month_count = db.query(Sale).filter(Sale.is_returned.is_(False), Sale.sale_date >= month_start, Sale.sale_date < month_end).count()
+    iphone_month_value = db.query(func.coalesce(func.sum(Sale.sale_price_usd), 0)).filter(Sale.is_returned.is_(False), Sale.sale_date >= month_start, Sale.sale_date < month_end).scalar()
+    iphone_month_profit = db.query(func.coalesce(func.sum(Sale.gross_profit_usd), 0)).filter(Sale.is_returned.is_(False), Sale.sale_date >= month_start, Sale.sale_date < month_end).scalar()
+    cost_this_month_usd = db.query(func.coalesce(func.sum(Sale.purchase_price_usd_snapshot), 0)).filter(Sale.is_returned.is_(False), Sale.sale_date >= month_start, Sale.sale_date < month_end).scalar()
 
-    iphone_last_count = db.query(Sale).filter(Sale.sale_date >= last_month_start, Sale.sale_date < last_month_end).count()
-    iphone_last_value = db.query(func.coalesce(func.sum(Sale.sale_price_usd), 0)).filter(Sale.sale_date >= last_month_start, Sale.sale_date < last_month_end).scalar()
-    iphone_last_profit = db.query(func.coalesce(func.sum(Sale.gross_profit_usd), 0)).filter(Sale.sale_date >= last_month_start, Sale.sale_date < last_month_end).scalar()
+    iphone_last_count = db.query(Sale).filter(Sale.is_returned.is_(False), Sale.sale_date >= last_month_start, Sale.sale_date < last_month_end).count()
+    iphone_last_value = db.query(func.coalesce(func.sum(Sale.sale_price_usd), 0)).filter(Sale.is_returned.is_(False), Sale.sale_date >= last_month_start, Sale.sale_date < last_month_end).scalar()
+    iphone_last_profit = db.query(func.coalesce(func.sum(Sale.gross_profit_usd), 0)).filter(Sale.is_returned.is_(False), Sale.sale_date >= last_month_start, Sale.sale_date < last_month_end).scalar()
 
     # ── Accesorios ───────────────────────────────────────────────────────────
-    acc_total_count = db.query(AccessorySale).count()
-    acc_total_value = db.query(func.coalesce(func.sum(AccessorySale.sale_price_usd * AccessorySale.quantity_sold), 0)).scalar()
-    acc_total_profit = db.query(func.coalesce(func.sum(AccessorySale.gross_profit_usd), 0)).scalar()
+    acc_total_count = db.query(AccessorySale).filter(active_accessory_sale).count()
+    acc_total_value = db.query(func.coalesce(func.sum(AccessorySale.sale_price_usd * AccessorySale.quantity_sold), 0)).filter(active_accessory_sale).scalar()
+    acc_total_profit = db.query(func.coalesce(func.sum(AccessorySale.gross_profit_usd), 0)).filter(active_accessory_sale).scalar()
 
-    acc_today_count = db.query(AccessorySale).filter(func.date(AccessorySale.sold_at) == today).count()
-    acc_today_value = db.query(func.coalesce(func.sum(AccessorySale.sale_price_usd * AccessorySale.quantity_sold), 0)).filter(func.date(AccessorySale.sold_at) == today).scalar()
+    acc_today_count = db.query(AccessorySale).filter(active_accessory_sale, func.date(AccessorySale.sold_at) == today).count()
+    acc_today_value = db.query(func.coalesce(func.sum(AccessorySale.sale_price_usd * AccessorySale.quantity_sold), 0)).filter(active_accessory_sale, func.date(AccessorySale.sold_at) == today).scalar()
 
-    acc_month_count = db.query(AccessorySale).filter(AccessorySale.sold_at >= month_start, AccessorySale.sold_at < month_end).count()
-    acc_month_value = db.query(func.coalesce(func.sum(AccessorySale.sale_price_usd * AccessorySale.quantity_sold), 0)).filter(AccessorySale.sold_at >= month_start, AccessorySale.sold_at < month_end).scalar()
-    acc_month_profit = db.query(func.coalesce(func.sum(AccessorySale.gross_profit_usd), 0)).filter(AccessorySale.sold_at >= month_start, AccessorySale.sold_at < month_end).scalar()
+    acc_month_count = db.query(AccessorySale).filter(active_accessory_sale, AccessorySale.sold_at >= month_start, AccessorySale.sold_at < month_end).count()
+    acc_month_value = db.query(func.coalesce(func.sum(AccessorySale.sale_price_usd * AccessorySale.quantity_sold), 0)).filter(active_accessory_sale, AccessorySale.sold_at >= month_start, AccessorySale.sold_at < month_end).scalar()
+    acc_month_profit = db.query(func.coalesce(func.sum(AccessorySale.gross_profit_usd), 0)).filter(active_accessory_sale, AccessorySale.sold_at >= month_start, AccessorySale.sold_at < month_end).scalar()
 
-    acc_last_count = db.query(AccessorySale).filter(AccessorySale.sold_at >= last_month_start, AccessorySale.sold_at < last_month_end).count()
-    acc_last_value = db.query(func.coalesce(func.sum(AccessorySale.sale_price_usd * AccessorySale.quantity_sold), 0)).filter(AccessorySale.sold_at >= last_month_start, AccessorySale.sold_at < last_month_end).scalar()
-    acc_last_profit = db.query(func.coalesce(func.sum(AccessorySale.gross_profit_usd), 0)).filter(AccessorySale.sold_at >= last_month_start, AccessorySale.sold_at < last_month_end).scalar()
+    acc_last_count = db.query(AccessorySale).filter(active_accessory_sale, AccessorySale.sold_at >= last_month_start, AccessorySale.sold_at < last_month_end).count()
+    acc_last_value = db.query(func.coalesce(func.sum(AccessorySale.sale_price_usd * AccessorySale.quantity_sold), 0)).filter(active_accessory_sale, AccessorySale.sold_at >= last_month_start, AccessorySale.sold_at < last_month_end).scalar()
+    acc_last_profit = db.query(func.coalesce(func.sum(AccessorySale.gross_profit_usd), 0)).filter(active_accessory_sale, AccessorySale.sold_at >= last_month_start, AccessorySale.sold_at < last_month_end).scalar()
 
     # ── Gastos / deudores ────────────────────────────────────────────────────
     expenses_this_month_usd = db.query(func.coalesce(func.sum(Expense.amount_usd), 0)).filter(
@@ -136,6 +142,11 @@ def get_dashboard_summary(
 
 @router.get("/monthly-stats")
 def get_monthly_stats(db: Session = Depends(get_db)):
+    active_sale_ids = db.query(Sale.id).filter(Sale.is_returned.is_(False))
+    active_accessory_sale = or_(
+        AccessorySale.sale_id.is_(None),
+        AccessorySale.sale_id.in_(active_sale_ids),
+    )
     iphone_rows = (
         db.query(
             extract("year", Sale.sale_date).label("year"),
@@ -145,6 +156,7 @@ def get_monthly_stats(db: Session = Depends(get_db)):
             func.coalesce(func.sum(Sale.gross_profit_usd), 0).label("profit_usd"),
             func.coalesce(func.sum(Sale.purchase_price_usd_snapshot), 0).label("cost_usd"),
         )
+        .filter(Sale.is_returned.is_(False))
         .group_by("year", "month")
         .all()
     )
@@ -158,6 +170,7 @@ def get_monthly_stats(db: Session = Depends(get_db)):
             func.coalesce(func.sum(AccessorySale.gross_profit_usd), 0).label("profit_usd"),
             func.coalesce(func.sum(AccessorySale.purchase_price_usd * AccessorySale.quantity_sold), 0).label("cost_usd"),
         )
+        .filter(active_accessory_sale)
         .group_by("year", "month")
         .all()
     )
@@ -208,6 +221,8 @@ def get_payment_methods_summary(db: Session = Depends(get_db)):
             func.count(SalePayment.id).label("count"),
             func.coalesce(func.sum(SalePayment.amount_usd), 0).label("total_usd")
         )
+        .join(Sale, SalePayment.sale_id == Sale.id)
+        .filter(Sale.is_returned.is_(False))
         .group_by(SalePayment.method)
         .order_by(func.sum(SalePayment.amount_usd).desc())
         .all()
@@ -220,6 +235,7 @@ def get_recent_sales(db: Session = Depends(get_db)):
     iphone_results = (
         db.query(Sale, Product)
         .join(Product, Sale.product_id == Product.id)
+        .filter(Sale.is_returned.is_(False))
         .order_by(Sale.sale_date.desc())
         .limit(8)
         .all()
@@ -237,9 +253,14 @@ def get_recent_sales(db: Session = Depends(get_db)):
         for sale, product in iphone_results
     ]
 
+    active_sale_ids = db.query(Sale.id).filter(Sale.is_returned.is_(False))
     acc_results = (
         db.query(AccessorySale, Accessory)
         .join(Accessory, AccessorySale.accessory_id == Accessory.id)
+        .filter(or_(
+            AccessorySale.sale_id.is_(None),
+            AccessorySale.sale_id.in_(active_sale_ids),
+        ))
         .order_by(AccessorySale.sold_at.desc())
         .limit(8)
         .all()
@@ -270,6 +291,7 @@ def get_top_models(db: Session = Depends(get_db)):
             func.coalesce(func.sum(Sale.sale_price_usd), 0).label("total_sales_usd")
         )
         .join(Sale, Sale.product_id == Product.id)
+        .filter(Sale.is_returned.is_(False))
         .group_by(Product.model)
         .order_by(func.count(Sale.id).desc())
         .all()
@@ -289,14 +311,26 @@ def download_report(
     sales = (
         db.query(Sale, Product)
         .join(Product, Sale.product_id == Product.id)
-        .filter(Sale.sale_date >= month_start, Sale.sale_date < month_end)
+        .filter(
+            Sale.is_returned.is_(False),
+            Sale.sale_date >= month_start,
+            Sale.sale_date < month_end,
+        )
         .order_by(Sale.sale_date)
         .all()
     )
+    active_sale_ids = db.query(Sale.id).filter(Sale.is_returned.is_(False))
     acc_sales = (
         db.query(AccessorySale, Accessory)
         .join(Accessory, AccessorySale.accessory_id == Accessory.id)
-        .filter(AccessorySale.sold_at >= month_start, AccessorySale.sold_at < month_end)
+        .filter(
+            or_(
+                AccessorySale.sale_id.is_(None),
+                AccessorySale.sale_id.in_(active_sale_ids),
+            ),
+            AccessorySale.sold_at >= month_start,
+            AccessorySale.sold_at < month_end,
+        )
         .order_by(AccessorySale.sold_at)
         .all()
     )

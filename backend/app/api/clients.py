@@ -336,7 +336,10 @@ def get_client_sales(
     rows = (
         db.query(Sale, Product)
         .join(Product, Sale.product_id == Product.id)
-        .filter(func.lower(Sale.client_name) == client.name.lower())
+        .filter(
+            func.lower(Sale.client_name) == client.name.lower(),
+            Sale.is_returned.is_(False),
+        )
         .order_by(Sale.sale_date.desc())
         .limit(20)
         .all()

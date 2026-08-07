@@ -89,6 +89,12 @@ export default function EditSalePage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setMessage("");
+    const salePrice = Number(form.sale_price_usd || 0);
+    const paymentTotal = payments.reduce((sum, payment) => sum + Number(payment.amount_usd || 0), 0);
+    if (payments.length > 0 && Math.abs(paymentTotal - salePrice) >= 0.005) {
+      setMessage(`La suma de los pagos (USD ${paymentTotal.toFixed(2)}) no coincide con el precio de venta (USD ${salePrice.toFixed(2)}).`);
+      return;
+    }
     setSaving(true);
     try {
       await api.put(`/sales/${id}`, {
@@ -124,6 +130,10 @@ export default function EditSalePage() {
   if (!sale || !form) return <p className="text-base-muted">Venta no encontrada.</p>;
 
   const inputClass = "w-full bg-base-subtle border border-base-border rounded-xl px-4 py-3 text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition text-sm";
+  const paymentTotal = payments.reduce((sum, payment) => sum + Number(payment.amount_usd || 0), 0);
+  const salePrice = Number(form.sale_price_usd || 0);
+  const paymentDifference = salePrice - paymentTotal;
+  const paymentsMismatch = payments.length > 0 && Math.abs(paymentDifference) >= 0.005;
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -220,7 +230,7 @@ export default function EditSalePage() {
                 <div>
                   <p className="text-xs text-base-muted mb-1">Monto USD</p>
                   <input type="number" step="0.01" value={payment.amount_usd}
-                    onChange={(e) => handlePaymentChange(index, "amount_usd", e.target.value)} className={inputClass} />
+                    onChange={(e) => handlePaymentChange(index, "amount_usd", e.target.value)} className={inputClass} required min="0" />
                 </div>
                 <div>
                   <p className="text-xs text-base-muted mb-1">Referencia</p>
@@ -230,6 +240,23 @@ export default function EditSalePage() {
               </div>
             </div>
           ))}
+
+          {payments.length > 0 && (
+            <div className={`rounded-xl border px-4 py-3 text-sm ${paymentsMismatch
+              ? "bg-red-50 border-red-100 text-red-600"
+              : "bg-green-50 border-green-100 text-green-600"}`}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span>Total de pagos</span>
+                <strong>USD {paymentTotal.toFixed(2)}</strong>
+              </div>
+              {paymentsMismatch && (
+                <p className="text-xs mt-1">
+                  {paymentDifference > 0 ? "Faltan" : "Sobran"} USD {Math.abs(paymentDifference).toFixed(2)} para coincidir con el precio de venta.
+                </p>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Extras */}
@@ -270,7 +297,7 @@ export default function EditSalePage() {
         )}
 
         <div className="flex gap-3">
-          <button type="submit" disabled={saving}
+          <button type="submit" disabled={saving || paymentsMismatch}
             className="bg-xylo-500 hover:bg-xylo-600 transition text-white rounded-xl px-6 py-3 font-medium shadow-sm disabled:opacity-50">
             {saving ? "Guardando..." : "Guardar cambios"}
           </button>

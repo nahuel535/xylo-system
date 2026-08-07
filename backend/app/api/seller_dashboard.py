@@ -92,7 +92,10 @@ def get_seller_dashboard(
     recent_sales = (
         db.query(Sale, Product)
         .join(Product, Sale.product_id == Product.id)
-        .filter(Sale.seller_id == current_user.id)
+        .filter(
+            Sale.seller_id == current_user.id,
+            Sale.is_returned.is_(False),
+        )
         .order_by(Sale.sale_date.desc())
         .limit(6)
         .all()

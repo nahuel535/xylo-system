@@ -76,7 +76,7 @@ class AccessorySaleResponse(BaseModel):
 
 class ComboItemCreate(BaseModel):
     accessory_id: int
-    quantity: int = 1
+    quantity: int = Field(default=1, ge=1)
 
 
 class ComboCreate(BaseModel):
@@ -114,6 +114,6 @@ class AccessorySaleUpdate(BaseModel):
 
 
 class SellComboRequest(BaseModel):
-    override_price_usd: Optional[Decimal] = None
+    override_price_usd: Optional[Decimal] = Field(default=None, ge=0)
     sale_id: Optional[int] = None
     notes: Optional[str] = None
