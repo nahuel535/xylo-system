@@ -2,10 +2,10 @@ import {
   Home, Package, PackagePlus, ShoppingBag,
   ReceiptText, TrendingUp, ScanLine, LogOut, Sun, Moon,
   Users, Wallet, LayoutGrid, TrendingDown, Cable, BookUser, CalendarDays,
-  BadgeDollarSign, FileText, History, ShieldAlert,
+  BadgeDollarSign, FileText, History, ShieldAlert, MessageCircle,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { createElement, useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { useNotifications } from "../context/NotificationContext";
@@ -34,6 +34,7 @@ const DESKTOP_SECTIONS = [
       { to: "/agenda", label: "Agenda", icon: CalendarDays },
       { to: "/presupuestos", label: "Presupuestos", icon: FileText },
       { to: "/after-sales", label: "Posventa", icon: ShieldAlert },
+      { to: "/whatsapp-list", label: "Lista WhatsApp", icon: MessageCircle },
       { to: "/comisiones", label: "Ganancias", icon: BadgeDollarSign, adminOnly: true },
     ],
   },
@@ -68,6 +69,7 @@ const SHEET_LINKS = [
   { to: "/agenda", label: "Agenda", icon: CalendarDays, color: "#0ea5e9" },
   { to: "/presupuestos", label: "Presupuestos", icon: FileText, color: "#8b5cf6" },
   { to: "/after-sales", label: "Posventa", icon: ShieldAlert, color: "#f97316" },
+  { to: "/whatsapp-list", label: "Lista WhatsApp", icon: MessageCircle, color: "#22c55e" },
   { to: "/comisiones", label: "Ganancias", icon: BadgeDollarSign, color: "#f59e0b", adminOnly: true },
   { to: "/users", label: "Usuarios", icon: Users, color: "#64748b", adminOnly: true },
   { to: "/admin/activity", label: "Auditoría", icon: History, color: "#64748b", adminOnly: true },
@@ -87,12 +89,13 @@ const PAGE_TITLES = {
   "/agenda": "Agenda",
   "/presupuestos": "Presupuestos",
   "/after-sales": "Posventa",
+  "/whatsapp-list": "Lista WhatsApp",
   "/comisiones": "Ganancias de vendedores",
   "/users": "Usuarios",
   "/admin/activity": "Auditoría",
 };
 
-function TabButton({ to, label, icon: Icon, inactive }) {
+function TabButton({ to, label, icon, inactive }) {
   const [pressed, setPressed] = useState(false);
   return (
     <NavLink
@@ -122,11 +125,11 @@ function TabButton({ to, label, icon: Icon, inactive }) {
             marginBottom: 7,
             transition: "all 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)",
           }} />
-          <Icon
-            size={22}
-            strokeWidth={isActive ? 2.3 : 1.6}
-            style={{ color: isActive ? "#10b981" : inactive, transition: "color 0.2s" }}
-          />
+          {createElement(icon, {
+            size: 22,
+            strokeWidth: isActive ? 2.3 : 1.6,
+            style: { color: isActive ? "#10b981" : inactive, transition: "color 0.2s" },
+          })}
           <span style={{
             fontSize: 10, fontWeight: isActive ? 650 : 400, lineHeight: 1,
             color: isActive ? "#10b981" : inactive,
@@ -168,8 +171,6 @@ export default function Sidebar() {
     ? user.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()
     : "?";
 
-  useEffect(() => { closeSheet(); }, [location.pathname]);
-
   function openSheet() {
     setSheetVisible(true);
     requestAnimationFrame(() => requestAnimationFrame(() => setSheetOpen(true)));
@@ -180,6 +181,11 @@ export default function Sidebar() {
     setDragOffset(0);
     setTimeout(() => setSheetVisible(false), 340);
   }
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(closeSheet);
+    return () => cancelAnimationFrame(frame);
+  }, [location.pathname]);
 
   function onHandleTouchStart(e) {
     dragStartY.current = e.touches[0].clientY;
@@ -223,7 +229,7 @@ export default function Sidebar() {
                   {label}
                 </p>
                 <div className="space-y-0.5">
-                  {links.map(({ to, label: linkLabel, icon: Icon }) => {
+                  {links.map(({ to, label: linkLabel, icon }) => {
                     const badge = to === "/crm" && reminderCount > 0 ? reminderCount : 0;
                     return (
                       <NavLink
@@ -237,7 +243,7 @@ export default function Sidebar() {
                               : "text-base-muted hover:bg-base-subtle hover:text-base-text"
                           }`}
                       >
-                        <Icon size={16} />
+                        {createElement(icon, { size: 16 })}
                         <span className="flex-1">{linkLabel}</span>
                         {badge > 0 && (
                           <span className="ml-auto text-[10px] font-bold bg-red-500 text-white rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center leading-none">
@@ -435,7 +441,7 @@ export default function Sidebar() {
 
             {/* App icon grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 4, padding: "4px 12px 8px" }}>
-              {SHEET_LINKS.filter(canSee).map(({ to, label, icon: Icon, color }) => {
+              {SHEET_LINKS.filter(canSee).map(({ to, label, icon, color }) => {
                 const isActive = to === "/"
                   ? location.pathname === "/"
                   : location.pathname.startsWith(to);
@@ -462,7 +468,7 @@ export default function Sidebar() {
                         display: "flex", alignItems: "center", justifyContent: "center",
                         boxShadow: `0 4px 12px ${color}55`,
                       }}>
-                        <Icon size={24} color="#fff" strokeWidth={1.8} />
+                        {createElement(icon, { size: 24, color: "#fff", strokeWidth: 1.8 })}
                       </div>
                       {to === "/crm" && reminderCount > 0 && (
                         <div style={{
