@@ -123,7 +123,7 @@ def test_dashboard_reports_iphone_operations_separately(client, seeded, db_sessi
     payload = response.json()
     assert payload["sales_this_month_count"] == 3
     assert payload["iphone_sales_this_month_count"] == 2
-    assert payload["iphone_sales_last_month_count"] == 0
+    assert payload["accessory_sales_this_month_count"] == 0
 
 
 def test_returned_sales_are_excluded_from_admin_metrics_and_reports(client, seeded, db_session):

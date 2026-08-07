@@ -101,18 +101,6 @@ def get_dashboard_summary(
         )
         .count()
     )
-    iphone_only_last_count = (
-        db.query(Sale)
-        .join(Product, Sale.product_id == Product.id)
-        .filter(
-            Sale.is_returned.is_(False),
-            Sale.sale_date >= last_month_start,
-            Sale.sale_date < last_month_end,
-            *iphone_product_filter,
-        )
-        .count()
-    )
-
     # ── Accesorios ───────────────────────────────────────────────────────────
     acc_total_count = db.query(AccessorySale).filter(active_accessory_sale).count()
     acc_total_value = db.query(func.coalesce(func.sum(AccessorySale.sale_price_usd * AccessorySale.quantity_sold), 0)).filter(active_accessory_sale).scalar()
@@ -152,6 +140,7 @@ def get_dashboard_summary(
         sales_today_value_usd=_d(iphone_today_value) + _d(acc_today_value),
         sales_this_month_count=iphone_month_count + acc_month_count,
         iphone_sales_this_month_count=iphone_only_month_count,
+        accessory_sales_this_month_count=acc_month_count,
         sales_this_month_value_usd=_d(iphone_month_value) + _d(acc_month_value),
         profit_this_month_usd=profit_this_month,
         iphone_profit_this_month_usd=_d(iphone_month_profit),
@@ -159,7 +148,6 @@ def get_dashboard_summary(
         iphone_total_gross_profit_usd=_d(iphone_total_profit),
         cost_this_month_usd=_d(cost_this_month_usd),
         sales_last_month_count=iphone_last_count + acc_last_count,
-        iphone_sales_last_month_count=iphone_only_last_count,
         sales_last_month_value_usd=_d(iphone_last_value) + _d(acc_last_value),
         profit_last_month_usd=_d(iphone_last_profit) + _d(acc_last_profit),
         expenses_this_month_usd=_d(expenses_this_month_usd),

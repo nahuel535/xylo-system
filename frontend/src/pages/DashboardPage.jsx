@@ -189,7 +189,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Comparativa mes actual vs anterior ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <CompareCard
           label="Facturación"
           current={summary.sales_this_month_value_usd}
@@ -208,13 +208,10 @@ export default function DashboardPage() {
           current={summary.sales_this_month_count}
           previous={summary.sales_last_month_count}
           integer
-        />
-        <CompareCard
-          label="Operaciones iPhones"
-          current={summary.iphone_sales_this_month_count}
-          previous={summary.iphone_sales_last_month_count}
-          integer
-          accent
+          breakdown={[
+            { label: "Accesorios", value: summary.accessory_sales_this_month_count },
+            { label: "iPhone", value: summary.iphone_sales_this_month_count },
+          ]}
         />
       </div>
 
@@ -537,7 +534,7 @@ function KpiCard({ label, value, sub, delta: d, deltaLabel, icon, accent }) {
   );
 }
 
-function CompareCard({ label, current, previous, prefix = "", integer = false, accent = false }) {
+function CompareCard({ label, current, previous, prefix = "", integer = false, accent = false, breakdown = [] }) {
   const d = delta(current, previous);
   const fmt2 = (v) => integer ? Number(v).toLocaleString("es-AR") : `${prefix} ${fmt(v)}`;
 
@@ -554,6 +551,15 @@ function CompareCard({ label, current, previous, prefix = "", integer = false, a
           <p className="text-xs text-base-muted mt-0.5">Mes anterior</p>
         </div>
       </div>
+      {breakdown.length > 0 && (
+        <div className="flex items-center gap-4 mt-3 text-xs text-base-muted">
+          {breakdown.map((item) => (
+            <span key={item.label}>
+              {item.label}: <strong className="text-base-text">{Number(item.value || 0).toLocaleString("es-AR")}</strong>
+            </span>
+          ))}
+        </div>
+      )}
       <div className="mt-3 pt-3 border-t border-base-border">
         <DeltaBadge delta={d} label="variación" />
       </div>
