@@ -189,7 +189,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Comparativa mes actual vs anterior ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <CompareCard
           label="Facturación"
           current={summary.sales_this_month_value_usd}
@@ -208,6 +208,13 @@ export default function DashboardPage() {
           current={summary.sales_this_month_count}
           previous={summary.sales_last_month_count}
           integer
+        />
+        <CompareCard
+          label="Operaciones iPhones"
+          current={summary.iphone_sales_this_month_count}
+          previous={summary.iphone_sales_last_month_count}
+          integer
+          accent
         />
       </div>
 

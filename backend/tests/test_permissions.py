@@ -91,6 +91,41 @@ def test_dashboard_reports_iphone_profit_without_accessories(client, seeded, db_
     assert float(payload["profit_this_month_usd"]) == 230.0
 
 
+def test_dashboard_reports_iphone_operations_separately(client, seeded, db_session):
+    console = Product(
+        category="Consola",
+        brand="Sony",
+        model="PS5 Test",
+        imei="CONSOLE-OPS-TEST",
+        purchase_price_usd=Decimal("300"),
+        suggested_sale_price_usd=Decimal("400"),
+        status="sold",
+    )
+    db_session.add(console)
+    db_session.flush()
+    db_session.add(Sale(
+        product_id=console.id,
+        seller_id=seeded["seller_a"].id,
+        sale_price_usd=Decimal("400"),
+        purchase_price_usd_snapshot=Decimal("300"),
+        gross_profit_usd=Decimal("100"),
+        commission_usd=Decimal("10"),
+        status="completed",
+    ))
+    db_session.commit()
+
+    response = client.get(
+        "/dashboard/summary",
+        headers=auth_headers(seeded["admin"]),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["sales_this_month_count"] == 3
+    assert payload["iphone_sales_this_month_count"] == 2
+    assert payload["iphone_sales_last_month_count"] == 0
+
+
 def test_returned_sales_are_excluded_from_admin_metrics_and_reports(client, seeded, db_session):
     returned_accessory = Accessory(
         name="Case returned",
