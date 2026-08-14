@@ -216,7 +216,14 @@ export default function Sidebar() {
             <img src={logo} alt="Xylo" className="w-8 h-8 rounded-xl" />
             <h1 className="text-base font-semibold text-base-text tracking-tight">Xylo</h1>
           </div>
-          <p className="text-xs text-base-muted pl-10">Sistema interno</p>
+          <div className="pl-10 flex items-center gap-2">
+            <p className="text-xs text-base-muted">Sistema interno</p>
+            {user?.isDemo && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-700">
+                Demo
+              </span>
+            )}
+          </div>
         </div>
 
         <nav className="flex-1 flex flex-col">
@@ -268,7 +275,7 @@ export default function Sidebar() {
               }}>{initials}</div>
               <div className="min-w-0">
                 <p className="text-xs font-medium text-base-text truncate">{user?.name}</p>
-                <p className="text-xs text-base-muted capitalize">{user?.role}</p>
+                <p className="text-xs text-base-muted capitalize">{user?.isDemo ? "Administrador demo" : user?.role}</p>
               </div>
             </div>
             <button
@@ -434,7 +441,7 @@ export default function Sidebar() {
                   {user?.name}
                 </p>
                 <p style={{ margin: 0, fontSize: 12, color: inactive, textTransform: "capitalize" }}>
-                  {user?.role}
+                  {user?.isDemo ? "Administrador demo" : user?.role}
                 </p>
               </div>
             </div>

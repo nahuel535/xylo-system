@@ -45,3 +45,11 @@ def get_optional_user_id(request: Request) -> Optional[int]:
         return int(payload.get("sub", 0)) or None
     except (TypeError, ValueError):
         return None
+
+
+def is_demo_request(request: Request) -> bool:
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return False
+    payload = decode_token(auth.split(" ", 1)[1])
+    return bool(payload and payload.get("demo") is True)

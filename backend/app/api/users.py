@@ -44,6 +44,7 @@ def create_user(
         password_hash=hash_password(user_data.password),
         role=user_data.role,
         must_change_password=user_data.role == "seller",
+        is_demo=current_admin.is_demo,
         commission_rate=user_data.commission_rate,
     )
     db.add(new_user)

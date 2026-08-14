@@ -27,6 +27,7 @@ export function AuthProvider({ children }) {
         id: data.user_id,
         name: data.user_name,
         role: data.user_role,
+        isDemo: data.is_demo,
         mustChangePassword: data.must_change_password,
       })
     );
@@ -37,6 +38,7 @@ export function AuthProvider({ children }) {
       id: data.user_id,
       name: data.user_name,
       role: data.user_role,
+      isDemo: data.is_demo,
       mustChangePassword: data.must_change_password,
     });
   }

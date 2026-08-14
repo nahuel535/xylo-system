@@ -1,10 +1,10 @@
 import httpx
 import base64
 from pathlib import Path
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from app.core.dependencies import require_admin
+from app.core.dependencies import is_demo_request, require_admin
 
 router = APIRouter(prefix="/photos", tags=["Photos"], dependencies=[Depends(require_admin)])
 
@@ -13,7 +13,9 @@ IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".heic", ".webp"}
 
 
 @router.get("/local-gallery")
-def get_local_gallery():
+def get_local_gallery(request: Request):
+    if is_demo_request(request):
+        return {"models": []}
     if not FOTOS_DIR.exists():
         return {"models": []}
     models = []
@@ -34,7 +36,9 @@ def get_local_gallery():
 
 
 @router.get("/local-file/{model}/{filename}")
-def get_local_file(model: str, filename: str):
+def get_local_file(model: str, filename: str, request: Request):
+    if is_demo_request(request):
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
     file_path = FOTOS_DIR / model / filename
     if not file_path.exists() or file_path.suffix.lower() not in IMAGE_EXTS:
         raise HTTPException(status_code=404, detail="Archivo no encontrado")

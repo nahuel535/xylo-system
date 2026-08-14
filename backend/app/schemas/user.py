@@ -44,6 +44,7 @@ class UserResponse(BaseModel):
     role: str
     is_active: bool
     must_change_password: bool
+    is_demo: bool
     commission_rate: Decimal
     created_at: datetime
 

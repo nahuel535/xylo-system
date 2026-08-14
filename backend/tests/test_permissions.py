@@ -5,6 +5,8 @@ from app.models.product import Product
 from app.models.sale import Sale
 from app.models.accessory import Accessory, AccessorySale, Combo, ComboItem
 from app.models.sale_payment import SalePayment
+from app.models.user import User
+from app.core.security import decode_token, hash_password
 from tests.conftest import auth_headers
 
 
@@ -534,6 +536,42 @@ def test_admin_records_partial_seller_payouts_and_dashboard_deducts_payments(cli
 def test_seller_cannot_list_users(client, seeded):
     response = client.get("/users/", headers=auth_headers(seeded["seller_a"]))
     assert response.status_code == 403
+
+
+def test_demo_admin_login_marks_token_and_new_users_as_demo(client, db_session):
+    demo_admin = User(
+        name="Nahuel Demo",
+        email="nf38686@gmail.com",
+        password_hash=hash_password("XyloDemo2026$"),
+        role="admin",
+        is_active=True,
+        must_change_password=False,
+        is_demo=True,
+    )
+    db_session.add(demo_admin)
+    db_session.commit()
+
+    login = client.post(
+        "/auth/login",
+        json={"email": "nf38686@gmail.com", "password": "XyloDemo2026$"},
+    )
+    assert login.status_code == 200
+    payload = login.json()
+    assert payload["is_demo"] is True
+    assert decode_token(payload["access_token"])["demo"] is True
+
+    created_user = client.post(
+        "/users/",
+        headers=auth_headers(demo_admin),
+        json={
+            "name": "Vendedor Demo",
+            "email": "seller-demo@example.com",
+            "password": "DemoSeller2026$",
+            "role": "seller",
+        },
+    )
+    assert created_user.status_code == 200
+    assert created_user.json()["is_demo"] is True
 
 
 def test_public_product_catalog_hides_purchase_data(client, seeded):

@@ -6,6 +6,7 @@ from app.db.session import get_db
 from app.models.client import Client, ClientReminder
 from app.utils.email import is_configured, send_email, NOTIFY_EMAIL
 from app.core.dependencies import require_admin
+from app.models.user import User
 
 router = APIRouter(prefix="/notifications", tags=["Notificaciones"], dependencies=[Depends(require_admin)])
 
@@ -17,7 +18,9 @@ REMINDER_LABELS = {
 
 
 @router.get("/status")
-def notification_status():
+def notification_status(current_admin: User = Depends(require_admin)):
+    if current_admin.is_demo:
+        return {"email_configured": False, "notify_email": None}
     return {
         "email_configured": is_configured(),
         "notify_email": NOTIFY_EMAIL if NOTIFY_EMAIL else None,
@@ -25,7 +28,16 @@ def notification_status():
 
 
 @router.post("/send-digest")
-def send_digest(db: Session = Depends(get_db)):
+def send_digest(
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+):
+    if current_admin.is_demo:
+        return {
+            "message": "Envío deshabilitado en el entorno demo.",
+            "sent": False,
+            "count": 0,
+        }
     today = date.today()
     rows = (
         db.query(ClientReminder, Client)
