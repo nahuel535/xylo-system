@@ -62,6 +62,41 @@ def test_admin_can_read_all_records_and_financial_fields(client, seeded):
     assert float(sale.json()["gross_profit_usd"]) == 100.0
 
 
+def test_admin_can_check_duplicate_imei_and_seller_cannot(client, seeded, db_session):
+    imei = "490154203237518"
+    product = Product(
+        category="iPhone",
+        brand="Apple",
+        model="iPhone 15",
+        imei=imei,
+        purchase_price_usd=Decimal("500"),
+        suggested_sale_price_usd=Decimal("650"),
+        status="in_stock",
+    )
+    db_session.add(product)
+    db_session.commit()
+
+    duplicate = client.get(
+        f"/products/check-imei/{imei}",
+        headers=auth_headers(seeded["admin"]),
+    )
+    available = client.get(
+        "/products/check-imei/356938035643809",
+        headers=auth_headers(seeded["admin"]),
+    )
+    forbidden = client.get(
+        f"/products/check-imei/{imei}",
+        headers=auth_headers(seeded["seller_a"]),
+    )
+
+    assert duplicate.status_code == 200
+    assert duplicate.json()["exists"] is True
+    assert duplicate.json()["product"]["id"] == product.id
+    assert available.status_code == 200
+    assert available.json() == {"exists": False, "product": None}
+    assert forbidden.status_code == 403
+
+
 def test_dashboard_reports_iphone_profit_without_accessories(client, seeded, db_session):
     accessory = Accessory(
         name="Case test",

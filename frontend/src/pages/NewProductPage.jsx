@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
 import { uploadToCloudinary } from "../services/cloudinary";
-import { Mic, MicOff, X, CheckCircle, SkipForward, ChevronRight, Images } from "lucide-react";
+import { Mic, MicOff, X, CheckCircle, SkipForward, ChevronRight, Images, ScanBarcode } from "lucide-react";
 import LocalGalleryPicker from "../components/LocalGalleryPicker";
+import ProductBarcodeScanner from "../components/ProductBarcodeScanner";
 import {
   CATEGORY_OPTIONS, CONDITION_OPTIONS, COSMETIC_CONDITION_OPTIONS,
   FUNCTIONAL_CONDITION_OPTIONS, SIM_TYPE_OPTIONS, SUPPLIER_OPTIONS,
@@ -128,6 +129,9 @@ export default function NewProductPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [showLocalGallery, setShowLocalGallery] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [scannedLabelData, setScannedLabelData] = useState(null);
+  const [imeiCheck, setImeiCheck] = useState({ status: "idle", product: null });
 
   const isAccessory = form.category === "Accesorio";
   const isCombo = form.category === "Combo";
@@ -330,6 +334,7 @@ export default function NewProductPage() {
 
   function handleChange(event) {
     const { name, value } = event.target;
+    if (name === "imei") setImeiCheck({ status: "idle", product: null });
     setForm((prev) => {
       const updated = { ...prev, [name]: value };
       if (name === "model") { updated.storage = ""; updated.color = ""; }
@@ -349,9 +354,71 @@ export default function NewProductPage() {
     });
   }
 
+  async function checkImei(value) {
+    const imei = String(value || "").replace(/\D/g, "");
+    if (!imei) {
+      setImeiCheck({ status: "idle", product: null });
+      return false;
+    }
+    if (imei.length !== 15) {
+      setImeiCheck({ status: "invalid", product: null });
+      return false;
+    }
+
+    setImeiCheck({ status: "checking", product: null });
+    try {
+      const response = await api.get(`/products/check-imei/${imei}`);
+      const next = response.data.exists
+        ? { status: "duplicate", product: response.data.product }
+        : { status: "available", product: null };
+      setImeiCheck(next);
+      return !response.data.exists;
+    } catch (error) {
+      setImeiCheck({ status: "error", product: null });
+      setMessage(error?.response?.data?.detail || "No pude verificar si el IMEI ya existe.");
+      return false;
+    }
+  }
+
+  function handleBarcodeApply(labelData) {
+    const metadata = [
+      labelData.imei2 && `IMEI 2: ${labelData.imei2}`,
+      labelData.ean && `EAN/UPC: ${labelData.ean}`,
+      labelData.part_number && `Código Apple: ${labelData.part_number}`,
+    ].filter(Boolean).join(" · ");
+
+    setForm((current) => ({
+      ...current,
+      category: "iPhone",
+      brand: "Apple",
+      model: labelData.model || current.model,
+      storage: labelData.storage || current.storage,
+      color: labelData.color || current.color,
+      imei: labelData.imei || current.imei,
+      serial_number: labelData.serial_number || current.serial_number,
+      notes: metadata && !current.notes.includes(metadata)
+        ? [current.notes, `Etiqueta: ${metadata}`].filter(Boolean).join("\n")
+        : current.notes,
+    }));
+    setScannedLabelData(labelData);
+    setShowBarcodeScanner(false);
+    if (labelData.imei) checkImei(labelData.imei);
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage("");
+    if (imeiCheck.status === "duplicate") {
+      setMessage("Ese IMEI ya está cargado. Revisá el producto existente antes de continuar.");
+      return;
+    }
+    if (!isAccessory && !isCombo && !isConsola) {
+      const imeiAvailable = await checkImei(form.imei);
+      if (!imeiAvailable) {
+        setMessage("Revisá el IMEI antes de guardar el producto.");
+        return;
+      }
+    }
     setSaving(true);
     try {
       const warrantyDays = form.warranty_value
@@ -503,17 +570,27 @@ export default function NewProductPage() {
       <form onSubmit={handleSubmit} className="bg-base-card border border-base-border rounded-2xl p-6 space-y-6 shadow-card">
 
         {/* Botón modo dictado */}
-        <div className="flex items-center justify-between pb-4 border-b border-base-border">
-          <p className="text-sm text-base-muted">Completá los campos manualmente o usá el modo dictado</p>
-          <button
-            type="button"
-            onClick={startVoiceMode}
-            className="flex items-center gap-2 bg-xylo-500 hover:bg-xylo-600 text-white rounded-xl px-4 py-2.5 text-sm font-medium transition shadow-sm"
-          >
-            <Mic size={15} />
-            Modo dictado
-            <ChevronRight size={14} />
-          </button>
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-base-border">
+          <p className="text-sm text-base-muted">Completá manualmente, por voz o escaneando la etiqueta</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setShowBarcodeScanner(true)}
+              className="flex items-center gap-2 rounded-xl border border-xylo-500/30 bg-xylo-500/5 px-4 py-2.5 text-sm font-medium text-xylo-600 transition hover:bg-xylo-500/10"
+            >
+              <ScanBarcode size={16} />
+              Escanear etiqueta
+            </button>
+            <button
+              type="button"
+              onClick={startVoiceMode}
+              className="flex items-center gap-2 bg-xylo-500 hover:bg-xylo-600 text-white rounded-xl px-4 py-2.5 text-sm font-medium transition shadow-sm"
+            >
+              <Mic size={15} />
+              Modo dictado
+              <ChevronRight size={14} />
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
@@ -608,7 +685,7 @@ export default function NewProductPage() {
 
           {/* Campos exclusivos de iPhone */}
           {!isAccessory && !isCombo && !isConsola && (
-            <Field label="IMEI" name="imei" value={form.imei} onChange={handleChange} required />
+            <Field label="IMEI" name="imei" value={form.imei} onChange={handleChange} onBlur={() => checkImei(form.imei)} required />
           )}
           {!isAccessory && !isCombo && !isConsola && (
             <Field label="Número de serie" name="serial_number" value={form.serial_number} onChange={handleChange} />
@@ -689,6 +766,42 @@ export default function NewProductPage() {
             placeholder="Seleccionar usuario"
           />
         </div>
+
+        {imeiCheck.status !== "idle" && (
+          <div className={`rounded-xl border px-4 py-3 text-sm ${
+            imeiCheck.status === "duplicate"
+              ? "border-red-200 bg-red-50 text-red-700"
+              : imeiCheck.status === "available"
+                ? "border-green-200 bg-green-50 text-green-700"
+                : imeiCheck.status === "invalid" || imeiCheck.status === "error"
+                  ? "border-amber-200 bg-amber-50 text-amber-700"
+                  : "border-base-border bg-base-subtle text-base-muted"
+          }`}>
+            {imeiCheck.status === "checking" && "Verificando IMEI..."}
+            {imeiCheck.status === "available" && "IMEI disponible: no está cargado en el sistema."}
+            {imeiCheck.status === "invalid" && "El IMEI debe tener exactamente 15 dígitos."}
+            {imeiCheck.status === "error" && "No se pudo verificar el IMEI."}
+            {imeiCheck.status === "duplicate" && (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span>
+                  IMEI duplicado: ya pertenece a {imeiCheck.product?.model || "otro producto"}
+                  {imeiCheck.product?.storage ? ` ${imeiCheck.product.storage}` : ""}.
+                </span>
+                {imeiCheck.product?.id && (
+                  <button type="button" onClick={() => navigate(`/products/${imeiCheck.product.id}`)} className="font-semibold underline">
+                    Ver producto
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {scannedLabelData && (
+          <p className="rounded-xl border border-xylo-500/20 bg-xylo-500/5 px-4 py-3 text-xs text-base-muted">
+            Etiqueta aplicada: {scannedLabelData.raw_codes.length} código{scannedLabelData.raw_codes.length === 1 ? "" : "s"} leído{scannedLabelData.raw_codes.length === 1 ? "" : "s"}. Revisá los datos antes de guardar.
+          </p>
+        )}
 
         {/* Banner confirmación voz individual */}
         {pendingVoice && (
@@ -772,7 +885,7 @@ export default function NewProductPage() {
           <button type="submit" disabled={saving} className="bg-xylo-500 hover:bg-xylo-600 disabled:opacity-60 transition text-white rounded-xl px-6 py-3 font-medium shadow-sm">
             {saving ? "Guardando..." : "Guardar producto"}
           </button>
-          <button type="button" onClick={() => { setForm(initialState); setPhotoPreview(null); }} className="bg-base-subtle hover:bg-base-border transition text-base-muted rounded-xl px-6 py-3">
+          <button type="button" onClick={() => { setForm(initialState); setPhotoPreview(null); setScannedLabelData(null); setImeiCheck({ status: "idle", product: null }); }} className="bg-base-subtle hover:bg-base-border transition text-base-muted rounded-xl px-6 py-3">
             Limpiar
           </button>
         </div>
@@ -783,6 +896,13 @@ export default function NewProductPage() {
         onClose={() => setShowLocalGallery(false)}
         onSelect={handleLocalGallerySelect}
       />
+      {showBarcodeScanner && (
+        <ProductBarcodeScanner
+          open
+          onClose={() => setShowBarcodeScanner(false)}
+          onApply={handleBarcodeApply}
+        />
+      )}
     </div>
   );
 }
@@ -804,13 +924,13 @@ function MicButton({ listening, onClick, className = "" }) {
   );
 }
 
-function Field({ label, name, value, onChange, onVoice, listening = false, type = "text", required = false, placeholder = "", step }) {
+function Field({ label, name, value, onChange, onBlur, onVoice, listening = false, type = "text", required = false, placeholder = "", step }) {
   return (
     <div>
       <p className="text-sm text-base-muted mb-2">{label}</p>
       <div className="relative">
         <input
-          name={name} value={value} onChange={onChange} type={type}
+          name={name} value={value} onChange={onChange} onBlur={onBlur} type={type}
           required={required} placeholder={listening ? "Escuchando..." : placeholder} step={step}
           className={`w-full border rounded-xl px-4 py-3 pr-10 text-base-text outline-none transition ${
             listening
