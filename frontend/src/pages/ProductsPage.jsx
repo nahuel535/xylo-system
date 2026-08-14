@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
-import { ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { ChevronUp, ChevronDown, ChevronsUpDown, ScanBarcode } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function ProductsPage() {
@@ -93,7 +93,7 @@ export default function ProductsPage() {
       });
     }
     return result;
-  }, [products, search, modelFilter, capacityFilter, colorFilter, conditionFilter, minPrice, maxPrice, sortField, sortDir]);
+  }, [products, search, categoryFilter, modelFilter, capacityFilter, colorFilter, conditionFilter, minPrice, maxPrice, sortField, sortDir]);
 
   const SortIcon = ({ field }) => {
     if (sortField !== field) return <ChevronsUpDown size={14} className="inline ml-1 opacity-30" />;
@@ -116,6 +116,18 @@ export default function ProductsPage() {
   return (
     <div>
       <Header title="Stock" subtitle="Listado de equipos disponibles" />
+
+      {isAdmin && (
+        <div className="-mt-3 mb-5 flex justify-end">
+          <Link
+            to="/products/new?scan=1"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-xylo-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-xylo-600 sm:w-auto"
+          >
+            <ScanBarcode size={18} />
+            Escanear equipo
+          </Link>
+        </div>
+      )}
 
       {/* Filtros */}
       <div className="bg-base-card border border-base-border rounded-2xl p-5 mb-5 shadow-card">

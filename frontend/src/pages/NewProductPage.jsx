@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
 import { uploadToCloudinary } from "../services/cloudinary";
@@ -118,6 +118,7 @@ function transcriptToNumber(text) {
 
 export default function NewProductPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const recognitionRef = useRef(null);
   const synthRef = useRef(window.speechSynthesis);
 
@@ -129,7 +130,7 @@ export default function NewProductPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [showLocalGallery, setShowLocalGallery] = useState(false);
-  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(() => searchParams.get("scan") === "1");
   const [scannedLabelData, setScannedLabelData] = useState(null);
   const [imeiCheck, setImeiCheck] = useState({ status: "idle", product: null });
 
