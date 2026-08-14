@@ -204,8 +204,8 @@ def upgrade() -> None:
             discount_usd, total_usd, status, valid_until, notes, created_by,
             created_at, updated_at
         ) VALUES
-            (980001, 920004, 'Diego Romero', '3515550104', '[{"description":"iPhone 15 128 GB","quantity":1,"unit_price_usd":680,"subtotal_usd":680}]'::json, 680, 20, 660, 'sent', CURRENT_DATE + 7, 'Presupuesto ficticio', 900003, NOW() - INTERVAL '1 day', NOW()),
-            (980002, 920003, 'Martina Suárez', '3515550103', '[{"description":"iPhone 16 Pro 256 GB","quantity":1,"unit_price_usd":1050,"subtotal_usd":1050}]'::json, 1050, 0, 1050, 'draft', CURRENT_DATE + 10, 'Presupuesto ficticio', 900001, NOW(), NOW())
+            (980001, 920004, 'Diego Romero', '3515550104', json_build_array(json_build_object('description', 'iPhone 15 128 GB', 'quantity', 1, 'unit_price_usd', 680, 'subtotal_usd', 680)), 680, 20, 660, 'sent', CURRENT_DATE + 7, 'Presupuesto ficticio', 900003, NOW() - INTERVAL '1 day', NOW()),
+            (980002, 920003, 'Martina Suárez', '3515550103', json_build_array(json_build_object('description', 'iPhone 16 Pro 256 GB', 'quantity', 1, 'unit_price_usd', 1050, 'subtotal_usd', 1050)), 1050, 0, 1050, 'draft', CURRENT_DATE + 10, 'Presupuesto ficticio', 900001, NOW(), NOW())
         """
     )
 
