@@ -89,8 +89,8 @@ def test_dashboard_reports_iphone_profit_without_accessories(client, seeded, db_
     assert float(payload["iphone_profit_this_month_usd"]) == 200.0
     assert float(payload["iphone_total_gross_profit_usd"]) == 200.0
     assert float(payload["profit_this_month_usd"]) == 230.0
-    assert float(payload["seller_commissions_this_month_usd"]) == 20.0
-    assert float(payload["net_profit_this_month_usd"]) == 210.0
+    assert float(payload["seller_payments_this_month_usd"]) == 0.0
+    assert float(payload["net_profit_this_month_usd"]) == 230.0
 
 
 def test_dashboard_reports_iphone_operations_separately(client, seeded, db_session):
@@ -194,8 +194,8 @@ def test_returned_sales_are_excluded_from_admin_metrics_and_reports(client, seed
 
     assert float(summary["iphone_profit_this_month_usd"]) == 100.0
     assert float(summary["profit_this_month_usd"]) == 120.0
-    assert float(summary["seller_commissions_this_month_usd"]) == 10.0
-    assert float(summary["net_profit_this_month_usd"]) == 110.0
+    assert float(summary["seller_payments_this_month_usd"]) == 0.0
+    assert float(summary["net_profit_this_month_usd"]) == 120.0
     assert summary["total_sales_count"] == 2
 
     current_month = next(
@@ -443,6 +443,92 @@ def test_admin_can_reduce_existing_sale_earning_but_not_exceed_base(client, seed
     assert updated.status_code == 200
     assert float(updated.json()["commission_usd"]) == 5.0
     assert rejected.status_code == 422
+
+
+def test_admin_records_partial_seller_payouts_and_dashboard_deducts_payments(client, seeded):
+    admin_headers = auth_headers(seeded["admin"])
+    seller_headers = auth_headers(seeded["seller_a"])
+    today = date.today()
+
+    initial_dashboard = client.get("/dashboard/summary", headers=admin_headers).json()
+    assert float(initial_dashboard["seller_payments_this_month_usd"]) == 0.0
+    assert float(initial_dashboard["net_profit_this_month_usd"]) == 200.0
+
+    created = client.post(
+        "/users/commissions/payments",
+        headers=admin_headers,
+        json={
+            "seller_id": seeded["seller_a"].id,
+            "amount_usd": 4,
+            "paid_at": today.isoformat(),
+            "notes": "Pago parcial",
+        },
+    )
+    assert created.status_code == 200
+    payout_id = created.json()["id"]
+    assert float(created.json()["amount_usd"]) == 4.0
+
+    summary = client.get(
+        f"/users/commissions/summary?month={today.month}&year={today.year}",
+        headers=admin_headers,
+    ).json()
+    seller_summary = next(row for row in summary if row["seller_id"] == seeded["seller_a"].id)
+    assert float(seller_summary["total_commission_usd"]) == 10.0
+    assert float(seller_summary["paid_this_month_usd"]) == 4.0
+    assert float(seller_summary["pending_commission_usd"]) == 6.0
+
+    dashboard = client.get("/dashboard/summary", headers=admin_headers).json()
+    assert float(dashboard["seller_payments_this_month_usd"]) == 4.0
+    assert float(dashboard["net_profit_this_month_usd"]) == 196.0
+
+    payments = client.get(
+        f"/users/commissions/payments?month={today.month}&year={today.year}",
+        headers=admin_headers,
+    )
+    assert payments.status_code == 200
+    assert [payment["id"] for payment in payments.json()] == [payout_id]
+
+    overpayment = client.post(
+        "/users/commissions/payments",
+        headers=admin_headers,
+        json={
+            "seller_id": seeded["seller_a"].id,
+            "amount_usd": 7,
+            "paid_at": today.isoformat(),
+        },
+    )
+    seller_attempt = client.post(
+        "/users/commissions/payments",
+        headers=seller_headers,
+        json={
+            "seller_id": seeded["seller_a"].id,
+            "amount_usd": 1,
+            "paid_at": today.isoformat(),
+        },
+    )
+    assert overpayment.status_code == 400
+    assert seller_attempt.status_code == 403
+
+    updated = client.put(
+        f"/users/commissions/payments/{payout_id}",
+        headers=admin_headers,
+        json={"amount_usd": 6, "notes": "Pago corregido"},
+    )
+    assert updated.status_code == 200
+    assert float(updated.json()["amount_usd"]) == 6.0
+
+    dashboard_after_update = client.get("/dashboard/summary", headers=admin_headers).json()
+    assert float(dashboard_after_update["seller_payments_this_month_usd"]) == 6.0
+    assert float(dashboard_after_update["net_profit_this_month_usd"]) == 194.0
+
+    deleted = client.delete(
+        f"/users/commissions/payments/{payout_id}",
+        headers=admin_headers,
+    )
+    assert deleted.status_code == 200
+    final_dashboard = client.get("/dashboard/summary", headers=admin_headers).json()
+    assert float(final_dashboard["seller_payments_this_month_usd"]) == 0.0
+    assert float(final_dashboard["net_profit_this_month_usd"]) == 200.0
 
 
 def test_seller_cannot_list_users(client, seeded):

@@ -16,6 +16,7 @@ from app.models.sale_payment import SalePayment
 from app.models.expense import Expense
 from app.models.debtor import Debtor
 from app.models.accessory import Accessory, AccessorySale
+from app.models.seller_payout import SellerPayout
 from app.schemas.dashboard import DashboardSummary, MonthStat
 from app.core.dependencies import require_admin
 
@@ -123,12 +124,11 @@ def get_dashboard_summary(
         extract("month", Expense.date) == target_month,
     ).scalar()
 
-    seller_commissions_this_month_usd = db.query(
-        func.coalesce(func.sum(Sale.commission_usd), 0)
+    seller_payments_this_month_usd = db.query(
+        func.coalesce(func.sum(SellerPayout.amount_usd), 0)
     ).filter(
-        Sale.is_returned.is_(False),
-        Sale.sale_date >= month_start,
-        Sale.sale_date < month_end,
+        SellerPayout.paid_at >= month_start.date(),
+        SellerPayout.paid_at < month_end.date(),
     ).scalar()
 
     active_debtors_count = db.query(Debtor).filter(Debtor.paid == False).count()
@@ -139,7 +139,7 @@ def get_dashboard_summary(
     net_profit_this_month_usd = (
         profit_this_month
         - _d(expenses_this_month_usd)
-        - _d(seller_commissions_this_month_usd)
+        - _d(seller_payments_this_month_usd)
     )
 
     return DashboardSummary(
@@ -163,7 +163,7 @@ def get_dashboard_summary(
         sales_last_month_value_usd=_d(iphone_last_value) + _d(acc_last_value),
         profit_last_month_usd=_d(iphone_last_profit) + _d(acc_last_profit),
         expenses_this_month_usd=_d(expenses_this_month_usd),
-        seller_commissions_this_month_usd=_d(seller_commissions_this_month_usd),
+        seller_payments_this_month_usd=_d(seller_payments_this_month_usd),
         net_profit_this_month_usd=net_profit_this_month_usd,
         active_debtors_count=active_debtors_count,
         total_active_debt_usd=_d(total_active_debt_usd),

@@ -167,15 +167,15 @@ export default function DashboardPage() {
         />
         <KpiCard
           label={`Pago a vendedores — ${MONTHS_ES[selectedMonth - 1]}`}
-          value={`USD ${fmt(summary.seller_commissions_this_month_usd)}`}
-          sub="Comisiones de ventas activas"
+          value={`USD ${fmt(summary.seller_payments_this_month_usd)}`}
+          sub="Pagos registrados en el mes"
           icon={<Users size={16} />}
           accent="orange"
         />
         <KpiCard
           label={`Ganancia neta — ${MONTHS_ES[selectedMonth - 1]}`}
           value={`USD ${fmt(summary.net_profit_this_month_usd)}`}
-          sub="Bruta menos gastos y vendedores"
+          sub="Bruta menos gastos y pagos a vendedores"
           icon={<DollarSign size={16} />}
           accent={Number(summary.net_profit_this_month_usd) >= 0 ? "green" : "red"}
         />

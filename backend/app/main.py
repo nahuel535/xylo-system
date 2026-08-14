@@ -29,6 +29,7 @@ from app.models.accessory import Accessory, AccessorySale  # noqa: ensure tables
 from app.models.client import Client, ClientInteraction  # noqa: ensure tables are registered
 from app.models.appointment import Appointment  # noqa: ensure table is registered
 from app.models.quote import Quote  # noqa: ensure table is registered
+from app.models.seller_payout import SellerPayout  # noqa: ensure table is registered
 from app.core.dependencies import require_admin
 from app.db.migrations import run_migrations
 

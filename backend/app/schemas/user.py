@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field, field_validator
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal, Optional
 
@@ -68,3 +68,30 @@ class SellerCommissionSummary(BaseModel):
     total_sales_usd: Decimal
     total_gross_profit_usd: Decimal
     total_commission_usd: Decimal
+    paid_this_month_usd: Decimal
+    pending_commission_usd: Decimal
+
+
+class SellerPayoutCreate(BaseModel):
+    seller_id: int
+    amount_usd: Decimal = Field(gt=0, max_digits=10, decimal_places=2)
+    paid_at: date
+    notes: Optional[str] = Field(default=None, max_length=500)
+
+
+class SellerPayoutUpdate(BaseModel):
+    amount_usd: Optional[Decimal] = Field(default=None, gt=0, max_digits=10, decimal_places=2)
+    paid_at: Optional[date] = None
+    notes: Optional[str] = Field(default=None, max_length=500)
+
+
+class SellerPayoutResponse(BaseModel):
+    id: int
+    seller_id: int
+    seller_name: str
+    amount_usd: Decimal
+    paid_at: date
+    notes: Optional[str]
+    created_by: Optional[int]
+    created_by_name: Optional[str]
+    created_at: datetime

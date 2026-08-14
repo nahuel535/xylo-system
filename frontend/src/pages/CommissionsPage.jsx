@@ -1,6 +1,6 @@
 import { createElement, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, DollarSign, Users, ChevronDown, ChevronUp, Pencil, Trash2 } from "lucide-react";
+import { TrendingUp, DollarSign, Users, ChevronDown, ChevronUp, Pencil, Trash2, Plus, X, WalletCards } from "lucide-react";
 import api from "../services/api";
 import Header from "../components/Header";
 
@@ -10,6 +10,19 @@ function fmt(val) {
   return Number(val || 0).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function todayLocal() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 10);
+}
+
+const emptyPayoutForm = (sellerId = "") => ({
+  seller_id: sellerId ? String(sellerId) : "",
+  amount_usd: "",
+  paid_at: todayLocal(),
+  notes: "",
+});
+
 export default function CommissionsPage() {
   const navigate = useNavigate();
   const now = new Date();
@@ -17,21 +30,30 @@ export default function CommissionsPage() {
   const [year, setYear]   = useState(now.getFullYear());
   const [data, setData]   = useState([]);
   const [users, setUsers] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [sellerSales, setSellerSales] = useState({});
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [deleteError, setDeleteError] = useState("");
+  const [editingPayoutId, setEditingPayoutId] = useState(null);
+  const [payoutForm, setPayoutForm] = useState(emptyPayoutForm);
+  const [payoutOpen, setPayoutOpen] = useState(false);
+  const [payoutError, setPayoutError] = useState("");
+  const [savingPayout, setSavingPayout] = useState(false);
+  const [confirmDeletePayoutId, setConfirmDeletePayoutId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [commRes, usersRes] = await Promise.all([
+      const [commRes, usersRes, paymentsRes] = await Promise.all([
         api.get(`/users/commissions/summary?month=${month}&year=${year}`),
         api.get("/users/"),
+        api.get(`/users/commissions/payments?month=${month}&year=${year}`),
       ]);
       setData(commRes.data);
       setUsers(usersRes.data);
+      setPayments(paymentsRes.data);
     } finally {
       setLoading(false);
     }
@@ -74,46 +96,129 @@ export default function CommissionsPage() {
     }
   }
 
+  function openNewPayout(sellerId = "") {
+    const firstSellerId = sellerId || data[0]?.seller_id || "";
+    setEditingPayoutId(null);
+    setPayoutForm(emptyPayoutForm(firstSellerId));
+    setPayoutError("");
+    setPayoutOpen(true);
+  }
+
+  function openEditPayout(payment) {
+    setEditingPayoutId(payment.id);
+    setPayoutForm({
+      seller_id: String(payment.seller_id),
+      amount_usd: String(payment.amount_usd),
+      paid_at: payment.paid_at,
+      notes: payment.notes || "",
+    });
+    setPayoutError("");
+    setPayoutOpen(true);
+  }
+
+  async function savePayout(event) {
+    event.preventDefault();
+    const amount = Number(payoutForm.amount_usd);
+    if (!payoutForm.seller_id) { setPayoutError("Seleccioná un vendedor."); return; }
+    if (!amount || amount <= 0) { setPayoutError("Ingresá un monto mayor a cero."); return; }
+    if (!payoutForm.paid_at) { setPayoutError("Seleccioná la fecha del pago."); return; }
+
+    setSavingPayout(true);
+    setPayoutError("");
+    const payload = {
+      amount_usd: amount,
+      paid_at: payoutForm.paid_at,
+      notes: payoutForm.notes || null,
+    };
+    try {
+      if (editingPayoutId) {
+        await api.put(`/users/commissions/payments/${editingPayoutId}`, payload);
+      } else {
+        await api.post("/users/commissions/payments", {
+          ...payload,
+          seller_id: Number(payoutForm.seller_id),
+        });
+      }
+      setPayoutOpen(false);
+      await load();
+    } catch (error) {
+      setPayoutError(error?.response?.data?.detail || "No se pudo guardar el pago.");
+    } finally {
+      setSavingPayout(false);
+    }
+  }
+
+  async function deletePayout(paymentId) {
+    setPayoutError("");
+    try {
+      await api.delete(`/users/commissions/payments/${paymentId}`);
+      setConfirmDeletePayoutId(null);
+      await load();
+    } catch (error) {
+      setPayoutError(error?.response?.data?.detail || "No se pudo eliminar el pago.");
+    }
+  }
+
   const totals = data.reduce((acc, row) => ({
     sales: acc.sales + row.sales_count,
     profit: acc.profit + Number(row.total_gross_profit_usd),
     commission: acc.commission + Number(row.total_commission_usd),
-  }), { sales: 0, profit: 0, commission: 0 });
+    paid: acc.paid + Number(row.paid_this_month_usd),
+    pending: acc.pending + Number(row.pending_commission_usd),
+  }), { sales: 0, profit: 0, commission: 0, paid: 0, pending: 0 });
 
   const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
+  const selectedPayoutSeller = data.find((row) => Number(row.seller_id) === Number(payoutForm.seller_id));
+  const editingPayment = payments.find((payment) => payment.id === editingPayoutId);
+  const availableToPay = Number(selectedPayoutSeller?.pending_commission_usd || 0)
+    + Number(editingPayment?.amount_usd || 0);
 
   return (
     <div>
-      <Header title="Ganancias de vendedores" subtitle="Base de USD 10 por venta, ajustable cuando la operación es compartida" />
+      <Header title="Ganancias de vendedores" subtitle="Comisiones generadas, pagos manuales e historial por vendedor" />
 
       {deleteError && (
         <div className="mb-4 bg-red-50 border border-red-100 text-red-600 rounded-xl px-4 py-3 text-sm">{deleteError}</div>
       )}
+      {payoutError && !payoutOpen && (
+        <div className="mb-4 bg-red-50 border border-red-100 text-red-600 rounded-xl px-4 py-3 text-sm">{payoutError}</div>
+      )}
 
       {/* Filtros */}
-      <div className="flex gap-3 mb-6 flex-wrap">
-        <select
-          value={month}
-          onChange={(e) => setMonth(Number(e.target.value))}
-          className="bg-base-card border border-base-border rounded-xl px-3 py-2 text-sm text-base-text outline-none"
+      <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
+        <div className="flex gap-3 flex-wrap">
+          <select
+            value={month}
+            onChange={(e) => setMonth(Number(e.target.value))}
+            className="bg-base-card border border-base-border rounded-xl px-3 py-2 text-sm text-base-text outline-none"
+          >
+            {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+          </select>
+          <select
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+            className="bg-base-card border border-base-border rounded-xl px-3 py-2 text-sm text-base-text outline-none"
+          >
+            {[2024, 2025, 2026].map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+        <button
+          type="button"
+          onClick={() => openNewPayout()}
+          className="inline-flex items-center gap-2 rounded-xl bg-xylo-500 px-4 py-2 text-sm font-semibold text-white hover:bg-xylo-600 transition"
         >
-          {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-        </select>
-        <select
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-          className="bg-base-card border border-base-border rounded-xl px-3 py-2 text-sm text-base-text outline-none"
-        >
-          {[2024, 2025, 2026].map((y) => <option key={y} value={y}>{y}</option>)}
-        </select>
+          <Plus size={15} /> Registrar pago
+        </button>
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
         {[
           { label: "Ventas", value: totals.sales, suffix: "", icon: TrendingUp, color: "#3b82f6" },
           { label: "Ganancia bruta", value: `USD ${fmt(totals.profit)}`, suffix: "", icon: DollarSign, color: "#10b981" },
-          { label: "Total vendedores", value: `USD ${fmt(totals.commission)}`, suffix: "", icon: Users, color: "#f59e0b" },
+          { label: "Generado vendedores", value: `USD ${fmt(totals.commission)}`, suffix: "", icon: Users, color: "#f59e0b" },
+          { label: "Pagado en el mes", value: `USD ${fmt(totals.paid)}`, suffix: "", icon: WalletCards, color: "#8b5cf6" },
+          { label: "Pendiente total", value: `USD ${fmt(totals.pending)}`, suffix: "", icon: DollarSign, color: "#ef4444" },
         ].map(({ label, value, icon, color }) => (
           <div key={label} className="bg-base-card border border-base-border rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-2">
@@ -129,8 +234,8 @@ export default function CommissionsPage() {
 
       {/* Tabla */}
       <div className="bg-base-card border border-base-border rounded-2xl overflow-hidden">
-        <div className="hidden md:grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] px-5 py-3 border-b border-base-border bg-base-subtle">
-          {["Vendedor", "Regla", "Ventas", "Facturación", "Ganancia bruta", "Ganancia vendedor"].map((h) => (
+        <div className="hidden lg:grid grid-cols-[1.6fr_.7fr_.6fr_1fr_1fr_1fr_1fr_1fr] gap-3 px-5 py-3 border-b border-base-border bg-base-subtle">
+          {["Vendedor", "Regla", "Ventas", "Facturación", "Ganancia bruta", "Generado", "Pagado mes", "Pendiente"].map((h) => (
             <span key={h} className="text-xs font-semibold text-base-muted uppercase tracking-wide">{h}</span>
           ))}
         </div>
@@ -148,7 +253,7 @@ export default function CommissionsPage() {
             <div key={row.seller_id} className="border-t border-base-border">
               {/* Row principal */}
               <div
-                className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] px-5 py-3.5 items-center hover:bg-base-subtle/50 cursor-pointer transition"
+                className="grid grid-cols-2 lg:grid-cols-[1.6fr_.7fr_.6fr_1fr_1fr_1fr_1fr_1fr] gap-3 px-5 py-3.5 items-center hover:bg-base-subtle/50 cursor-pointer transition"
                 onClick={() => toggleExpand(row.seller_id)}
               >
                 {/* Vendedor */}
@@ -175,6 +280,10 @@ export default function CommissionsPage() {
                 <span className="text-sm text-base-text">USD {fmt(row.total_gross_profit_usd)}</span>
                 <span className="text-sm font-bold" style={{ color: Number(row.total_commission_usd) > 0 ? "#10b981" : undefined }}>
                   USD {fmt(row.total_commission_usd)}
+                </span>
+                <span className="text-sm font-semibold text-purple-500">USD {fmt(row.paid_this_month_usd)}</span>
+                <span className="text-sm font-bold" style={{ color: Number(row.pending_commission_usd) > 0 ? "#ef4444" : "#10b981" }}>
+                  USD {fmt(row.pending_commission_usd)}
                 </span>
               </div>
 
@@ -253,6 +362,176 @@ export default function CommissionsPage() {
           );
         })}
       </div>
+
+      {/* Historial de pagos */}
+      <div className="mt-6 bg-base-card border border-base-border rounded-2xl overflow-hidden">
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-base-border">
+          <div>
+            <h2 className="text-sm font-semibold text-base-text">Historial de pagos</h2>
+            <p className="text-xs text-base-muted">{MONTHS[month - 1]} {year}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => openNewPayout()}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-xylo-500 hover:text-xylo-600"
+          >
+            <Plus size={14} /> Nuevo pago
+          </button>
+        </div>
+
+        {payments.length === 0 ? (
+          <div className="px-5 py-8 text-center">
+            <WalletCards size={22} className="mx-auto mb-2 text-base-muted opacity-50" />
+            <p className="text-sm text-base-muted">No hay pagos registrados en este mes.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[650px] text-sm">
+              <thead className="bg-base-subtle text-xs uppercase tracking-wide text-base-muted">
+                <tr>
+                  {['Fecha', 'Vendedor', 'Monto', 'Nota', 'Registrado por', 'Acciones'].map((heading) => (
+                    <th key={heading} className="px-5 py-3 text-left font-semibold">{heading}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {payments.map((payment) => (
+                  <tr key={payment.id} className="border-t border-base-border">
+                    <td className="px-5 py-3 text-base-text">{new Date(`${payment.paid_at}T00:00:00`).toLocaleDateString('es-AR')}</td>
+                    <td className="px-5 py-3 font-medium text-base-text">{payment.seller_name}</td>
+                    <td className="px-5 py-3 font-bold text-purple-500">USD {fmt(payment.amount_usd)}</td>
+                    <td className="px-5 py-3 text-base-muted">{payment.notes || '—'}</td>
+                    <td className="px-5 py-3 text-base-muted">{payment.created_by_name || '—'}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => openEditPayout(payment)}
+                          className="p-1.5 rounded-lg text-base-muted hover:text-base-text hover:bg-base-subtle transition"
+                          aria-label={`Editar pago ${payment.id}`}
+                        >
+                          <Pencil size={13} />
+                        </button>
+                        {confirmDeletePayoutId === payment.id ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => deletePayout(payment.id)}
+                              className="text-[10px] font-semibold bg-red-500 text-white rounded-md px-2 py-1"
+                            >
+                              Confirmar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeletePayoutId(null)}
+                              className="text-[10px] text-base-muted rounded-md px-1.5 py-1"
+                            >
+                              No
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeletePayoutId(payment.id)}
+                            className="p-1.5 rounded-lg text-base-muted hover:text-red-500 hover:bg-red-50 transition"
+                            aria-label={`Eliminar pago ${payment.id}`}
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {payoutOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onMouseDown={() => setPayoutOpen(false)}>
+          <div className="w-full max-w-md rounded-2xl border border-base-border bg-base-card p-5 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3 mb-5">
+              <div>
+                <h2 className="text-lg font-bold text-base-text">{editingPayoutId ? 'Editar pago' : 'Registrar pago'}</h2>
+                <p className="text-xs text-base-muted mt-1">Se descontará de la ganancia neta en la fecha indicada.</p>
+              </div>
+              <button type="button" onClick={() => setPayoutOpen(false)} className="p-1.5 rounded-lg text-base-muted hover:bg-base-subtle">
+                <X size={17} />
+              </button>
+            </div>
+
+            <form onSubmit={savePayout} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-base-muted mb-1.5">Vendedor</label>
+                <select
+                  value={payoutForm.seller_id}
+                  disabled={Boolean(editingPayoutId)}
+                  onChange={(event) => setPayoutForm((current) => ({ ...current, seller_id: event.target.value }))}
+                  className="w-full rounded-xl border border-base-border bg-base-subtle px-3 py-2.5 text-sm text-base-text outline-none disabled:opacity-60"
+                >
+                  <option value="">Seleccionar vendedor</option>
+                  {data.map((row) => <option key={row.seller_id} value={row.seller_id}>{row.seller_name}</option>)}
+                </select>
+                {selectedPayoutSeller && (
+                  <p className="mt-1.5 text-[11px] text-base-muted">Saldo disponible: USD {fmt(availableToPay)}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-base-muted mb-1.5">Monto USD</label>
+                  <input
+                    type="number"
+                    min="0.01"
+                    step="0.01"
+                    max={availableToPay > 0 ? availableToPay : undefined}
+                    value={payoutForm.amount_usd}
+                    onChange={(event) => setPayoutForm((current) => ({ ...current, amount_usd: event.target.value }))}
+                    className="w-full rounded-xl border border-base-border bg-base-subtle px-3 py-2.5 text-sm text-base-text outline-none"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-base-muted mb-1.5">Fecha</label>
+                  <input
+                    type="date"
+                    value={payoutForm.paid_at}
+                    onChange={(event) => setPayoutForm((current) => ({ ...current, paid_at: event.target.value }))}
+                    className="w-full rounded-xl border border-base-border bg-base-subtle px-3 py-2.5 text-sm text-base-text outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-base-muted mb-1.5">Nota <span className="opacity-50">opcional</span></label>
+                <textarea
+                  rows="3"
+                  maxLength="500"
+                  value={payoutForm.notes}
+                  onChange={(event) => setPayoutForm((current) => ({ ...current, notes: event.target.value }))}
+                  className="w-full resize-none rounded-xl border border-base-border bg-base-subtle px-3 py-2.5 text-sm text-base-text outline-none"
+                  placeholder="Ej: Pago de comisiones de la semana"
+                />
+              </div>
+
+              {payoutError && (
+                <div className="rounded-xl border border-red-100 bg-red-50 px-3 py-2 text-xs text-red-600">{payoutError}</div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-1">
+                <button type="button" onClick={() => setPayoutOpen(false)} className="rounded-xl border border-base-border px-4 py-2 text-sm text-base-muted hover:bg-base-subtle">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={savingPayout} className="rounded-xl bg-xylo-500 px-4 py-2 text-sm font-semibold text-white hover:bg-xylo-600 disabled:opacity-60">
+                  {savingPayout ? 'Guardando...' : editingPayoutId ? 'Guardar cambios' : 'Registrar pago'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

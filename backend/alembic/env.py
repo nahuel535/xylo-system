@@ -9,6 +9,7 @@ from app.models.appointment import Appointment  # noqa: F401
 from app.models.client import Client, ClientInteraction, ClientReminder  # noqa: F401
 from app.models.expense import Expense  # noqa: F401
 from app.models.quote import Quote  # noqa: F401
+from app.models.seller_payout import SellerPayout  # noqa: F401
 
 
 config = context.config

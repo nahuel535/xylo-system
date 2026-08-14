@@ -7,10 +7,14 @@ from sqlalchemy import func as sqlfunc
 from app.db.session import get_db
 from app.models.user import User
 from app.models.sale import Sale
+from app.models.seller_payout import SellerPayout
 from app.schemas.user import (
     AdminPasswordReset,
     CommissionRateUpdate,
     SellerCommissionSummary,
+    SellerPayoutCreate,
+    SellerPayoutResponse,
+    SellerPayoutUpdate,
     UserCreate,
     UserResponse,
     UserStatusUpdate,
@@ -201,7 +205,10 @@ def get_commissions_summary(
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
 ):
-    sellers = db.query(User).filter(User.is_active == True).all()
+    sellers = db.query(User).filter(
+        User.is_active == True,
+        User.role == "seller",
+    ).all()
     result = []
 
     for seller in sellers:
@@ -222,6 +229,28 @@ def get_commissions_summary(
         total_commission = sum(
             Decimal(str(s.commission_usd)) for s in sales if s.commission_usd is not None
         )
+        paid_query = db.query(
+            sqlfunc.coalesce(sqlfunc.sum(SellerPayout.amount_usd), 0)
+        ).filter(SellerPayout.seller_id == seller.id)
+        if month and year:
+            from sqlalchemy import extract
+            paid_query = paid_query.filter(
+                extract("month", SellerPayout.paid_at) == month,
+                extract("year", SellerPayout.paid_at) == year,
+            )
+        paid_this_month = Decimal(str(paid_query.scalar() or 0))
+
+        all_time_commission = Decimal(str(
+            db.query(sqlfunc.coalesce(sqlfunc.sum(Sale.commission_usd), 0)).filter(
+                Sale.seller_id == seller.id,
+                Sale.is_returned == False,
+            ).scalar() or 0
+        ))
+        all_time_paid = Decimal(str(
+            db.query(sqlfunc.coalesce(sqlfunc.sum(SellerPayout.amount_usd), 0)).filter(
+                SellerPayout.seller_id == seller.id,
+            ).scalar() or 0
+        ))
 
         result.append(SellerCommissionSummary(
             seller_id=seller.id,
@@ -231,6 +260,181 @@ def get_commissions_summary(
             total_sales_usd=total_sales,
             total_gross_profit_usd=total_profit,
             total_commission_usd=total_commission,
+            paid_this_month_usd=paid_this_month,
+            pending_commission_usd=all_time_commission - all_time_paid,
         ))
 
     return sorted(result, key=lambda x: x.total_commission_usd, reverse=True)
+
+
+def _seller_pending_commission(seller_id: int, db: Session) -> Decimal:
+    accrued = Decimal(str(
+        db.query(sqlfunc.coalesce(sqlfunc.sum(Sale.commission_usd), 0)).filter(
+            Sale.seller_id == seller_id,
+            Sale.is_returned == False,
+        ).scalar() or 0
+    ))
+    paid = Decimal(str(
+        db.query(sqlfunc.coalesce(sqlfunc.sum(SellerPayout.amount_usd), 0)).filter(
+            SellerPayout.seller_id == seller_id,
+        ).scalar() or 0
+    ))
+    return accrued - paid
+
+
+def _get_seller_or_404(seller_id: int, db: Session) -> User:
+    seller = db.query(User).filter(
+        User.id == seller_id,
+        User.role == "seller",
+    ).first()
+    if not seller:
+        raise HTTPException(status_code=404, detail="Vendedor no encontrado")
+    return seller
+
+
+def _payout_response(payout: SellerPayout, users_by_id: dict[int, User]) -> dict:
+    seller = users_by_id.get(payout.seller_id)
+    creator = users_by_id.get(payout.created_by) if payout.created_by else None
+    return {
+        "id": payout.id,
+        "seller_id": payout.seller_id,
+        "seller_name": seller.name if seller else "Vendedor",
+        "amount_usd": payout.amount_usd,
+        "paid_at": payout.paid_at,
+        "notes": payout.notes,
+        "created_by": payout.created_by,
+        "created_by_name": creator.name if creator else None,
+        "created_at": payout.created_at,
+    }
+
+
+@router.get("/commissions/payments", response_model=list[SellerPayoutResponse])
+def list_seller_payouts(
+    month: Optional[int] = Query(None, ge=1, le=12),
+    year: Optional[int] = Query(None, ge=2000, le=2100),
+    seller_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    query = db.query(SellerPayout)
+    if month is not None:
+        from sqlalchemy import extract
+        query = query.filter(extract("month", SellerPayout.paid_at) == month)
+    if year is not None:
+        from sqlalchemy import extract
+        query = query.filter(extract("year", SellerPayout.paid_at) == year)
+    if seller_id is not None:
+        query = query.filter(SellerPayout.seller_id == seller_id)
+
+    payouts = query.order_by(SellerPayout.paid_at.desc(), SellerPayout.id.desc()).all()
+    user_ids = {p.seller_id for p in payouts} | {p.created_by for p in payouts if p.created_by}
+    users_by_id = {
+        user.id: user
+        for user in db.query(User).filter(User.id.in_(user_ids)).all()
+    } if user_ids else {}
+    return [_payout_response(payout, users_by_id) for payout in payouts]
+
+
+@router.post("/commissions/payments", response_model=SellerPayoutResponse)
+def create_seller_payout(
+    data: SellerPayoutCreate,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+):
+    seller = _get_seller_or_404(data.seller_id, db)
+    amount = Decimal(str(data.amount_usd)).quantize(Decimal("0.01"))
+    pending = _seller_pending_commission(seller.id, db)
+    if amount > pending:
+        raise HTTPException(
+            status_code=400,
+            detail=f"El pago supera el saldo pendiente de USD {pending:.2f}",
+        )
+
+    payout = SellerPayout(
+        seller_id=seller.id,
+        amount_usd=amount,
+        paid_at=data.paid_at,
+        notes=data.notes.strip() if data.notes and data.notes.strip() else None,
+        created_by=current_admin.id,
+    )
+    db.add(payout)
+    db.flush()
+    record_audit(
+        db,
+        entity_type="seller_payout",
+        entity_id=payout.id,
+        user=current_admin,
+        action="created",
+        changes={"seller_id": seller.id, "amount_usd": str(amount), "paid_at": str(data.paid_at)},
+    )
+    db.commit()
+    db.refresh(payout)
+    return _payout_response(payout, {seller.id: seller, current_admin.id: current_admin})
+
+
+@router.put("/commissions/payments/{payout_id}", response_model=SellerPayoutResponse)
+def update_seller_payout(
+    payout_id: int,
+    data: SellerPayoutUpdate,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+):
+    payout = db.query(SellerPayout).filter(SellerPayout.id == payout_id).first()
+    if not payout:
+        raise HTTPException(status_code=404, detail="Pago no encontrado")
+    seller = _get_seller_or_404(payout.seller_id, db)
+    changes = data.model_dump(exclude_unset=True)
+
+    if "amount_usd" in changes:
+        amount = Decimal(str(changes["amount_usd"])).quantize(Decimal("0.01"))
+        available = _seller_pending_commission(seller.id, db) + Decimal(str(payout.amount_usd))
+        if amount > available:
+            raise HTTPException(
+                status_code=400,
+                detail=f"El pago supera el saldo disponible de USD {available:.2f}",
+            )
+        payout.amount_usd = amount
+    if "paid_at" in changes:
+        payout.paid_at = changes["paid_at"]
+    if "notes" in changes:
+        notes = changes["notes"]
+        payout.notes = notes.strip() if notes and notes.strip() else None
+
+    record_audit(
+        db,
+        entity_type="seller_payout",
+        entity_id=payout.id,
+        user=current_admin,
+        action="updated",
+        changes={key: {"new": str(value) if value is not None else None} for key, value in changes.items()},
+    )
+    db.commit()
+    db.refresh(payout)
+    users_by_id = {seller.id: seller, current_admin.id: current_admin}
+    return _payout_response(payout, users_by_id)
+
+
+@router.delete("/commissions/payments/{payout_id}")
+def delete_seller_payout(
+    payout_id: int,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(require_admin),
+):
+    payout = db.query(SellerPayout).filter(SellerPayout.id == payout_id).first()
+    if not payout:
+        raise HTTPException(status_code=404, detail="Pago no encontrado")
+    record_audit(
+        db,
+        entity_type="seller_payout",
+        entity_id=payout.id,
+        user=current_admin,
+        action="deleted",
+        changes={
+            "seller_id": payout.seller_id,
+            "amount_usd": str(payout.amount_usd),
+            "paid_at": str(payout.paid_at),
+        },
+    )
+    db.delete(payout)
+    db.commit()
+    return {"ok": True}

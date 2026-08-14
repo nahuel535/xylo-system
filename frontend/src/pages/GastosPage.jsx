@@ -173,7 +173,7 @@ export default function GastosPage() {
                 </div>
                 {form.category === "Vendedores y revendedores" && (
                   <p className="mt-2 text-[11px] leading-relaxed text-base-muted">
-                    Las comisiones registradas en las ventas ya se descuentan automáticamente. Usá esta categoría solo para pagos adicionales o revendedores.
+                    Los pagos de comisiones se registran desde Ganancias. Usá esta categoría solo para otros pagos o revendedores.
                   </p>
                 )}
               </div>
