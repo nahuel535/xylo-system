@@ -37,6 +37,7 @@ import AdminActivityPage from "./pages/AdminActivityPage";
 import PrintQuotePage from "./pages/PrintQuotePage";
 import AfterSalesPage from "./pages/AfterSalesPage";
 import WhatsAppListPage from "./pages/WhatsAppListPage";
+import WhatsAppInboxPage from "./pages/WhatsAppInboxPage";
 
 function Layout() {
   return (
@@ -73,6 +74,7 @@ function Layout() {
           <Route path="/presupuestos/:id/imprimir" element={<ProtectedRoute><PrintQuotePage /></ProtectedRoute>} />
           <Route path="/after-sales" element={<ProtectedRoute><AfterSalesPage /></ProtectedRoute>} />
           <Route path="/whatsapp-list" element={<ProtectedRoute><WhatsAppListPage /></ProtectedRoute>} />
+          <Route path="/inbox" element={<ProtectedRoute><WhatsAppInboxPage /></ProtectedRoute>} />
         </Routes>
       </main>
     </div>
