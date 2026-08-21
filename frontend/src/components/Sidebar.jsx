@@ -2,7 +2,7 @@ import {
   Home, Package, PackagePlus, ShoppingBag,
   ReceiptText, TrendingUp, ScanLine, LogOut, Sun, Moon,
   Users, Wallet, LayoutGrid, TrendingDown, Cable, BookUser, CalendarDays,
-  BadgeDollarSign, FileText, History, ShieldAlert, MessageCircle,
+  BadgeDollarSign, FileText, History, ShieldAlert, MessageCircle, Inbox,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { createElement, useState, useEffect, useRef } from "react";
@@ -31,6 +31,7 @@ const DESKTOP_SECTIONS = [
       { to: "/gastos", label: "Gastos", icon: TrendingDown, adminOnly: true },
       { to: "/accessories", label: "Accesorios", icon: Cable, adminOnly: true },
       { to: "/crm", label: "CRM", icon: BookUser },
+      { to: "/inbox", label: "Mensajes", icon: Inbox },
       { to: "/agenda", label: "Agenda", icon: CalendarDays },
       { to: "/presupuestos", label: "Presupuestos", icon: FileText },
       { to: "/after-sales", label: "Posventa", icon: ShieldAlert },
@@ -66,6 +67,7 @@ const SHEET_LINKS = [
   { to: "/gastos", label: "Gastos", icon: TrendingDown, color: "#ef4444", adminOnly: true },
   { to: "/accessories", label: "Accesorios", icon: Cable, color: "#0891b2", adminOnly: true },
   { to: "/crm", label: "CRM", icon: BookUser, color: "#7c3aed" },
+  { to: "/inbox", label: "Mensajes", icon: Inbox, color: "#25d366" },
   { to: "/agenda", label: "Agenda", icon: CalendarDays, color: "#0ea5e9" },
   { to: "/presupuestos", label: "Presupuestos", icon: FileText, color: "#8b5cf6" },
   { to: "/after-sales", label: "Posventa", icon: ShieldAlert, color: "#f97316" },
@@ -86,6 +88,7 @@ const PAGE_TITLES = {
   "/debtors": "Deudores",
   "/accessories": "Accesorios",
   "/crm": "CRM",
+  "/inbox": "Mensajes",
   "/agenda": "Agenda",
   "/presupuestos": "Presupuestos",
   "/after-sales": "Posventa",
