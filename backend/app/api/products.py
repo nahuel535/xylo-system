@@ -76,6 +76,7 @@ def list_products(
 @router.get("/check-imei/{imei}")
 def check_product_imei(
     imei: str,
+    exclude_id: Optional[int] = None,
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
 ):
@@ -83,7 +84,10 @@ def check_product_imei(
     if len(normalized_imei) != 15:
         raise HTTPException(status_code=400, detail="El IMEI debe tener exactamente 15 dígitos")
 
-    product = db.query(Product).filter(Product.imei == normalized_imei).first()
+    query = db.query(Product).filter(Product.imei == normalized_imei)
+    if exclude_id is not None:
+        query = query.filter(Product.id != exclude_id)
+    product = query.first()
     if not product:
         return {"exists": False, "product": None}
 
