@@ -29,6 +29,7 @@ export default function EditProductPage() {
   const [deleting, setDeleting] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+  const [imeiCheck, setImeiCheck] = useState({ status: "idle", product: null });
 
   useEffect(() => {
     async function loadData() {
@@ -119,6 +120,34 @@ export default function EditProductPage() {
 
       return updated;
     });
+
+    if (name === "imei") setImeiCheck({ status: "idle", product: null });
+  }
+
+  async function checkImei(value) {
+    const imei = String(value || "").replace(/\D/g, "");
+    if (!imei) {
+      setImeiCheck({ status: "idle", product: null });
+      return false;
+    }
+    if (imei.length !== 15) {
+      setImeiCheck({ status: "invalid", product: null });
+      return false;
+    }
+
+    setImeiCheck({ status: "checking", product: null });
+    try {
+      const response = await api.get(`/products/check-imei/${imei}`, { params: { exclude_id: id } });
+      const next = response.data.exists
+        ? { status: "duplicate", product: response.data.product }
+        : { status: "available", product: null };
+      setImeiCheck(next);
+      return !response.data.exists;
+    } catch (error) {
+      setImeiCheck({ status: "error", product: null });
+      setMessage(error?.response?.data?.detail || "No pude verificar si el IMEI ya existe.");
+      return false;
+    }
   }
 
   function handleBarcodeApply(labelData) {
@@ -140,11 +169,21 @@ export default function EditProductPage() {
         : current.notes,
     }));
     setShowBarcodeScanner(false);
+    if (labelData.imei) checkImei(labelData.imei);
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage("");
+    if (imeiCheck.status === "duplicate") {
+      setMessage("Ese IMEI ya está cargado en otro producto. Revisalo antes de continuar.");
+      return;
+    }
+    const imeiAvailable = await checkImei(form.imei);
+    if (!imeiAvailable) {
+      setMessage("Revisá el IMEI antes de guardar los cambios.");
+      return;
+    }
     setSaving(true);
 
     try {
@@ -272,6 +311,7 @@ export default function EditProductPage() {
             name="imei"
             value={form.imei}
             onChange={handleChange}
+            onBlur={() => checkImei(form.imei)}
             required
           />
 
@@ -410,6 +450,36 @@ export default function EditProductPage() {
             placeholder="Seleccionar usuario"
           />
         </div>
+
+        {imeiCheck.status !== "idle" && (
+          <div className={`rounded-xl border px-4 py-3 text-sm ${
+            imeiCheck.status === "duplicate"
+              ? "border-red-200 bg-red-50 text-red-700"
+              : imeiCheck.status === "available"
+                ? "border-green-200 bg-green-50 text-green-700"
+                : imeiCheck.status === "invalid" || imeiCheck.status === "error"
+                  ? "border-amber-200 bg-amber-50 text-amber-700"
+                  : "border-base-border bg-base-subtle text-base-muted"
+          }`}>
+            {imeiCheck.status === "checking" && "Verificando IMEI..."}
+            {imeiCheck.status === "available" && "IMEI disponible: no está cargado en otro producto."}
+            {imeiCheck.status === "invalid" && "El IMEI debe tener exactamente 15 dígitos."}
+            {imeiCheck.status === "error" && "No se pudo verificar el IMEI."}
+            {imeiCheck.status === "duplicate" && (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span>
+                  IMEI duplicado: ya pertenece a {imeiCheck.product?.model || "otro producto"}
+                  {imeiCheck.product?.storage ? ` ${imeiCheck.product.storage}` : ""}.
+                </span>
+                {imeiCheck.product?.id && (
+                  <button type="button" onClick={() => navigate(`/products/${imeiCheck.product.id}`)} className="font-semibold underline">
+                    Ver producto
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         <div>
           <p className="text-sm text-base-muted mb-2">Observaciones</p>
