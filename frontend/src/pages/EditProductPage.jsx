@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { ScanBarcode } from "lucide-react";
 import api from "../services/api";
 import Header from "../components/Header";
 import { uploadToCloudinary } from "../services/cloudinary";
+import ProductBarcodeScanner from "../components/ProductBarcodeScanner";
 import {
   CATEGORY_OPTIONS,
   CONDITION_OPTIONS,
@@ -26,6 +28,7 @@ export default function EditProductPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -118,6 +121,27 @@ export default function EditProductPage() {
     });
   }
 
+  function handleBarcodeApply(labelData) {
+    const metadata = [
+      labelData.imei2 && `IMEI 2: ${labelData.imei2}`,
+      labelData.ean && `EAN/UPC: ${labelData.ean}`,
+      labelData.part_number && `Código Apple: ${labelData.part_number}`,
+    ].filter(Boolean).join(" · ");
+
+    setForm((current) => ({
+      ...current,
+      model: labelData.model || current.model,
+      storage: labelData.storage || current.storage,
+      color: labelData.color || current.color,
+      imei: labelData.imei || current.imei,
+      serial_number: labelData.serial_number || current.serial_number,
+      notes: metadata && !current.notes.includes(metadata)
+        ? [current.notes, `Etiqueta: ${metadata}`].filter(Boolean).join("\n")
+        : current.notes,
+    }));
+    setShowBarcodeScanner(false);
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setMessage("");
@@ -185,6 +209,18 @@ export default function EditProductPage() {
         onSubmit={handleSubmit}
         className="bg-base-card border border-base-border rounded-xl p-6 space-y-6"
       >
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-base-border">
+          <p className="text-sm text-base-muted">Actualizá el IMEI y demás datos manualmente o escaneando la etiqueta</p>
+          <button
+            type="button"
+            onClick={() => setShowBarcodeScanner(true)}
+            className="flex items-center gap-2 rounded-xl border border-xylo-500/30 bg-xylo-500/5 px-4 py-2.5 text-sm font-medium text-xylo-600 transition hover:bg-xylo-500/10"
+          >
+            <ScanBarcode size={16} />
+            Escanear etiqueta
+          </button>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           <SelectField
             label="Categoría"
@@ -459,6 +495,14 @@ export default function EditProductPage() {
           </button>
         </div>
       </form>
+
+      {showBarcodeScanner && (
+        <ProductBarcodeScanner
+          open
+          onClose={() => setShowBarcodeScanner(false)}
+          onApply={handleBarcodeApply}
+        />
+      )}
     </div>
   );
 }
