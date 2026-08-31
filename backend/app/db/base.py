@@ -11,3 +11,5 @@ from app.models.service_claim import ServiceClaim
 from app.models.debtor import Debtor
 from app.models.accessory import Accessory, AccessorySale, Combo, ComboItem
 from app.models.seller_payout import SellerPayout
+from app.models.service_ticket import ServiceTicket
+from app.models.part_price import PartPrice
