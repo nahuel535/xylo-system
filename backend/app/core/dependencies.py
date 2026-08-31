@@ -28,6 +28,15 @@ def require_admin(current_user: User = Depends(get_current_user)):
     return current_user
 
 
+def require_admin_or_technician(current_user: User = Depends(get_current_user)):
+    if current_user.role not in ("admin", "technician"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Se requiere rol admin o técnico",
+        )
+    return current_user
+
+
 def ensure_owner_or_admin(current_user: User, owner_user_id: Optional[int]) -> None:
     if current_user.role != "admin" and owner_user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recurso no encontrado")
