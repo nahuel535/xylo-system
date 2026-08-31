@@ -1,8 +1,9 @@
 import {
-  Home, Package, PackagePlus, ShoppingBag,
+  Home, Package, PackagePlus,
   ReceiptText, TrendingUp, ScanLine, LogOut, Sun, Moon,
   Users, Wallet, LayoutGrid, TrendingDown, Cable, BookUser, CalendarDays,
   BadgeDollarSign, FileText, History, ShieldAlert, MessageCircle, Inbox,
+  Wrench, Tags,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { createElement, useState, useEffect, useRef } from "react";
@@ -18,7 +19,6 @@ const DESKTOP_SECTIONS = [
       { to: "/", label: "Inicio", icon: Home },
       { to: "/scanner", label: "Escanear", icon: ScanLine },
       { to: "/products", label: "Stock", icon: Package },
-      { to: "/sold-products", label: "Vendidos", icon: ShoppingBag, adminOnly: true },
       { to: "/sales", label: "Ventas", icon: ReceiptText },
     ],
   },
@@ -35,6 +35,8 @@ const DESKTOP_SECTIONS = [
       { to: "/agenda", label: "Agenda", icon: CalendarDays },
       { to: "/presupuestos", label: "Presupuestos", icon: FileText },
       { to: "/after-sales", label: "Posventa", icon: ShieldAlert },
+      { to: "/servicio-tecnico", label: "Servicio Técnico", icon: Wrench, adminOnly: true },
+      { to: "/precios-piezas", label: "Precios de piezas", icon: Tags },
       { to: "/whatsapp-list", label: "Lista WhatsApp", icon: MessageCircle },
       { to: "/comisiones", label: "Ganancias", icon: BadgeDollarSign, adminOnly: true },
     ],
@@ -48,6 +50,17 @@ const DESKTOP_SECTIONS = [
   },
 ];
 
+const TECHNICIAN_DESKTOP_SECTIONS = [
+  {
+    label: "Servicio Técnico",
+    links: [
+      { to: "/", label: "Inicio", icon: Home },
+      { to: "/servicio-tecnico", label: "Tickets", icon: Wrench },
+      { to: "/precios-piezas", label: "Precios de piezas", icon: Tags },
+    ],
+  },
+];
+
 const TABS = [
   { to: "/", label: "Inicio", icon: Home },
   { to: "/products", label: "Stock", icon: Package },
@@ -55,11 +68,16 @@ const TABS = [
   { to: "/scanner", label: "Escanear", icon: ScanLine },
 ];
 
+const TECHNICIAN_TABS = [
+  { to: "/", label: "Inicio", icon: Home },
+  { to: "/servicio-tecnico", label: "Tickets", icon: Wrench },
+  { to: "/precios-piezas", label: "Precios", icon: Tags },
+];
+
 const SHEET_LINKS = [
   { to: "/", label: "Inicio", icon: Home, color: "#6366f1" },
   { to: "/products", label: "Stock", icon: Package, color: "#3b82f6" },
   { to: "/products/new", label: "Cargar", icon: PackagePlus, color: "#10b981", adminOnly: true },
-  { to: "/sold-products", label: "Vendidos", icon: ShoppingBag, color: "#f59e0b", adminOnly: true },
   { to: "/sales", label: "Ventas", icon: ReceiptText, color: "#8b5cf6" },
   { to: "/exchange", label: "Cotización", icon: TrendingUp, color: "#0ea5e9" },
   { to: "/scanner", label: "Escanear", icon: ScanLine, color: "#ef4444" },
@@ -71,17 +89,24 @@ const SHEET_LINKS = [
   { to: "/agenda", label: "Agenda", icon: CalendarDays, color: "#0ea5e9" },
   { to: "/presupuestos", label: "Presupuestos", icon: FileText, color: "#8b5cf6" },
   { to: "/after-sales", label: "Posventa", icon: ShieldAlert, color: "#f97316" },
+  { to: "/servicio-tecnico", label: "Servicio Técnico", icon: Wrench, color: "#f59e0b", adminOnly: true },
+  { to: "/precios-piezas", label: "Precios de piezas", icon: Tags, color: "#0891b2" },
   { to: "/whatsapp-list", label: "Lista WhatsApp", icon: MessageCircle, color: "#22c55e" },
   { to: "/comisiones", label: "Ganancias", icon: BadgeDollarSign, color: "#f59e0b", adminOnly: true },
   { to: "/users", label: "Usuarios", icon: Users, color: "#64748b", adminOnly: true },
   { to: "/admin/activity", label: "Auditoría", icon: History, color: "#64748b", adminOnly: true },
 ];
 
+const TECHNICIAN_SHEET_LINKS = [
+  { to: "/", label: "Inicio", icon: Home, color: "#6366f1" },
+  { to: "/servicio-tecnico", label: "Tickets", icon: Wrench, color: "#f59e0b" },
+  { to: "/precios-piezas", label: "Precios de piezas", icon: Tags, color: "#0891b2" },
+];
+
 const PAGE_TITLES = {
   "/": "Dashboard",
   "/products": "Stock",
   "/products/new": "Nuevo producto",
-  "/sold-products": "Vendidos",
   "/sales": "Ventas",
   "/exchange": "Cotización",
   "/scanner": "Escanear",
@@ -92,6 +117,8 @@ const PAGE_TITLES = {
   "/agenda": "Agenda",
   "/presupuestos": "Presupuestos",
   "/after-sales": "Posventa",
+  "/servicio-tecnico": "Servicio Técnico",
+  "/precios-piezas": "Precios de piezas",
   "/whatsapp-list": "Lista WhatsApp",
   "/comisiones": "Ganancias de vendedores",
   "/users": "Usuarios",
@@ -159,6 +186,10 @@ export default function Sidebar() {
   const { dark, toggleTheme } = useTheme();
   const { count: reminderCount } = useNotifications();
   const canSee = (item) => !item.adminOnly || user?.role === "admin";
+  const isTechnician = user?.role === "technician";
+  const activeDesktopSections = isTechnician ? TECHNICIAN_DESKTOP_SECTIONS : DESKTOP_SECTIONS;
+  const activeTabs = isTechnician ? TECHNICIAN_TABS : TABS;
+  const activeSheetLinks = isTechnician ? TECHNICIAN_SHEET_LINKS : SHEET_LINKS;
 
   const bg = dark ? "rgba(20,20,22,0.94)" : "rgba(252,252,253,0.94)";
   const border = dark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
@@ -231,7 +262,7 @@ export default function Sidebar() {
 
         <nav className="flex-1 flex flex-col">
           <div className="flex-1 space-y-5">
-            {DESKTOP_SECTIONS.map(({ label, links }) => ({ label, links: links.filter(canSee) }))
+            {activeDesktopSections.map(({ label, links }) => ({ label, links: links.filter(canSee) }))
               .filter(({ links }) => links.length > 0)
               .map(({ label, links }) => (
               <div key={label}>
@@ -336,7 +367,7 @@ export default function Sidebar() {
         }}
       >
         <div style={{ display: "flex", alignItems: "stretch", height: 56 }}>
-          {TABS.filter(canSee).map(({ to, label, icon: Icon }) => (
+          {activeTabs.filter(canSee).map(({ to, label, icon: Icon }) => (
             <TabButton key={to} to={to} label={label} icon={Icon} inactive={inactive} />
           ))}
 
@@ -451,7 +482,7 @@ export default function Sidebar() {
 
             {/* App icon grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 4, padding: "4px 12px 8px" }}>
-              {SHEET_LINKS.filter(canSee).map(({ to, label, icon, color }) => {
+              {activeSheetLinks.filter(canSee).map(({ to, label, icon, color }) => {
                 const isActive = to === "/"
                   ? location.pathname === "/"
                   : location.pathname.startsWith(to);
