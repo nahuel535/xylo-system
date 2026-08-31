@@ -1,8 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Inbox, Send, Search, User, CalendarPlus, X, Check, Link2 } from "lucide-react";
+import { Inbox, Send, Search, User, CalendarPlus, X, Check, Link2, MessageCircle, Instagram } from "lucide-react";
 import api from "../services/api";
 import Header from "../components/Header";
+
+const CHANNELS = {
+  whatsapp: {
+    label: "WhatsApp",
+    endpoint: "whatsapp",
+    externalId: (c) => c.wa_id,
+    badgeClass: "bg-[#25d366]",
+    Icon: MessageCircle,
+  },
+  instagram: {
+    label: "Instagram",
+    endpoint: "instagram",
+    externalId: (c) => (c.contact_name ? `@${c.contact_name}` : c.igsid),
+    badgeClass: "bg-gradient-to-tr from-amber-400 via-pink-500 to-purple-600",
+    Icon: Instagram,
+  },
+};
 
 function formatTime(iso) {
   if (!iso) return "";
@@ -15,7 +32,20 @@ function formatDay(iso) {
 }
 
 function conversationLabel(conversation) {
-  return conversation.client?.name || conversation.contact_name || conversation.wa_id;
+  return conversation.client?.name || conversation.contact_name || CHANNELS[conversation.channel].externalId(conversation);
+}
+
+function conversationKey(conversation) {
+  return `${conversation.channel}:${conversation.id}`;
+}
+
+function ChannelBadge({ channel, size = 14 }) {
+  const { Icon, badgeClass } = CHANNELS[channel];
+  return (
+    <span className={`inline-flex items-center justify-center rounded-full text-white ${badgeClass}`} style={{ width: size + 8, height: size + 8 }}>
+      <Icon size={size} strokeWidth={2.5} />
+    </span>
+  );
 }
 
 export default function WhatsAppInboxPage() {
@@ -24,7 +54,7 @@ export default function WhatsAppInboxPage() {
   const [conversations, setConversations] = useState([]);
   const [loadingConversations, setLoadingConversations] = useState(true);
   const [search, setSearch] = useState("");
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedKey, setSelectedKey] = useState(null);
 
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
@@ -42,10 +72,21 @@ export default function WhatsAppInboxPage() {
 
   async function loadConversations() {
     try {
-      const response = await api.get("/whatsapp/conversations");
-      setConversations(response.data);
-    } catch (requestError) {
-      setError(requestError?.response?.data?.detail || "No se pudieron cargar las conversaciones.");
+      const [whatsappRes, instagramRes] = await Promise.allSettled([
+        api.get("/whatsapp/conversations"),
+        api.get("/instagram/conversations"),
+      ]);
+
+      const merged = [
+        ...(whatsappRes.status === "fulfilled" ? whatsappRes.value.data.map((c) => ({ ...c, channel: "whatsapp" })) : []),
+        ...(instagramRes.status === "fulfilled" ? instagramRes.value.data.map((c) => ({ ...c, channel: "instagram" })) : []),
+      ].sort((a, b) => new Date(b.last_message_at || b.created_at) - new Date(a.last_message_at || a.created_at));
+
+      setConversations(merged);
+
+      if (whatsappRes.status === "rejected" && instagramRes.status === "rejected") {
+        setError("No se pudieron cargar las conversaciones.");
+      }
     } finally {
       setLoadingConversations(false);
     }
@@ -57,14 +98,15 @@ export default function WhatsAppInboxPage() {
     return () => window.clearInterval(interval);
   }, []);
 
-  async function loadMessages(conversationId, { silent } = {}) {
+  async function loadMessages(conversation, { silent } = {}) {
     if (!silent) setLoadingMessages(true);
     try {
-      const response = await api.get(`/whatsapp/conversations/${conversationId}/messages`);
+      const { endpoint } = CHANNELS[conversation.channel];
+      const response = await api.get(`/${endpoint}/conversations/${conversation.id}/messages`);
       setMessages(response.data);
       setConversations((current) =>
-        current.map((conversation) =>
-          conversation.id === conversationId ? { ...conversation, unread_count: 0 } : conversation
+        current.map((c) =>
+          c.channel === conversation.channel && c.id === conversation.id ? { ...c, unread_count: 0 } : c
         )
       );
     } catch (requestError) {
@@ -74,13 +116,15 @@ export default function WhatsAppInboxPage() {
     }
   }
 
+  const selectedConversation = conversations.find((c) => conversationKey(c) === selectedKey) || null;
+
   useEffect(() => {
-    if (!selectedId) return undefined;
-    loadMessages(selectedId);
-    const interval = window.setInterval(() => loadMessages(selectedId, { silent: true }), 4000);
+    if (!selectedConversation) return undefined;
+    loadMessages(selectedConversation);
+    const interval = window.setInterval(() => loadMessages(selectedConversation, { silent: true }), 4000);
     return () => window.clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId]);
+  }, [selectedKey]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
@@ -90,15 +134,13 @@ export default function WhatsAppInboxPage() {
     const value = search.trim().toLowerCase();
     if (!value) return conversations;
     return conversations.filter((conversation) =>
-      [conversationLabel(conversation), conversation.wa_id, conversation.last_message_preview]
+      [conversationLabel(conversation), CHANNELS[conversation.channel].externalId(conversation), conversation.last_message_preview]
         .some((field) => String(field || "").toLowerCase().includes(value))
     );
   }, [conversations, search]);
 
-  const selectedConversation = conversations.find((conversation) => conversation.id === selectedId) || null;
-
   function selectConversation(conversation) {
-    setSelectedId(conversation.id);
+    setSelectedKey(conversationKey(conversation));
     setShowAppointmentForm(false);
     setAppointmentSaved(false);
     setAppointmentError("");
@@ -107,11 +149,12 @@ export default function WhatsAppInboxPage() {
   async function sendMessage(event) {
     event.preventDefault();
     const body = draft.trim();
-    if (!body || !selectedId || sending) return;
+    if (!body || !selectedConversation || sending) return;
     setSending(true);
     setError("");
     try {
-      const response = await api.post(`/whatsapp/conversations/${selectedId}/messages`, { body });
+      const { endpoint } = CHANNELS[selectedConversation.channel];
+      const response = await api.post(`/${endpoint}/conversations/${selectedConversation.id}/messages`, { body });
       setMessages((current) => [...current, response.data]);
       setDraft("");
       loadConversations();
@@ -129,7 +172,7 @@ export default function WhatsAppInboxPage() {
       title: `Turno - ${conversationLabel(selectedConversation)}`,
       date: today,
       start_time: "10:00",
-      notes: `Contacto por WhatsApp (${selectedConversation.wa_id})`,
+      notes: `Contacto por ${CHANNELS[selectedConversation.channel].label} (${CHANNELS[selectedConversation.channel].externalId(selectedConversation)})`,
     });
     setAppointmentSaved(false);
     setAppointmentError("");
@@ -146,7 +189,8 @@ export default function WhatsAppInboxPage() {
         title: appointmentForm.title,
         client_id: selectedConversation.client_id || null,
         contact_name: conversationLabel(selectedConversation),
-        contact_phone: selectedConversation.wa_id,
+        contact_phone: selectedConversation.channel === "whatsapp" ? selectedConversation.wa_id : null,
+        contact_instagram: selectedConversation.channel === "instagram" ? selectedConversation.contact_name || selectedConversation.igsid : null,
         date: appointmentForm.date,
         start_time: appointmentForm.start_time,
         notes: appointmentForm.notes,
@@ -162,7 +206,7 @@ export default function WhatsAppInboxPage() {
 
   return (
     <div>
-      <Header title="Mensajes" subtitle="Inbox de WhatsApp del CRM" />
+      <Header title="Mensajes" subtitle="Inbox de WhatsApp e Instagram del CRM" />
 
       {error && (
         <div className="mb-4 bg-red-50 border border-red-100 text-red-600 rounded-xl px-4 py-3 text-sm">{error}</div>
@@ -176,7 +220,7 @@ export default function WhatsAppInboxPage() {
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar contacto o número..."
+                placeholder="Buscar contacto, @usuario o número..."
                 className="w-full bg-base-subtle border border-base-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-base-text outline-none focus:ring-2 focus:ring-xylo-500/20 focus:border-xylo-500 transition"
               />
             </div>
@@ -188,31 +232,37 @@ export default function WhatsAppInboxPage() {
             ) : filteredConversations.length === 0 ? (
               <p className="p-5 text-sm text-base-muted">Todavía no llegaron mensajes.</p>
             ) : filteredConversations.map((conversation) => {
-              const active = conversation.id === selectedId;
+              const key = conversationKey(conversation);
+              const active = key === selectedKey;
               const unread = conversation.unread_count > 0;
               return (
                 <button
-                  key={conversation.id}
+                  key={key}
                   type="button"
                   onClick={() => selectConversation(conversation)}
                   className={`w-full text-left p-4 transition ${active ? "bg-xylo-50/60 dark:bg-xylo-950/20" : "hover:bg-base-subtle/50"}`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <p className={`text-sm truncate ${unread ? "font-bold text-base-text" : "font-medium text-base-text"}`}>
-                      {conversationLabel(conversation)}
-                    </p>
-                    <span className="text-[10px] text-base-muted whitespace-nowrap">{formatDay(conversation.last_message_at)}</span>
-                  </div>
-                  <p className={`text-xs mt-0.5 truncate ${unread ? "text-base-text font-medium" : "text-base-muted"}`}>
-                    {conversation.last_message_preview || "Sin mensajes"}
-                  </p>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-[10px] text-base-muted">{conversation.wa_id}</span>
-                    {unread && (
-                      <span className="text-[10px] font-bold bg-green-500 text-white rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center leading-none">
-                        {conversation.unread_count > 99 ? "99+" : conversation.unread_count}
-                      </span>
-                    )}
+                  <div className="flex items-start gap-2.5">
+                    <ChannelBadge channel={conversation.channel} size={13} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className={`text-sm truncate ${unread ? "font-bold text-base-text" : "font-medium text-base-text"}`}>
+                          {conversationLabel(conversation)}
+                        </p>
+                        <span className="text-[10px] text-base-muted whitespace-nowrap">{formatDay(conversation.last_message_at)}</span>
+                      </div>
+                      <p className={`text-xs mt-0.5 truncate ${unread ? "text-base-text font-medium" : "text-base-muted"}`}>
+                        {conversation.last_message_preview || "Sin mensajes"}
+                      </p>
+                      <div className="flex items-center justify-between mt-1.5">
+                        <span className="text-[10px] text-base-muted truncate">{CHANNELS[conversation.channel].externalId(conversation)}</span>
+                        {unread && (
+                          <span className="text-[10px] font-bold bg-green-500 text-white rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center leading-none">
+                            {conversation.unread_count > 99 ? "99+" : conversation.unread_count}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </button>
               );
@@ -225,14 +275,17 @@ export default function WhatsAppInboxPage() {
             <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-16">
               <Inbox size={28} className="text-base-muted mb-3" />
               <p className="text-sm font-medium text-base-text">Elegí una conversación</p>
-              <p className="text-xs text-base-muted mt-1">Los mensajes de WhatsApp aparecen acá.</p>
+              <p className="text-xs text-base-muted mt-1">Los mensajes de WhatsApp e Instagram aparecen acá.</p>
             </div>
           ) : (
             <>
               <div className="p-4 border-b border-base-border flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-semibold text-base-text text-sm truncate">{conversationLabel(selectedConversation)}</p>
-                  <p className="text-xs text-base-muted">{selectedConversation.wa_id}</p>
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <ChannelBadge channel={selectedConversation.channel} size={15} />
+                  <div className="min-w-0">
+                    <p className="font-semibold text-base-text text-sm truncate">{conversationLabel(selectedConversation)}</p>
+                    <p className="text-xs text-base-muted">{CHANNELS[selectedConversation.channel].externalId(selectedConversation)}</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {selectedConversation.client_id ? (
