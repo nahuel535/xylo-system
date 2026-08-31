@@ -25,6 +25,7 @@ from app.api.seller_dashboard import router as seller_dashboard_router
 from app.api.admin_activity import router as admin_activity_router
 from app.api.after_sales import router as after_sales_router
 from app.api.whatsapp import router as whatsapp_router
+from app.api.instagram import router as instagram_router
 from app.api.service import tickets_router as service_tickets_router, part_prices_router as part_prices_router
 from app.models.expense import Expense  # noqa: ensure table is registered
 from app.models.accessory import Accessory, AccessorySale  # noqa: ensure tables are registered
@@ -33,6 +34,7 @@ from app.models.appointment import Appointment  # noqa: ensure table is register
 from app.models.quote import Quote  # noqa: ensure table is registered
 from app.models.seller_payout import SellerPayout  # noqa: ensure table is registered
 from app.models.whatsapp import WhatsAppConversation, WhatsAppMessage  # noqa: ensure tables are registered
+from app.models.instagram import InstagramConversation, InstagramMessage  # noqa: ensure tables are registered
 from app.core.dependencies import require_admin
 from app.db.migrations import run_migrations
 
@@ -76,6 +78,7 @@ app.include_router(seller_dashboard_router)
 app.include_router(admin_activity_router)
 app.include_router(after_sales_router)
 app.include_router(whatsapp_router)
+app.include_router(instagram_router)
 app.include_router(service_tickets_router)
 app.include_router(part_prices_router)
 
