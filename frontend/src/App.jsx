@@ -9,7 +9,6 @@ import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import ProductsPage from "./pages/ProductsPage";
 import NewProductPage from "./pages/NewProductPage";
-import SoldProductsPage from "./pages/SoldProductsPage";
 import SaleDetailPage from "./pages/SaleDetailPage";
 import EditSalePage from "./pages/EditSalePage";
 import SalesPage from "./pages/SalesPage";
@@ -38,6 +37,9 @@ import PrintQuotePage from "./pages/PrintQuotePage";
 import AfterSalesPage from "./pages/AfterSalesPage";
 import WhatsAppListPage from "./pages/WhatsAppListPage";
 import WhatsAppInboxPage from "./pages/WhatsAppInboxPage";
+import ServiceTicketsPage from "./pages/ServiceTicketsPage";
+import ServiceTicketDetailPage from "./pages/ServiceTicketDetailPage";
+import PartPricesPage from "./pages/PartPricesPage";
 
 function Layout() {
   return (
@@ -49,7 +51,6 @@ function Layout() {
           <Route path="/change-password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
           <Route path="/scanner" element={<ProtectedRoute><ScannerPage /></ProtectedRoute>} />
           <Route path="/products" element={<ProtectedRoute><ProductsPage /></ProtectedRoute>} />
-          <Route path="/sold-products" element={<ProtectedRoute requireAdmin><SoldProductsPage /></ProtectedRoute>} />
           <Route path="/sales" element={<ProtectedRoute><SalesPage /></ProtectedRoute>} />
           <Route path="/sales/:id" element={<ProtectedRoute><SaleDetailPage /></ProtectedRoute>} />
           <Route path="/sales/:id/edit" element={<ProtectedRoute requireAdmin><EditSalePage /></ProtectedRoute>} />
@@ -73,6 +74,9 @@ function Layout() {
           <Route path="/presupuestos" element={<ProtectedRoute><QuotesPage /></ProtectedRoute>} />
           <Route path="/presupuestos/:id/imprimir" element={<ProtectedRoute><PrintQuotePage /></ProtectedRoute>} />
           <Route path="/after-sales" element={<ProtectedRoute><AfterSalesPage /></ProtectedRoute>} />
+          <Route path="/servicio-tecnico" element={<ProtectedRoute allowedRoles={["admin", "technician"]}><ServiceTicketsPage /></ProtectedRoute>} />
+          <Route path="/servicio-tecnico/:id" element={<ProtectedRoute allowedRoles={["admin", "technician"]}><ServiceTicketDetailPage /></ProtectedRoute>} />
+          <Route path="/precios-piezas" element={<ProtectedRoute><PartPricesPage /></ProtectedRoute>} />
           <Route path="/whatsapp-list" element={<ProtectedRoute><WhatsAppListPage /></ProtectedRoute>} />
           <Route path="/inbox" element={<ProtectedRoute><WhatsAppInboxPage /></ProtectedRoute>} />
         </Routes>
