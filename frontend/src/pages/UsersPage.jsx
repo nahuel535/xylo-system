@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   UserPlus,
   Users,
+  Wrench,
   X,
 } from "lucide-react";
 import api from "../services/api";
@@ -37,6 +38,7 @@ export default function UsersPage() {
     active: users.filter((user) => user.is_active).length,
     sellers: users.filter((user) => user.role === "seller" && user.is_active).length,
     admins: users.filter((user) => user.role === "admin" && user.is_active).length,
+    technicians: users.filter((user) => user.role === "technician" && user.is_active).length,
   }), [users]);
 
   async function loadUsers() {
@@ -145,10 +147,11 @@ export default function UsersPage() {
       {message && <Alert tone="success" onClose={() => setMessage("")}>{message}</Alert>}
       {error && !panel && <Alert tone="error" onClose={() => setError("")}>{error}</Alert>}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
         <SummaryCard icon={Users} label="Usuarios" value={stats.total} />
         <SummaryCard icon={Check} label="Activos" value={stats.active} color="text-green-600" />
         <SummaryCard icon={UserPlus} label="Vendedores" value={stats.sellers} color="text-blue-600" />
+        <SummaryCard icon={Wrench} label="Técnicos" value={stats.technicians} color="text-amber-600" />
         <SummaryCard icon={ShieldCheck} label="Administradores" value={stats.admins} color="text-xylo-500" />
       </div>
 
@@ -249,6 +252,7 @@ export default function UsersPage() {
                     className={inputClass}
                   >
                     <option value="seller">Vendedor</option>
+                    <option value="technician">Técnico</option>
                     <option value="admin">Administrador</option>
                   </select>
                 </Field>
@@ -405,12 +409,19 @@ function SummaryCard({ icon: Icon, label, value, color = "text-base-text" }) {
 }
 
 function RoleBadge({ role }) {
+  const styles = {
+    admin: "bg-xylo-50 text-xylo-600",
+    technician: "bg-amber-50 text-amber-600",
+    seller: "bg-blue-50 text-blue-600",
+  };
+  const labels = {
+    admin: "Administrador",
+    technician: "Técnico",
+    seller: "Vendedor",
+  };
   return (
-    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${role === "admin"
-      ? "bg-xylo-50 text-xylo-600"
-      : "bg-blue-50 text-blue-600"}`}
-    >
-      {role === "admin" ? "Administrador" : "Vendedor"}
+    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${styles[role] || styles.seller}`}>
+      {labels[role] || "Vendedor"}
     </span>
   );
 }
