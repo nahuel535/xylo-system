@@ -8,7 +8,7 @@ class UserCreate(BaseModel):
     name: str = Field(min_length=2, max_length=120)
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
-    role: Literal["admin", "seller"] = "seller"
+    role: Literal["admin", "seller", "technician"] = "seller"
     commission_rate: Decimal = Field(default=Decimal("0"), ge=0, le=100)
 
     @field_validator("name")
@@ -20,7 +20,7 @@ class UserCreate(BaseModel):
 class UserUpdate(BaseModel):
     name: Optional[str] = Field(default=None, min_length=2, max_length=120)
     email: Optional[EmailStr] = None
-    role: Optional[Literal["admin", "seller"]] = None
+    role: Optional[Literal["admin", "seller", "technician"]] = None
     commission_rate: Optional[Decimal] = Field(default=None, ge=0, le=100)
 
     @field_validator("name")
