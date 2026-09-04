@@ -15,7 +15,7 @@ class SaleCreate(BaseModel):
     product_id: int
     seller_id: int
     sale_price_usd: Decimal
-    commission_usd: Optional[Decimal] = Field(default=None, ge=0, le=10)
+    commission_usd: Optional[Decimal] = Field(default=None, ge=0)
     client_name: Optional[str] = None
     notes: Optional[str] = None
     has_trade_in: bool = False
@@ -30,7 +30,7 @@ class SaleCreate(BaseModel):
 
 class SaleUpdate(BaseModel):
     sale_price_usd: Optional[Decimal] = None
-    commission_usd: Optional[Decimal] = Field(default=None, ge=0, le=10)
+    commission_usd: Optional[Decimal] = Field(default=None, ge=0)
     seller_id: Optional[int] = None
     client_name: Optional[str] = None
     notes: Optional[str] = None
