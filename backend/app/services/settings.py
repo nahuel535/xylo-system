@@ -1,5 +1,7 @@
 from decimal import Decimal
-from typing import Optional
+from typing import Dict, Optional
+
+import json
 
 from sqlalchemy.orm import Session
 
@@ -7,6 +9,11 @@ from app.models.system_setting import SystemSetting
 
 BASE_SELLER_COMMISSION_KEY = "base_seller_commission_usd"
 DEFAULT_BASE_SELLER_COMMISSION_USD = Decimal("10.00")
+
+CARD_INSTALLMENT_RATES_KEY = "card_installment_rates"
+DEFAULT_CARD_INSTALLMENT_RATES: Dict[str, float] = {
+    "1": 18, "2": 27, "3": 28, "6": 36, "9": 44, "12": 50,
+}
 
 
 def get_setting(db: Session, key: str) -> Optional[str]:
@@ -37,3 +44,15 @@ def get_base_seller_commission(db: Session) -> Decimal:
         return Decimal(raw_value)
     except Exception:
         return DEFAULT_BASE_SELLER_COMMISSION_USD
+
+
+def get_card_installment_rates(db: Session) -> Dict[str, float]:
+    """% de recargo por cantidad de cuotas con tarjeta. Configurable desde
+    /settings/card-installment-rates; si nunca se cargó, usa el default histórico."""
+    raw_value = get_setting(db, CARD_INSTALLMENT_RATES_KEY)
+    if raw_value is None:
+        return DEFAULT_CARD_INSTALLMENT_RATES
+    try:
+        return json.loads(raw_value)
+    except Exception:
+        return DEFAULT_CARD_INSTALLMENT_RATES
