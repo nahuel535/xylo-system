@@ -37,6 +37,8 @@ from app.models.seller_payout import SellerPayout  # noqa: ensure table is regis
 from app.models.whatsapp import WhatsAppConversation, WhatsAppMessage  # noqa: ensure tables are registered
 from app.models.instagram import InstagramConversation, InstagramMessage  # noqa: ensure tables are registered
 from app.models.system_setting import SystemSetting  # noqa: ensure table is registered
+from app.models.trade_in_price import TradeInBasePrice  # noqa: ensure table is registered
+from app.api.trade_in import router as trade_in_router
 from app.core.dependencies import require_admin
 from app.db.migrations import run_migrations
 
@@ -82,6 +84,7 @@ app.include_router(after_sales_router)
 app.include_router(whatsapp_router)
 app.include_router(instagram_router)
 app.include_router(settings_router)
+app.include_router(trade_in_router)
 app.include_router(service_tickets_router)
 app.include_router(part_prices_router)
 
