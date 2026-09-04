@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import api from "../services/api";
 import Header from "../components/Header";
-import { Plus, Minus, Trash2, Cable, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Minus, Trash2, Cable, ChevronDown, ChevronUp, Repeat } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 const METHODS = [
@@ -16,12 +16,14 @@ const METHODS = [
 export default function SellProductPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [product, setProduct] = useState(null);
   const [exchange, setExchange] = useState(null);
   const [users, setUsers] = useState([]);
   const [allAccessories, setAllAccessories] = useState([]);
+  const [baseCommission, setBaseCommission] = useState(10);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -36,6 +38,11 @@ export default function SellProductPage() {
     status: "completed",
   });
 
+  const [tradeIn, setTradeIn] = useState({
+    enabled: Boolean(searchParams.get("trade_in_value")),
+    value_usd: searchParams.get("trade_in_value") || "",
+  });
+
   const [pay1, setPay1] = useState({ method: "transferencia", amount_usd: "", reference: "" });
   const [pay2, setPay2] = useState({ enabled: false, method: "efectivo", amount_usd: "", reference: "" });
 
@@ -47,21 +54,25 @@ export default function SellProductPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [productRes, exchangeRes, usersRes, accRes] = await Promise.all([
+        const [productRes, exchangeRes, usersRes, accRes, commissionRes] = await Promise.all([
           api.get(`/products/${id}`),
           api.get("/exchange-rates/active"),
           isAdmin ? api.get("/users/") : Promise.resolve({ data: [user] }),
           isAdmin ? api.get("/accessories/").catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+          isAdmin ? api.get("/settings/base-seller-commission").catch(() => ({ data: { amount_usd: 10 } })) : Promise.resolve({ data: { amount_usd: 10 } }),
         ]);
         const productData = productRes.data;
         setProduct(productData);
         setExchange(exchangeRes.data);
         setUsers(usersRes.data);
         setAllAccessories(accRes.data.filter((a) => a.quantity > 0));
+        const baseCommissionValue = Number(commissionRes.data.amount_usd);
+        setBaseCommission(baseCommissionValue);
         const suggestedPrice = productData.suggested_sale_price_usd || "";
         setForm((prev) => ({
           ...prev,
           sale_price_usd: suggestedPrice,
+          commission_usd: String(baseCommissionValue),
           seller_id: isAdmin && usersRes.data.length > 0 ? usersRes.data[0].id : user.id,
         }));
         setPay1((prev) => ({ ...prev, amount_usd: suggestedPrice }));
@@ -163,8 +174,8 @@ export default function SellProductPage() {
         commission_usd: isAdmin ? Number(form.commission_usd) : null,
         client_name: form.client_name || null,
         notes: form.notes || null,
-        has_trade_in: false,
-        trade_in_value_usd: null,
+        has_trade_in: tradeIn.enabled && Boolean(tradeIn.value_usd),
+        trade_in_value_usd: tradeIn.enabled && tradeIn.value_usd ? Number(tradeIn.value_usd) : null,
         has_deposit: false,
         deposit_amount_usd: null,
         remaining_balance_usd: null,
@@ -240,11 +251,10 @@ export default function SellProductPage() {
                 className={inputClass}
                 type="number"
                 min="0"
-                max="10"
                 step="0.01"
                 required
               />
-              <p className="text-xs text-base-muted mt-1.5">Base: USD 10. Ingresá un monto menor si la venta fue compartida.</p>
+              <p className="text-xs text-base-muted mt-1.5">Base configurada: USD {baseCommission.toFixed(2)}. Cambiala si esta venta tiene una comisión distinta.</p>
             </div>
           )}
 
@@ -262,6 +272,40 @@ export default function SellProductPage() {
               <p className="text-sm text-base-muted mb-2">Cliente</p>
               <input name="client_name" value={form.client_name} onChange={handleChange} className={inputClass} placeholder="Nombre del cliente (opcional)" />
             </div>
+          </div>
+
+          {/* Plan canje */}
+          <div className="border border-base-border rounded-xl p-4 space-y-3">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={tradeIn.enabled}
+                onChange={(e) => setTradeIn((p) => ({ ...p, enabled: e.target.checked }))}
+                className="w-4 h-4 rounded accent-xylo-500"
+              />
+              <Repeat size={15} className="text-base-muted" />
+              <span className="text-sm font-semibold text-base-text">Recibe equipo en parte de pago (plan canje)</span>
+            </label>
+            {tradeIn.enabled && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-6">
+                <div>
+                  <p className="text-xs text-base-muted mb-1.5">Valor del canje (USD)</p>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={tradeIn.value_usd}
+                    onChange={(e) => setTradeIn((p) => ({ ...p, value_usd: e.target.value }))}
+                    className={inputClass}
+                    placeholder="Usá el Cotizador para calcularlo"
+                  />
+                </div>
+                <ReadOnlyField
+                  label="Valor del canje ARS"
+                  value={exchange && tradeIn.value_usd ? `ARS ${toArs(tradeIn.value_usd, exchange.buy_rate_ars)}` : "-"}
+                />
+              </div>
+            )}
           </div>
 
           {/* Pagos */}
