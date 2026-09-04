@@ -2,7 +2,7 @@ import {
   Home, Package, PackagePlus,
   ReceiptText, TrendingUp, ScanLine, LogOut, Sun, Moon,
   Users, Wallet, LayoutGrid, TrendingDown, Cable, BookUser, CalendarDays,
-  BadgeDollarSign, FileText, History, ShieldAlert, MessageCircle, Inbox,
+  BadgeDollarSign, FileText, History, ShieldAlert, MessageCircle, Inbox, Calculator,
   Wrench, Tags,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -34,6 +34,7 @@ const DESKTOP_SECTIONS = [
       { to: "/inbox", label: "Mensajes", icon: Inbox },
       { to: "/agenda", label: "Agenda", icon: CalendarDays },
       { to: "/presupuestos", label: "Presupuestos", icon: FileText },
+      { to: "/cotizador", label: "Cotizador", icon: Calculator },
       { to: "/after-sales", label: "Posventa", icon: ShieldAlert },
       { to: "/servicio-tecnico", label: "Servicio Técnico", icon: Wrench, adminOnly: true },
       { to: "/precios-piezas", label: "Precios de piezas", icon: Tags },
@@ -88,6 +89,7 @@ const SHEET_LINKS = [
   { to: "/inbox", label: "Mensajes", icon: Inbox, color: "#25d366" },
   { to: "/agenda", label: "Agenda", icon: CalendarDays, color: "#0ea5e9" },
   { to: "/presupuestos", label: "Presupuestos", icon: FileText, color: "#8b5cf6" },
+  { to: "/cotizador", label: "Cotizador", icon: Calculator, color: "#f97316" },
   { to: "/after-sales", label: "Posventa", icon: ShieldAlert, color: "#f97316" },
   { to: "/servicio-tecnico", label: "Servicio Técnico", icon: Wrench, color: "#f59e0b", adminOnly: true },
   { to: "/precios-piezas", label: "Precios de piezas", icon: Tags, color: "#0891b2" },
@@ -116,6 +118,7 @@ const PAGE_TITLES = {
   "/inbox": "Mensajes",
   "/agenda": "Agenda",
   "/presupuestos": "Presupuestos",
+  "/cotizador": "Cotizador",
   "/after-sales": "Posventa",
   "/servicio-tecnico": "Servicio Técnico",
   "/precios-piezas": "Precios de piezas",
