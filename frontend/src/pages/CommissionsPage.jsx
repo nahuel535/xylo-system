@@ -1,6 +1,6 @@
 import { createElement, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { TrendingUp, DollarSign, Users, ChevronDown, ChevronUp, Pencil, Trash2, Plus, X, WalletCards } from "lucide-react";
+import { TrendingUp, DollarSign, Users, ChevronDown, ChevronUp, Pencil, Trash2, Plus, X, WalletCards, Check } from "lucide-react";
 import api from "../services/api";
 import Header from "../components/Header";
 
@@ -42,6 +42,50 @@ export default function CommissionsPage() {
   const [payoutError, setPayoutError] = useState("");
   const [savingPayout, setSavingPayout] = useState(false);
   const [confirmDeletePayoutId, setConfirmDeletePayoutId] = useState(null);
+
+  const [baseCommission, setBaseCommission] = useState(null);
+  const [editingBaseCommission, setEditingBaseCommission] = useState(false);
+  const [baseCommissionDraft, setBaseCommissionDraft] = useState("");
+  const [baseCommissionSaving, setBaseCommissionSaving] = useState(false);
+  const [baseCommissionSaved, setBaseCommissionSaved] = useState(false);
+  const [baseCommissionError, setBaseCommissionError] = useState("");
+
+  useEffect(() => {
+    api.get("/settings/base-seller-commission")
+      .then((res) => setBaseCommission(res.data.amount_usd))
+      .catch(() => {});
+  }, []);
+
+  function openEditBaseCommission() {
+    setBaseCommissionDraft(String(baseCommission ?? ""));
+    setBaseCommissionError("");
+    setBaseCommissionSaved(false);
+    setEditingBaseCommission(true);
+  }
+
+  async function saveBaseCommission(event) {
+    event.preventDefault();
+    const amount = Number(baseCommissionDraft);
+    if (!amount || amount <= 0) {
+      setBaseCommissionError("Ingresá un monto válido mayor a 0.");
+      return;
+    }
+    setBaseCommissionSaving(true);
+    setBaseCommissionError("");
+    try {
+      const res = await api.put("/settings/base-seller-commission", { amount_usd: amount });
+      setBaseCommission(res.data.amount_usd);
+      setBaseCommissionSaved(true);
+      window.setTimeout(() => {
+        setEditingBaseCommission(false);
+        setBaseCommissionSaved(false);
+      }, 1200);
+    } catch (error) {
+      setBaseCommissionError(error?.response?.data?.detail || "No se pudo guardar el cambio.");
+    } finally {
+      setBaseCommissionSaving(false);
+    }
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -183,6 +227,66 @@ export default function CommissionsPage() {
       {payoutError && !payoutOpen && (
         <div className="mb-4 bg-red-50 border border-red-100 text-red-600 rounded-xl px-4 py-3 text-sm">{payoutError}</div>
       )}
+
+      {/* Comisión base configurable */}
+      <div className="mb-6 bg-base-card border border-base-border rounded-2xl px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-xylo-500/10 text-xylo-600">
+            <DollarSign size={17} />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-base-text">Comisión base por venta</p>
+            <p className="text-xs text-base-muted">Se aplica automáticamente cuando no se define una comisión puntual en la venta</p>
+          </div>
+        </div>
+
+        {!editingBaseCommission ? (
+          <div className="flex items-center gap-3">
+            <span className="text-lg font-bold text-base-text">
+              {baseCommission === null ? "..." : `USD ${fmt(baseCommission)}`}
+            </span>
+            <button
+              type="button"
+              onClick={openEditBaseCommission}
+              className="flex items-center gap-1.5 rounded-xl border border-base-border px-3 py-2 text-xs font-medium text-base-muted transition hover:bg-base-subtle"
+            >
+              <Pencil size={13} /> Editar
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={saveBaseCommission} className="flex items-center gap-2">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-base-muted">USD</span>
+              <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                autoFocus
+                value={baseCommissionDraft}
+                onChange={(e) => setBaseCommissionDraft(e.target.value)}
+                className="w-32 bg-base-subtle border border-base-border rounded-xl pl-11 pr-3 py-2 text-sm text-base-text outline-none focus:border-xylo-500"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={baseCommissionSaving}
+              className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition ${baseCommissionSaved ? "bg-green-600 text-white" : "bg-xylo-500 hover:bg-xylo-600 disabled:opacity-60 text-white"}`}
+            >
+              {baseCommissionSaved ? <Check size={13} /> : baseCommissionSaving ? "..." : "Guardar"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditingBaseCommission(false)}
+              className="text-base-muted hover:text-base-text"
+            >
+              <X size={16} />
+            </button>
+          </form>
+        )}
+        {baseCommissionError && (
+          <p className="w-full text-xs text-red-500">{baseCommissionError}</p>
+        )}
+      </div>
 
       {/* Filtros */}
       <div className="flex items-center justify-between gap-3 mb-6 flex-wrap">
