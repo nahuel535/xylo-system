@@ -31,6 +31,7 @@ import ClientDetailPage from "./pages/ClientDetailPage";
 import AgendaPage from "./pages/AgendaPage";
 import CommissionsPage from "./pages/CommissionsPage";
 import QuotesPage from "./pages/QuotesPage";
+import TradeInCalculatorPage from "./pages/TradeInCalculatorPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
 import AdminActivityPage from "./pages/AdminActivityPage";
 import PrintQuotePage from "./pages/PrintQuotePage";
@@ -72,6 +73,7 @@ function Layout() {
           <Route path="/agenda" element={<ProtectedRoute><AgendaPage /></ProtectedRoute>} />
           <Route path="/comisiones" element={<ProtectedRoute requireAdmin><CommissionsPage /></ProtectedRoute>} />
           <Route path="/presupuestos" element={<ProtectedRoute><QuotesPage /></ProtectedRoute>} />
+          <Route path="/cotizador" element={<ProtectedRoute><TradeInCalculatorPage /></ProtectedRoute>} />
           <Route path="/presupuestos/:id/imprimir" element={<ProtectedRoute><PrintQuotePage /></ProtectedRoute>} />
           <Route path="/after-sales" element={<ProtectedRoute><AfterSalesPage /></ProtectedRoute>} />
           <Route path="/servicio-tecnico" element={<ProtectedRoute allowedRoles={["admin", "technician"]}><ServiceTicketsPage /></ProtectedRoute>} />
