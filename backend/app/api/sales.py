@@ -12,9 +12,9 @@ from app.models.user import User
 from app.schemas.sale import SaleCreate, SaleUpdate, SaleResponse, SaleReturnRequest
 from app.core.dependencies import ensure_owner_or_admin, get_current_user, require_admin
 from app.models.client import Client, ClientInteraction, ClientReminder
+from app.services.settings import get_base_seller_commission
 
 router = APIRouter(prefix="/sales", tags=["Sales"])
-BASE_SELLER_COMMISSION_USD = Decimal("10.00")
 
 
 def _sale_for_user(sale: Sale, current_user: User) -> dict:
@@ -124,7 +124,7 @@ def create_sale(
     purchase_price = Decimal(product.purchase_price_usd)
     sale_price = Decimal(sale_data.sale_price_usd)
     gross_profit = sale_price - purchase_price
-    commission_usd = BASE_SELLER_COMMISSION_USD
+    commission_usd = get_base_seller_commission(db)
     if current_user.role == "admin" and sale_data.commission_usd is not None:
         commission_usd = Decimal(str(sale_data.commission_usd)).quantize(Decimal("0.01"))
 
