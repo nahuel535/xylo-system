@@ -54,11 +54,28 @@ export const CONDITION_OPTIONS = [
 ];
 
 export const COSMETIC_CONDITION_OPTIONS = [
-  "Excelente",
-  "Muy bueno",
-  "Bueno",
-  "Regular",
+  "A",
+  "A-",
+  "B",
 ];
+
+// Calidad estética: círculo de color para mostrar de un vistazo en el stock.
+export const COSMETIC_CONDITION_ICON = {
+  "A": "🟢",
+  "A-": "🟡",
+  "B": "🟠",
+};
+
+export const COSMETIC_CONDITION_LABEL = {
+  "A": "Calidad A — mínimos o sin detalles",
+  "A-": "Calidad A- — detalles leves",
+  "B": "Calidad B — detalles grandes",
+};
+
+export const COSMETIC_CONDITION_SELECT_OPTIONS = COSMETIC_CONDITION_OPTIONS.map((value) => ({
+  value,
+  label: `${COSMETIC_CONDITION_ICON[value]} ${COSMETIC_CONDITION_LABEL[value]}`,
+}));
 
 export const FUNCTIONAL_CONDITION_OPTIONS = [
   "Perfecto",
