@@ -8,7 +8,7 @@ import ProductBarcodeScanner from "../components/ProductBarcodeScanner";
 import {
   CATEGORY_OPTIONS,
   CONDITION_OPTIONS,
-  COSMETIC_CONDITION_OPTIONS,
+  COSMETIC_CONDITION_SELECT_OPTIONS,
   FUNCTIONAL_CONDITION_OPTIONS,
   SIM_TYPE_OPTIONS,
   SUPPLIER_OPTIONS,
@@ -335,7 +335,7 @@ export default function EditProductPage() {
             name="cosmetic_condition"
             value={form.cosmetic_condition}
             onChange={handleChange}
-            options={COSMETIC_CONDITION_OPTIONS}
+            options={COSMETIC_CONDITION_SELECT_OPTIONS}
             placeholder="Seleccionar estado"
           />
 
