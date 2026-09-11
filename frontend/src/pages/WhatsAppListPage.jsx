@@ -3,15 +3,10 @@ import { Check, Clipboard, MessageCircle, Minus, Plus, Search, Smartphone } from
 import api from "../services/api";
 import Header from "../components/Header";
 
-const GROUP_ICONS = ["🟡", "🟢", "🔵", "🟣", "🟠", "⚫"];
+const GROUP_ICON = "🟢";
 
-const DEFAULT_INTRO = "iPhones seleccionados en excelente estado, listos para usar.";
+const DEFAULT_INTRO = "";
 const DEFAULT_FOOTER = [
-  "🧾 Precios en dólares.",
-  "🛡️ Garantía de parte nuestra.",
-  "🧪 Equipos revisados y testeados.",
-  "📲 Pagos en dólares, pesos (transferencia o efectivo) o USDT. También aceptamos tarjetas.",
-  "",
   "📌 Tipo de equipo:",
   "iPhones seleccionados en excelente estado, listos para usar.",
 ].join("\n");
@@ -53,7 +48,7 @@ function buildMessage(selectedProducts, priceOverrides, intro, footer) {
       const price = priceValue(product, priceOverrides);
       return `• ${color}${battery} — $${price.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
     });
-    return `${GROUP_ICONS[index % GROUP_ICONS.length]} *${model} — ${storage}*\n\n${lines.join("\n")}`;
+    return `${GROUP_ICON} *${model} — ${storage}*\n\n${lines.join("\n")}`;
   });
 
   return [intro.trim(), ...sections, footer.trim()].filter(Boolean).join("\n\n");
