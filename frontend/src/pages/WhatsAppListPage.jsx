@@ -2,13 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { Check, Clipboard, MessageCircle, Minus, Plus, Search, Smartphone } from "lucide-react";
 import api from "../services/api";
 import Header from "../components/Header";
+import { COSMETIC_CONDITION_ICON } from "../data/productOptions";
 
-const GROUP_ICON = "🟢";
-
-const DEFAULT_INTRO = "";
-const DEFAULT_FOOTER = [
+const DEFAULT_INTRO = [
   "📌 Tipo de equipo:",
   "iPhones seleccionados en excelente estado, listos para usar.",
+].join("\n");
+
+const DEFAULT_FOOTER = [
+  "🟢 Calidad A — mínimos o sin detalles",
+  "🟡 Calidad A- — detalles leves",
+  "🟠 Calidad B — detalles grandes",
 ].join("\n");
 
 function productSort(a, b) {
@@ -40,15 +44,16 @@ function buildMessage(selectedProducts, priceOverrides, intro, footer) {
     groups.get(key).push(product);
   });
 
-  const sections = [...groups.entries()].map(([key, products], index) => {
+  const sections = [...groups.entries()].map(([key, products]) => {
     const [model, storage] = key.split("|||");
     const lines = products.map((product) => {
       const color = product.color || "Sin color";
       const battery = product.battery_health ? ` - ${product.battery_health}%` : "";
       const price = priceValue(product, priceOverrides);
-      return `• ${color}${battery} — $${price.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+      const icon = COSMETIC_CONDITION_ICON[product.cosmetic_condition] || "•";
+      return `${icon} ${color}${battery} — $${price.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
     });
-    return `${GROUP_ICON} *${model} — ${storage}*\n\n${lines.join("\n")}`;
+    return `*${model} — ${storage}*\n\n${lines.join("\n")}`;
   });
 
   return [intro.trim(), ...sections, footer.trim()].filter(Boolean).join("\n\n");
