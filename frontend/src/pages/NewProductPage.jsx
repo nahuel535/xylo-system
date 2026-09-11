@@ -7,7 +7,7 @@ import { Mic, MicOff, X, CheckCircle, SkipForward, ChevronRight, Images, ScanBar
 import LocalGalleryPicker from "../components/LocalGalleryPicker";
 import ProductBarcodeScanner from "../components/ProductBarcodeScanner";
 import {
-  CATEGORY_OPTIONS, CONDITION_OPTIONS, COSMETIC_CONDITION_OPTIONS,
+  CATEGORY_OPTIONS, CONDITION_OPTIONS, COSMETIC_CONDITION_SELECT_OPTIONS,
   FUNCTIONAL_CONDITION_OPTIONS, SIM_TYPE_OPTIONS, SUPPLIER_OPTIONS,
   MODEL_OPTIONS, CONSOLE_MODEL_OPTIONS, ALL_PRODUCT_OPTIONS, ACCESSORY_TYPE_OPTIONS, COMBO_ITEMS, COMBO_TEMPLATES,
 } from "../data/productOptions";
@@ -696,7 +696,7 @@ export default function NewProductPage() {
           )}
 
           {!isCombo && (
-            <SelectField label="Estado estético" name="cosmetic_condition" value={form.cosmetic_condition} onChange={handleChange} options={COSMETIC_CONDITION_OPTIONS} placeholder="Seleccionar estado" />
+            <SelectField label="Estado estético" name="cosmetic_condition" value={form.cosmetic_condition} onChange={handleChange} options={COSMETIC_CONDITION_SELECT_OPTIONS} placeholder="Seleccionar estado" />
           )}
           {!isCombo && (
             <SelectField label="Estado funcional" name="functional_condition" value={form.functional_condition} onChange={handleChange} options={FUNCTIONAL_CONDITION_OPTIONS} placeholder="Seleccionar estado" />
