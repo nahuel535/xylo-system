@@ -4,6 +4,7 @@ import api from "../services/api";
 import Header from "../components/Header";
 import { ChevronUp, ChevronDown, ChevronsUpDown, ScanBarcode } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { COSMETIC_CONDITION_ICON } from "../data/productOptions";
 
 export default function ProductsPage() {
   const { user } = useAuth();
@@ -229,7 +230,11 @@ export default function ProductsPage() {
                       </span>
                     ) : "-"}
                   </td>
-                  <td className="px-5 py-3.5 text-sm text-base-text">{product.cosmetic_condition || "-"}</td>
+                  <td className="px-5 py-3.5 text-sm text-base-text">
+                    {product.cosmetic_condition ? (
+                      <span>{COSMETIC_CONDITION_ICON[product.cosmetic_condition] || ""} {product.cosmetic_condition}</span>
+                    ) : "-"}
+                  </td>
                   <td className="px-5 py-3.5">
                     <span className="px-2 py-1 rounded-full text-xs bg-xylo-50 text-xylo-600 font-medium">
                       {product.condition_type || "-"}
@@ -264,6 +269,9 @@ export default function ProductsPage() {
                 <div>
                   <p className="font-semibold text-xylo-500">{product.model}</p>
                   <p className="text-xs text-base-muted">{product.storage} · {product.color}</p>
+                  {product.cosmetic_condition && (
+                    <p className="text-xs text-base-muted mt-0.5">{COSMETIC_CONDITION_ICON[product.cosmetic_condition] || ""} {product.cosmetic_condition}</p>
+                  )}
                   {product.status === "reserved" && (
                     <p className="text-[10px] font-semibold text-amber-600 mt-1">Reservado · {product.reserved_for}</p>
                   )}
