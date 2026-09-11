@@ -10,9 +10,10 @@ const DEFAULT_INTRO = [
 ].join("\n");
 
 const DEFAULT_FOOTER = [
-  "🟢 Calidad A — mínimos o sin detalles",
-  "🟡 Calidad A- — detalles leves",
-  "🟠 Calidad B — detalles grandes",
+  "📄 Precios en dólares.",
+  "🧾 Garantía de parte nuestra.",
+  "🧪 Equipos revisados y testeados.",
+  "📲 Pagos en dólares, pesos (transferencia o efectivo) o USDT. También aceptamos Tarjetas.",
 ].join("\n");
 
 function productSort(a, b) {
