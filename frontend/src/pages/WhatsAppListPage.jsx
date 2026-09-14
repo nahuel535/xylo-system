@@ -4,12 +4,13 @@ import api from "../services/api";
 import Header from "../components/Header";
 import { COSMETIC_CONDITION_ICON } from "../data/productOptions";
 
-const DEFAULT_INTRO = [
-  "📌 Tipo de equipo:",
-  "iPhones seleccionados en excelente estado, listos para usar.",
-].join("\n");
+const DEFAULT_INTRO = "";
 
 const DEFAULT_FOOTER = [
+  "🟢 Calidad A — mínimos o sin detalles",
+  "🟡 Calidad A- — detalles leves",
+  "🟠 Calidad B — detalles grandes",
+  "",
   "📄 Precios en dólares.",
   "🧾 Garantía de parte nuestra.",
   "🧪 Equipos revisados y testeados.",
